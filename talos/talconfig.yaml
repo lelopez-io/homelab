@@ -31,8 +31,9 @@ nodes:
       customization:
         systemExtensions:
           officialExtensions:
-            - siderolabs/i915
-            - siderolabs/intel-ucode
+            - siderolabs/i915         # Intel GPU drivers
+            - siderolabs/intel-ucode  # Intel CPU microcode
+            - siderolabs/iscsi-tools  # iSCSI storage drivers
 
   - hostname: talos-node-2
     ipAddress: 192.168.1.31
@@ -51,5 +52,6 @@ nodes:
       customization:
         systemExtensions:
           officialExtensions:
-            - siderolabs/i915
-            - siderolabs/intel-ucode
+            - siderolabs/i915         # Intel GPU drivers
+            - siderolabs/intel-ucode  # Intel CPU microcode
+            - siderolabs/iscsi-tools  # iSCSI storage drivers
