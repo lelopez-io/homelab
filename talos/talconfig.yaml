@@ -1,0 +1,55 @@
+---
+clusterName: homelab-cluster
+talosVersion: v1.11.6
+kubernetesVersion: v1.34.1
+endpoint: https://192.168.1.30:6443
+allowSchedulingOnControlPlanes: true
+
+clusterPodNets:
+  - 10.244.0.0/16
+clusterSvcNets:
+  - 10.96.0.0/12
+
+cniConfig:
+  name: flannel
+
+nodes:
+  - hostname: talos-node-1
+    ipAddress: 192.168.1.30
+    controlPlane: true
+    installDiskSelector:
+      size: ">= 2TB"
+      model: WPBSN4M8-2TGP
+    networkInterfaces:
+      - interface: enp172s0
+        addresses:
+          - 192.168.1.30/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.1.1
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/i915
+            - siderolabs/intel-ucode
+
+  - hostname: talos-node-2
+    ipAddress: 192.168.1.31
+    controlPlane: false
+    installDiskSelector:
+      size: ">= 2TB"
+      model: WPBSN4M8-2TGP
+    networkInterfaces:
+      - interface: enp172s0
+        addresses:
+          - 192.168.1.31/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.1.1
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/i915
+            - siderolabs/intel-ucode
