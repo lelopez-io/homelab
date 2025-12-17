@@ -1,2 +1,5 @@
 # macOS
 .DS_Store
+
+# Generated Talos configs (regenerate with talhelper genconfig)
+talos/clusterconfig/
