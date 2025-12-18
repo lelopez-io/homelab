@@ -1,0 +1,14 @@
+---
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: homelab-subnet
+spec:
+  hostname: homelab-subnet
+  subnetRouter:
+    advertiseRoutes:
+      - "192.168.1.30/32" # Control plane node
+      - "192.168.1.31/32" # Worker node
+      - "192.168.1.40/29" # MetalLB pool .40-.47
+      - "192.168.1.48/28" # MetalLB pool .48-.63
+      - "192.168.1.64/28" # MetalLB pool .64-.79
