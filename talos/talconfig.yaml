@@ -13,6 +13,23 @@ clusterSvcNets:
 cniConfig:
   name: flannel
 
+# DRA feature gates for control plane components
+controlPlane:
+  patches:
+    - |-
+      cluster:
+        apiServer:
+          extraArgs:
+            feature-gates: DynamicResourceAllocation=true
+            runtime-config: resource.k8s.io/v1=true
+        controllerManager:
+          extraArgs:
+            feature-gates: DynamicResourceAllocation=true
+        scheduler:
+          extraArgs:
+            feature-gates: DynamicResourceAllocation=true
+
+
 nodes:
   - hostname: talos-node-1
     ipAddress: 192.168.1.30
@@ -34,6 +51,18 @@ nodes:
             - siderolabs/i915         # Intel GPU drivers
             - siderolabs/intel-ucode  # Intel CPU microcode
             - siderolabs/iscsi-tools  # iSCSI storage drivers
+    patches:
+      - |-
+        machine:
+          kubelet:
+            extraArgs:
+              feature-gates: DynamicResourceAllocation=true
+          files:
+            - path: /etc/cri/conf.d/20-customization.part
+              op: create
+              content: |
+                [plugins."io.containerd.cri.v1.runtime"]
+                  cdi_spec_dirs = ["/var/run/cdi"]
 
   - hostname: talos-node-2
     ipAddress: 192.168.1.31
@@ -55,3 +84,15 @@ nodes:
             - siderolabs/i915         # Intel GPU drivers
             - siderolabs/intel-ucode  # Intel CPU microcode
             - siderolabs/iscsi-tools  # iSCSI storage drivers
+    patches:
+      - |-
+        machine:
+          kubelet:
+            extraArgs:
+              feature-gates: DynamicResourceAllocation=true
+          files:
+            - path: /etc/cri/conf.d/20-customization.part
+              op: create
+              content: |
+                [plugins."io.containerd.cri.v1.runtime"]
+                  cdi_spec_dirs = ["/var/run/cdi"]
