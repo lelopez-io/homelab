@@ -6,3 +6,4 @@ resources:
   - metallb
   - ingress-nginx.flux.yaml
   - longhorn
+  - gpu

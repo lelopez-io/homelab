@@ -1,0 +1,12 @@
+[
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/volumes/2",
+    "value": {
+      "name": "cdi",
+      "hostPath": {
+        "path": "/var/run/cdi"
+      }
+    }
+  }
+]

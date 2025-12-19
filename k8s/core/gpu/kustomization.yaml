@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Intel GPU Resource Driver (uses v1 API, Helm chart lags behind)
+  - https://github.com/intel/intel-resource-drivers-for-kubernetes//deployments/gpu/base?ref=826b331a873dd302ce8fe314513d5b8affc039f2
+  - resourceclaimtemplate.yaml
+patches:
+  # Talos Compatibility
+  - path: namespace-patch.yaml
+  - path: daemonset-patch.json
+    target:
+      kind: DaemonSet
+      name: intel-gpu-resource-driver-kubelet-plugin
+
