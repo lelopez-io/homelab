@@ -66,7 +66,7 @@ nodes:
 
   - hostname: talos-node-2
     ipAddress: 192.168.1.31
-    controlPlane: false
+    controlPlane: true
     installDiskSelector:
       size: ">= 2TB"
       model: WPBSN4M8-2TGP
@@ -99,7 +99,7 @@ nodes:
 
   - hostname: talos-node-3
     ipAddress: 192.168.1.32
-    controlPlane: false
+    controlPlane: true
     installDiskSelector:
       size: ">= 2TB"
       model: WPBSN4M8-2TGP
