@@ -96,3 +96,36 @@ nodes:
               content: |
                 [plugins."io.containerd.cri.v1.runtime"]
                   cdi_spec_dirs = ["/var/run/cdi"]
+
+  - hostname: talos-node-3
+    ipAddress: 192.168.1.32
+    controlPlane: false
+    installDiskSelector:
+      size: ">= 2TB"
+      model: WPBSN4M8-2TGP
+    networkInterfaces:
+      - interface: enp172s0
+        addresses:
+          - 192.168.1.32/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.1.1
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/i915         # Intel GPU drivers
+            - siderolabs/intel-ucode  # Intel CPU microcode
+            - siderolabs/iscsi-tools  # iSCSI storage drivers
+    patches:
+      - |-
+        machine:
+          kubelet:
+            extraArgs:
+              feature-gates: DynamicResourceAllocation=true
+          files:
+            - path: /etc/cri/conf.d/20-customization.part
+              op: create
+              content: |
+                [plugins."io.containerd.cri.v1.runtime"]
+                  cdi_spec_dirs = ["/var/run/cdi"]
