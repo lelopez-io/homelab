@@ -4,7 +4,9 @@ kind: Connector
 metadata:
   name: homelab-subnet
 spec:
-  hostname: homelab-subnet
+  replicas: 3
+  proxyClass: control-plane
+  hostnamePrefix: homelab-subnet
   subnetRouter:
     advertiseRoutes:
       - "192.168.1.30/32" # Control plane node
