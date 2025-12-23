@@ -28,6 +28,9 @@ spec:
       valuesKey: claim
       targetPath: extraEnv.PLEX_CLAIM
   values:
+    image:
+      tag: "1.42.2.10156-f737b826c"
+
     extraEnv:
       TZ: "America/Denver"
 
