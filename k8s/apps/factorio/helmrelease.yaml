@@ -1,0 +1,66 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: factorio
+  namespace: factorio
+spec:
+  interval: 24h
+  url: https://sqljames.github.io/factorio-server-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: factorio
+  namespace: factorio
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: factorio-server-charts
+      sourceRef:
+        kind: HelmRepository
+        name: factorio
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    image:
+      tag: "2.0.72"
+      pullPolicy: IfNotPresent
+    hostNetworkEnabled: false
+    service:
+      type: LoadBalancer
+      port: 34197
+    persistence:
+      enabled: true
+      dataDir:
+        existingClaim: factorio-data
+    factorioServer:
+      save_name: "test-world"
+      generate_new_save: true
+      load_latest_save: false
+    server_settings:
+      name: "Openlandmark"
+      description: "Experience is merely the name men gave to their mistakes."
+      visibility:
+        public: false
+        lan: true
+      max_players: 0
+      auto_pause: true
+      only_admins_can_pause_the_game: true
+    map_gen_settings:
+      seed: 1853500214
+    admin_list:
+      - lelopez
+    resources:
+      requests:
+        memory: 2Gi
+        cpu: 1000m
+      limits:
+        memory: 4Gi
+        cpu: 2000m
+
