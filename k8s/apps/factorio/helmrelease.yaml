@@ -63,4 +63,22 @@ spec:
       limits:
         memory: 4Gi
         cpu: 2000m
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: factorio-factorio-server-charts
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/-
+                value:
+                  name: playit-agent
+                  image: ghcr.io/playit-cloud/playit-agent:latest
+                  env:
+                    - name: SECRET_KEY
+                      valueFrom:
+                        secretKeyRef:
+                          name: playit-secret
+                          key: secret-key
 
