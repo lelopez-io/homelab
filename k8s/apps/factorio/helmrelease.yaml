@@ -49,6 +49,7 @@ spec:
       visibility:
         public: false
         lan: true
+      require_user_verification: true
       max_players: 0
       auto_pause: true
       only_admins_can_pause_the_game: true
