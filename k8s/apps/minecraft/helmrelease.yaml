@@ -44,6 +44,14 @@ spec:
       serviceType: LoadBalancer
       rcon:
         enabled: true
+      extraPorts:
+        - name: bedrock
+          containerPort: 19132
+          protocol: UDP
+          service:
+            enabled: true
+            type: LoadBalancer
+            port: 19132
     persistence:
       dataDir:
         enabled: true
