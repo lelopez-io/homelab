@@ -42,6 +42,8 @@ spec:
       viewDistance: 32
       enableCommandBlock: true
       serviceType: LoadBalancer
+      rcon:
+        enabled: true
     persistence:
       dataDir:
         enabled: true
@@ -55,6 +57,14 @@ spec:
         cpu: 4000m
     extraEnv:
       JVM_XX_OPTS: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true"
+      MODPACK: "https://download.bentobox.world/api/generate?downloads=%5B%22BSkyBlock%22%2C%22Challenges%22%2C%22Level%22%2C%22Warps%22%2C%22ControlPanel%22%2C%22DimensionalTrees%22%2C%22Biomes%22%2C%22Bank%22%5D"
+      MODRINTH_PROJECTS: |
+        paper:viaversion
+      PLUGINS: |
+        https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
+        https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
+        https://hangarcdn.papermc.io/plugins/other/DirectionHUD/versions/1.8.1.2%2B1.21.7/PAPER/directionhud-paper-1.8.1.2%2B1.21.7.jar
+      REMOVE_OLD_MODS: 'TRUE'
   postRenderers:
     - kustomize:
         patches:
