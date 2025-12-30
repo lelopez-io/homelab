@@ -1,0 +1,58 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: minecraft
+  namespace: minecraft
+spec:
+  interval: 24h
+  url: https://itzg.github.io/minecraft-server-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: minecraft
+  namespace: minecraft
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: minecraft
+      sourceRef:
+        kind: HelmRepository
+        name: minecraft
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    minecraftServer:
+      eula: "TRUE"
+      version: "1.21.11"
+      type: "PAPER"
+      difficulty: normal
+      motd: "Experience is merely the name men gave to their mistakes."
+      maxPlayers: 10
+      gameMode: survival
+      pvp: false
+      onlineMode: true
+      memory: 4096M
+      viewDistance: 32
+      enableCommandBlock: true
+      serviceType: LoadBalancer
+    persistence:
+      dataDir:
+        enabled: true
+        existingClaim: minecraft-data
+    resources:
+      requests:
+        memory: 4Gi
+        cpu: 2000m
+      limits:
+        memory: 6Gi
+        cpu: 4000m
+    extraEnv:
+      JVM_XX_OPTS: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true"
+
