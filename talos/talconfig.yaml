@@ -13,6 +13,12 @@ clusterSvcNets:
 cniConfig:
   name: flannel
 
+cluster:
+  etcd:
+    advertisedSubnets:
+      - 192.168.1.0/24
+      - 192.168.10.0/24
+
 # DRA feature gates for control plane components
 controlPlane:
   patches:
