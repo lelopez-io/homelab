@@ -2,11 +2,21 @@
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
+  name: static-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.10.40-192.168.10.49
+  autoAssign: false
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
   name: default-pool
   namespace: metallb-system
 spec:
   addresses:
-    - 192.168.1.40-192.168.1.79
+    - 192.168.10.50-192.168.10.79
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -15,4 +25,5 @@ metadata:
   namespace: metallb-system
 spec:
   ipAddressPools:
+    - static-pool
     - default-pool
