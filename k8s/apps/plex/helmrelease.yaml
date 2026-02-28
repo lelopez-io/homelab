@@ -27,6 +27,14 @@ spec:
       name: plex-claim
       valuesKey: claim
       targetPath: extraEnv.PLEX_CLAIM
+    - kind: ConfigMap
+      name: plex-vars
+      valuesKey: ADVERTISE_IP
+      targetPath: extraEnv.ADVERTISE_IP
+    - kind: ConfigMap
+      name: plex-vars
+      valuesKey: PLEX_IP
+      targetPath: service.annotations.metallb\.universe\.tf/loadBalancerIPs
   values:
     image:
       tag: "1.42.2.10156-f737b826c"
@@ -56,4 +64,3 @@ spec:
         mountPath: /data/media
       - name: dev-dri
         mountPath: /dev/dri
-
