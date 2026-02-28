@@ -6,3 +6,4 @@ resources:
   - helmrepository.yaml
   - helmrelease.yaml
   - config.flux.yaml
+  - networkpolicy.yaml
