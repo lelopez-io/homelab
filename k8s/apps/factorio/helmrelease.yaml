@@ -30,7 +30,7 @@ spec:
       retries: 3
   values:
     image:
-      tag: "2.0.72"
+      tag: "2.0.73"
       pullPolicy: IfNotPresent
     hostNetworkEnabled: false
     service:
