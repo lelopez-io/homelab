@@ -18,6 +18,7 @@ spec:
   chart:
     spec:
       chart: factorio-server-charts
+      version: "2.5.2"
       sourceRef:
         kind: HelmRepository
         name: factorio
@@ -38,7 +39,7 @@ spec:
     persistence:
       enabled: true
       dataDir:
-        existingClaim: factorio-data
+        existingClaim: factorio-data-encrypted
     factorioServer:
       save_name: "2024.10.23--factorio--olm-space-age"
       generate_new_save: true
