@@ -6,4 +6,5 @@ resources:
   - pvc.yaml
   - secret.sops.yaml
   - helmrelease.yaml
+  - networkpolicy.yaml
 
