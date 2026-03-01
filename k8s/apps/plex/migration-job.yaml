@@ -1,0 +1,56 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: plex-migrate
+  namespace: plex
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+        - name: migrate
+          image: alpine:3.19
+          command:
+            - sh
+            - -c
+            - |
+              apk add --no-cache rsync
+              echo "Migrating config..."
+              rsync -av --progress /old-config/ /new-config/
+              echo "Migrating media..."
+              rsync -av --progress /old-media/ /new-media/
+              echo "Migration complete"
+          volumeMounts:
+            - name: old-config
+              mountPath: /old-config
+              readOnly: true
+            - name: new-config
+              mountPath: /new-config
+            - name: old-media
+              mountPath: /old-media
+              readOnly: true
+            - name: new-media
+              mountPath: /new-media
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "2000m"
+      volumes:
+        - name: old-config
+          persistentVolumeClaim:
+            claimName: plex-config
+        - name: new-config
+          persistentVolumeClaim:
+            claimName: plex-config-encrypted
+        - name: old-media
+          persistentVolumeClaim:
+            claimName: plex-media
+        - name: new-media
+          persistentVolumeClaim:
+            claimName: plex-media-encrypted
+      restartPolicy: Never
