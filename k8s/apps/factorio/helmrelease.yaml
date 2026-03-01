@@ -42,7 +42,7 @@ spec:
         existingClaim: factorio-data-encrypted
     factorioServer:
       save_name: "2024.10.23--factorio--olm-space-age"
-      generate_new_save: true
+      generate_new_save: false
       load_latest_save: false
     server_settings:
       name: "Openlandmark"
