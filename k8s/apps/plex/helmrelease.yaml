@@ -66,3 +66,39 @@ spec:
         readOnly: true
       - name: dev-dri
         mountPath: /dev/dri
+
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: StatefulSet
+              name: plex-plex-media-server
+            patch: |
+              - op: add
+                path: /spec/template/spec/volumes/-
+                value:
+                  name: filebrowser-db
+                  emptyDir: {}
+              - op: add
+                path: /spec/template/spec/containers/-
+                value:
+                  name: filebrowser
+                  image: filebrowser/filebrowser:v2.31.2
+                  args:
+                    - --noauth
+                    - --root=/srv
+                    - --database=/database/filebrowser.db
+                  ports:
+                    - containerPort: 80
+                  volumeMounts:
+                    - name: media
+                      mountPath: /srv
+                    - name: filebrowser-db
+                      mountPath: /database
+                  resources:
+                    requests:
+                      cpu: 50m
+                      memory: 64Mi
+                    limits:
+                      cpu: 500m
+                      memory: 256Mi
