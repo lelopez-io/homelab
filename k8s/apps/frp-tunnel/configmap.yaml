@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frpc-config
+  namespace: frp-tunnel
+data:
+  frpc.toml: |
+    serverAddr = "{{ .Envs.FRP_SERVER_ADDR }}"
+    serverPort = 7000
+
+    auth.method = "token"
+    auth.token = "{{ .Envs.FRP_TOKEN }}"
+
+    # TLS on the control channel — frps has transport.tls.force = true.
+    transport.tls.enable = true
+
+    log.to = "console"
+    log.level = "info"
+
+    # Plex passthrough — forwards public 32400 (via frps) to Plex MetalLB IP.
+    [[proxies]]
+    name = "plex"
+    type = "tcp"
+    localIP = "192.168.10.40"
+    localPort = 32400
+    remotePort = 32400

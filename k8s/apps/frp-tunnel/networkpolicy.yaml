@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frpc
+  namespace: frp-tunnel
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    # Public internet for the frps control channel — V3 pattern: block RFC1918.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+    # Specific RFC1918 exception for Plex MetalLB IP (passthrough target).
+    - to:
+        - ipBlock:
+            cidr: 192.168.10.40/32
+      ports:
+        - protocol: TCP
+          port: 32400

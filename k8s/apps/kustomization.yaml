@@ -4,4 +4,5 @@ resources:
   - plex
   - factorio
   - minecraft
+  - frp-tunnel
 
