@@ -85,7 +85,10 @@ spec:
                 path: /spec/template/spec/containers/-
                 value:
                   name: playit-agent
-                  image: ghcr.io/playit-cloud/playit-agent:latest
+                  image: ghcr.io/playit-cloud/playit-agent:1.0.5
+                  args:
+                    - "--socket-path"
+                    - "/tmp/playitd.sock"
                   env:
                     - name: SECRET_KEY
                       valueFrom:
