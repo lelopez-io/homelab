@@ -29,6 +29,9 @@ spec:
     remediation:
       retries: 3
   values:
+    image:
+      tag: "java25@sha256:2e7c7b7641a8f30e70fa8d357bc2ad1c029cb56c93ca7f39af08713166c755ca"
+
     minecraftServer:
       eula: "TRUE"
       version: "1.21.11"
