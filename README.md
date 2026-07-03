@@ -64,12 +64,16 @@ homelab/
     │   ├── tailscale/        # VPN + subnet router
     │   ├── metallb/          # Load balancer
     │   ├── ingress-nginx/    # Ingress controller
+    │   ├── cert-manager/     # Wildcard TLS for private services
     │   ├── longhorn/         # Distributed storage
     │   └── gpu/              # Intel GPU DRA driver
     └── apps/                 # Applications
         ├── plex/             # Media server
         ├── factorio/         # Game server
-        └── minecraft/        # Game server
+        ├── minecraft/        # Game server
+        ├── frp-tunnel/       # Public ingress via VPS (frps)
+        ├── forgejo/          # Self-hosted git forge
+        └── forgejo-runner/   # Forgejo Actions CI runner
 ```
 
 ---
