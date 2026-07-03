@@ -30,7 +30,7 @@ spec:
       retries: 3
   values:
     image:
-      tag: "2.0.73"
+      tag: "2.0.73@sha256:6471fbfb7eab3abf55bb53fed632606ecf17bf930891bccddff724afab9ed94c"
       pullPolicy: IfNotPresent
     hostNetworkEnabled: false
     service:
@@ -76,7 +76,7 @@ spec:
                 path: /spec/template/spec/containers/-
                 value:
                   name: playit-agent
-                  image: ghcr.io/playit-cloud/playit-agent:1.0.5
+                  image: ghcr.io/playit-cloud/playit-agent:1.0.5@sha256:188c2129aa156facb6dd56cf7413620e3af2a9318d10f46ca5f2aa70e0aac403
                   args:
                     - "--socket-path"
                     - "/tmp/playitd.sock"
