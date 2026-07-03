@@ -208,9 +208,11 @@ flowchart TB
 
 ## Documentation
 
-This repository accompanies a [tutorial series](https://lelopez.io/blog/homelab-v2-00-talos-kubernetes-homelab-series) documenting the complete build process.
+This repository accompanies tutorial series documenting the complete build process: [Building with Talos](https://lelopez.io/blog/homelab-v2-00-talos-kubernetes-homelab-series) (V2) and [Security Hardening](https://lelopez.io/blog/homelab-v3-00-security-hardening-series) (V3), plus standalone guides.
 
-> Articles with version tags link to milestone repo states. Articles without tags are reference guides that don't modify the repository.
+> Articles with version tags link to milestone repo states. Articles without tags are reference guides or procedures that don't modify the repository.
+
+### Building with Talos (V2)
 
 | #   | Article                                                                                                        | Version                                                       |
 | --- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
@@ -241,6 +243,39 @@ This repository accompanies a [tutorial series](https://lelopez.io/blog/homelab-
 | 12b | [Minecraft Import Existing World](https://lelopez.io/blog/homelab-v2-12b-minecraft-import-existing-world)      | [v0.12.2](https://github.com/lelopez-io/homelab/tree/v0.12.2) |
 | 12c | [Minecraft Bedrock Support](https://lelopez.io/blog/homelab-v2-12c-minecraft-bedrock-support)                  | [v0.12.3](https://github.com/lelopez-io/homelab/tree/v0.12.3) |
 | 12d | [Minecraft Server Management](https://lelopez.io/blog/homelab-v2-12d-minecraft-server-management)              |                                                               |
+| 12e | [Minecraft Plugin Updates](https://lelopez.io/blog/homelab-v2-12e-minecraft-plugin-updates)                    |                                                               |
+
+### Security Hardening (V3)
+
+| #   | Article                                                                                                    | Version                                                         |
+| --- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 00  | [Security Hardening Series](https://lelopez.io/blog/homelab-v3-00-security-hardening-series)               | [v2.0.0](https://github.com/lelopez-io/homelab/tree/v2.0.0)     |
+| 01  | [VLAN Architecture](https://lelopez.io/blog/homelab-v3-01-vlan-architecture)                               |                                                                 |
+| 02  | [Firewall Rules](https://lelopez.io/blog/homelab-v3-02-firewall-rules)                                     |                                                                 |
+| 02a | [Content Filtering](https://lelopez.io/blog/homelab-v3-02a-content-filtering)                              |                                                                 |
+| 03  | [Talos Migration](https://lelopez.io/blog/homelab-v3-03-talos-migration)                                   | [v1.1.0](https://github.com/lelopez-io/homelab/tree/v1.1.0)     |
+| 04  | [Tailscale Migration](https://lelopez.io/blog/homelab-v3-04-tailscale-migration)                           | [v1.2.0](https://github.com/lelopez-io/homelab/tree/v1.2.0)     |
+| 05  | [MetalLB Migration](https://lelopez.io/blog/homelab-v3-05-metallb-migration)                               | [v1.3.0](https://github.com/lelopez-io/homelab/tree/v1.3.0)     |
+| 06  | [Plex LAN Configuration](https://lelopez.io/blog/homelab-v3-06-plex-lan-configuration)                     | [v1.4.0](https://github.com/lelopez-io/homelab/tree/v1.4.0)     |
+| 07  | [Tailscale Hardening](https://lelopez.io/blog/homelab-v3-07-tailscale-hardening)                           | [v1.5.0](https://github.com/lelopez-io/homelab/tree/v1.5.0)     |
+| 08  | [MetalLB & Ingress Hardening](https://lelopez.io/blog/homelab-v3-08-metallb-ingress-hardening)             | [v1.6.0](https://github.com/lelopez-io/homelab/tree/v1.6.0)     |
+| 09  | [Longhorn Hardening](https://lelopez.io/blog/homelab-v3-09-longhorn-hardening)                             | [v1.7.0](https://github.com/lelopez-io/homelab/tree/v1.7.0)     |
+| 09a | [Longhorn Upgrade](https://lelopez.io/blog/homelab-v3-09a-longhorn-upgrade)                                | [v1.7.2](https://github.com/lelopez-io/homelab/tree/v1.7.2)     |
+| 10  | [Minecraft Hardening](https://lelopez.io/blog/homelab-v3-10-minecraft-hardening)                           | [v1.8.0](https://github.com/lelopez-io/homelab/tree/v1.8.0)     |
+| 11  | [Factorio Hardening](https://lelopez.io/blog/homelab-v3-11-factorio-hardening)                             | [v1.9.0](https://github.com/lelopez-io/homelab/tree/v1.9.0)     |
+| 12  | [Plex Hardening](https://lelopez.io/blog/homelab-v3-12-plex-hardening)                                     | [v1.10.2](https://github.com/lelopez-io/homelab/tree/v1.10.2)   |
+| 12a | [Plex Performance](https://lelopez.io/blog/homelab-v3-12a-plex-performance)                                | [v1.10.3](https://github.com/lelopez-io/homelab/tree/v1.10.3)   |
+| 13  | [SecureBoot & Encryption Prep](https://lelopez.io/blog/homelab-v3-13-secureboot-encryption-prep)           | [v1.11.0](https://github.com/lelopez-io/homelab/tree/v1.11.0)   |
+| 14  | [Secure Node Re-image](https://lelopez.io/blog/homelab-v3-14-secure-node-reimage)                          |                                                                 |
+| 15  | [GPG Signed Commits](https://lelopez.io/blog/homelab-v3-15-gpg-signed-commits)                             |                                                                 |
+| 16  | [Image Digest Pinning](https://lelopez.io/blog/homelab-v3-16-image-digest-pinning)                         |                                                                 |
+
+### Standalone Guides
+
+| Article                                                                                              | Version                                                       |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [Plex FileBrowser Upload](https://lelopez.io/blog/homelab-guide-plex-filebrowser-upload)             | [v1.12.0](https://github.com/lelopez-io/homelab/tree/v1.12.0) |
+| [Plex Remote Access via frp](https://lelopez.io/blog/homelab-guide-plex-remote-access-frp)           | [v1.13.0](https://github.com/lelopez-io/homelab/tree/v1.13.0) |
 
 ## License
 
