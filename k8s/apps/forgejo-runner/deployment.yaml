@@ -1,0 +1,118 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo-runner
+  namespace: forgejo-runner
+  labels:
+    app.kubernetes.io/name: forgejo-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: forgejo-runner
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: forgejo-runner
+    spec:
+      initContainers:
+        # Shared-secret registration: deterministic from the sops secret, so the
+        # runner re-registers as the same runner on every pod restart. The
+        # matching server-side registration is a one-time step:
+        #   kubectl exec -n forgejo deploy/forgejo -- forgejo forgejo-cli \
+        #     actions register --name homelab-runner --secret <same-secret>
+        - name: register
+          image: code.forgejo.org/forgejo/runner:12.12.0@sha256:268ad0d1d24bd7ecf2386b7c44e8211398dc014ca81d4fd5fbad96fe79af18f5
+          command:
+            - sh
+            - -c
+            - >-
+              test -f /data/.runner ||
+              forgejo-runner create-runner-file
+              --instance "$FORGEJO_INSTANCE_URL"
+              --secret "$RUNNER_SECRET"
+          workingDir: /data
+          env:
+            - name: FORGEJO_INSTANCE_URL
+              value: http://forgejo-http.forgejo.svc.cluster.local
+            - name: RUNNER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: forgejo-runner-secret
+                  key: secret
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: runner
+          image: code.forgejo.org/forgejo/runner:12.12.0@sha256:268ad0d1d24bd7ecf2386b7c44e8211398dc014ca81d4fd5fbad96fe79af18f5
+          command:
+            - forgejo-runner
+            - --config
+            - /etc/runner/config.yml
+            - daemon
+          workingDir: /data
+          env:
+            - name: DOCKER_HOST
+              value: tcp://localhost:2376
+            - name: DOCKER_CERT_PATH
+              value: /certs/client
+            - name: DOCKER_TLS_VERIFY
+              value: "1"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/runner
+              readOnly: true
+            - name: docker-certs
+              mountPath: /certs
+              readOnly: true
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+        # Job containers execute inside this docker daemon, not on the node.
+        - name: dind
+          image: docker.io/library/docker:29.6.1-dind@sha256:66d292e5c26bd33a6f6f61cacb880de2186339a524ecba1ce098dbbaceed6515
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: /certs
+          volumeMounts:
+            - name: docker-certs
+              mountPath: /certs
+            - name: dind-storage
+              mountPath: /var/lib/docker
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          securityContext:
+            privileged: true
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: forgejo-runner-config
+        - name: docker-certs
+          emptyDir: {}
+        - name: dind-storage
+          emptyDir: {}

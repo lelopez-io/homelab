@@ -6,4 +6,5 @@ resources:
   - minecraft
   - frp-tunnel
   - forgejo
+  - forgejo-runner
 
