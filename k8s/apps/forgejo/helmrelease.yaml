@@ -1,0 +1,126 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: forgejo
+  namespace: forgejo
+spec:
+  type: oci
+  interval: 24h
+  url: oci://code.forgejo.org/forgejo-helm
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: forgejo
+  namespace: forgejo
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: forgejo
+      version: "17.1.1"
+      sourceRef:
+        kind: HelmRepository
+        name: forgejo
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  # Hostnames live in the sops secret — the repo is public, the domain isn't.
+  valuesFrom:
+    - kind: Secret
+      name: forgejo-secrets
+      valuesKey: email
+      targetPath: gitea.admin.email
+    - kind: Secret
+      name: forgejo-secrets
+      valuesKey: host
+      targetPath: ingress.hosts[0].host
+    - kind: Secret
+      name: forgejo-secrets
+      valuesKey: host
+      targetPath: ingress.tls[0].hosts[0]
+    - kind: Secret
+      name: forgejo-secrets
+      valuesKey: host
+      targetPath: gitea.config.server.DOMAIN
+    - kind: Secret
+      name: forgejo-secrets
+      valuesKey: root-url
+      targetPath: gitea.config.server.ROOT_URL
+  values:
+    # Single replica on a ReadWriteOnce Longhorn volume — replace, don't roll.
+    strategy:
+      type: Recreate
+
+    image:
+      tag: "15.0.3"
+      digest: sha256:e7a59d193ad5e8bde19cffc68f26ee00e77a5b0014e95433eed5038f0c3888da
+
+    persistence:
+      enabled: true
+      create: false
+      claimName: forgejo-data-encrypted
+
+    # Private by design: the hostname is a public Cloudflare wildcard A
+    # record answering with a private IP (ingress-nginx, 192.168.10.42) —
+    # resolvable anywhere, routable only from the Lab VLAN or tailnet.
+    # TLS comes from the controller's default certificate (the sub-tier
+    # wildcard issued by cert-manager) — no annotation, no secretName, so
+    # no per-service certificate can ever reach CT logs. The tls block
+    # (host from secret, no secret ref) opts the host into TLS + redirect.
+    ingress:
+      enabled: true
+      className: nginx
+      annotations:
+        # Registry blob uploads exceed nginx's 1m default
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      tls:
+        - {}
+
+    service:
+      http:
+        type: ClusterIP
+        port: 80
+      # Git-over-SSH bypasses the ingress: dedicated MetalLB IP, standard
+      # port, SSH does its own crypto. Clone URLs advertise the IP.
+      ssh:
+        type: LoadBalancer
+        port: 22
+        annotations:
+          metallb.universe.tf/loadBalancerIPs: "192.168.10.41"
+
+    gitea:
+      admin:
+        existingSecret: forgejo-secrets
+      config:
+        APP_NAME: "Homelab Forge"
+        server:
+          SSH_DOMAIN: 192.168.10.41
+          SSH_PORT: 22
+          SSH_LISTEN_PORT: 2222
+        database:
+          DB_TYPE: sqlite3
+        service:
+          DISABLE_REGISTRATION: true
+          REQUIRE_SIGNIN_VIEW: true
+        actions:
+          ENABLED: true
+        webhook:
+          # Allow webhooks to in-cluster targets (e.g. Flux receivers)
+          ALLOWED_HOST_LIST: private
+
+    # Helm test hook pod uses an unpinned busybox:latest — not needed.
+    test:
+      enabled: false
+
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 2Gi
+        cpu: 2000m
