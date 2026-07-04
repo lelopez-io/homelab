@@ -20,3 +20,9 @@ spec:
       kind: HelmRelease
       name: cert-manager
       namespace: cert-manager
+  postBuild:
+    # Injects the private-tier domain from sops — it never appears in
+    # plain manifests.
+    substituteFrom:
+      - kind: Secret
+        name: cert-manager-vars

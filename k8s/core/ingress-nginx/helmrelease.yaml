@@ -28,5 +28,12 @@ spec:
           # Static IP so private-tier DNS records have a stable target
           metallb.universe.tf/loadBalancerIPs: "192.168.10.42"
       watchIngressWithoutClass: true
+      # The sub-tier wildcard (issued by cert-manager into this namespace)
+      # serves every private-tier Ingress — no per-service TLS secrets or
+      # cert-manager annotations, so per-host certificates (and their
+      # CT-log entries) are structurally impossible. Controller falls back
+      # to its self-signed cert until the Certificate is first issued.
+      extraArgs:
+        default-ssl-certificate: "ingress-nginx/sub-wildcard-tls"
       metrics:
         enabled: true

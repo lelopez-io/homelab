@@ -1,0 +1,20 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sub-wildcard
+  # Lives with its consumer: ingress-nginx serves this as the default SSL
+  # certificate, so every private-tier Ingress gets it without a tls
+  # secretName or cert-manager annotation — per-service certificates (and
+  # their CT-log entries) become structurally impossible.
+  namespace: ingress-nginx
+spec:
+  secretName: sub-wildcard-tls
+  dnsNames:
+    # Substituted by Flux from the cert-manager-vars secret — the domain
+    # never appears in the public repo. The literal *. keeps kustomize from
+    # stripping the quotes envsubst needs: an unquoted * is a YAML alias.
+    - "*.${SUB_DOMAIN}"
+  issuerRef:
+    name: letsencrypt-dns
+    kind: ClusterIssuer
