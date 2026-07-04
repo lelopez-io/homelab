@@ -3,3 +3,27 @@ kind: Kustomization
 resources:
 - gotk-components.yaml
 - gotk-sync.yaml
+- gpg-public-keys.yaml
+patches:
+  # Deploy from signed release tags, not branch HEAD: commits (agent or
+  # human) flow freely to main and never deploy; only a deliberate,
+  # presence-gated `git tag -s` changes the cluster. A compromised GitHub
+  # account can push code but cannot cut a signed release.
+  # New tags sort above the old unsigned article tags, so those are never
+  # candidates once the first release exists (cut it before this config
+  # reconciles). The JSON patch replaces ref wholesale (branch and semver
+  # are mutually exclusive); gotk-sync.yaml stays bootstrap-owned.
+  - target:
+      kind: GitRepository
+      name: flux-system
+    patch: |
+      - op: replace
+        path: /spec/ref
+        value:
+          semver: "*"
+      - op: add
+        path: /spec/verify
+        value:
+          mode: Tag
+          secretRef:
+            name: gpg-public-keys

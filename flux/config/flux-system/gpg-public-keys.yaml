@@ -1,0 +1,41 @@
+---
+# GPG public keys Flux uses to verify release-tag signatures.
+# Public material — deliberately NOT sops-encrypted: verification needs no
+# secrets, and keeping the key readable in git makes the trust anchor
+# auditable. The secret halves live in the vault (primary) and on each
+# device (its signing subkey); nothing secret appears here.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gpg-public-keys
+  namespace: flux-system
+stringData:
+  identity.asc: |
+    -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+    mDMEalHiXxYJKwYBBAHaRw8BAQdAs9g09TLRjZd7f9wjFOMa9m0lukJsbOkTujM6
+    HZk+XL60HUx1aXMgRS4gTG9wZXogPHV4QGxlbG9wZXouaW8+iLUEExYKAF0WIQRN
+    PnYmYx++73+8GtZXnFd1S8Q9jwUCalHiXxsUgAAAAAAEAA5tYW51MiwyLjUrMS4x
+    MiwwLDMCGwEFCQHhM4AFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQV5xX
+    dUvEPY8IqAEAoUbwigIFNo1cBnEH7LotUoGVJ2qXl3jJpf42EHG2+oYBAK41pKa9
+    SXuBk6+hXZCDOO0+KEZxm+n81I/bxfqMPX8AuDgEalHiyxIKKwYBBAGXVQEFAQEH
+    QGVvVx0Qest6C9gbSHPd58niVw/XXw78uXVluJFD7Rt/AwEIB4iaBBgWCgBCFiEE
+    TT52JmMfvu9/vBrWV5xXdUvEPY8FAmpR4ssbFIAAAAAABAAObWFudTIsMi41KzEu
+    MTIsMCwzAhsMBQkB4TOAAAoJEFecV3VLxD2P6LsBAP0PaRuRCPtYoMGqfbfUx94p
+    NGq0H83nJ7Vdjb7wYrYfAQDgDeKHAWwoHrV3JT9QSnx5kxS8nxP/wNrag19AFHsV
+    DbgzBGpR5YcWCSsGAQQB2kcPAQEHQLaSrklR9bbSA64nKFQj19Gl64/hofZxus1X
+    4sBehYJuiQERBBgWCgBCFiEETT52JmMfvu9/vBrWV5xXdUvEPY8FAmpR5YcbFIAA
+    AAAABAAObWFudTIsMi41KzEuMTIsMCwzAhsCBQkB4TOAAIEJEFecV3VLxD2PdiAE
+    GRYKAB0WIQRIDYMcoM9R01X+xgfZQxGmCfn4fgUCalHlhwAKCRDZQxGmCfn4fk+V
+    AP9t33VnqYjQ+APPcgmp9eDs8rgiyLG201CfetRLrfv93gEApK2An3dQX9tKCz/z
+    WlugM2izvvL5R2qjz+7C97hwIwF8HwD/fHO6JvGH/5L5p4CaMQjHO6YsNUd/ElbI
+    FvTUJLbX5DgA/1eFdZiYWV8p+WWD7miuyVbPQGtDscg+0vn0/tDQAIkAuDMEalHt
+    PBYJKwYBBAHaRw8BAQdAEZ6XVu9h5pSlSoMGBCxsPm+rzMH/barA+wZl2CgoAf6J
+    AREEGBYKAEIWIQRNPnYmYx++73+8GtZXnFd1S8Q9jwUCalHtPBsUgAAAAAAEAA5t
+    YW51MiwyLjUrMS4xMiwwLDMCGwIFCQHhM4AAgQkQV5xXdUvEPY92IAQZFgoAHRYh
+    BH60gqTfeDoqSUGhQICde5javy1+BQJqUe08AAoJEICde5javy1+FpUBAOpjf3xu
+    OIZeg7cagLHVr659zuP8vsvzVQ2FRBrBarBXAQDnj0TSPRcMYsw5OB53zquQUCD2
+    xgxX6lAPcqsLcShfCB9AAQCq6qw8J57/bSkJDddtLNrE5G8QPB32/4cHPpjxn6PM
+    8gD+PhoCIpelpsZYLMOuMvxARFixqPdyC0zE2Mxew9fyNgA=
+    =rF1N
+    -----END PGP PUBLIC KEY BLOCK-----
