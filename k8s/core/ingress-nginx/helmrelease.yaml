@@ -24,6 +24,9 @@ spec:
     controller:
       service:
         type: LoadBalancer
+        annotations:
+          # Static IP so private-tier DNS records have a stable target
+          metallb.universe.tf/loadBalancerIPs: "192.168.10.42"
       watchIngressWithoutClass: true
       metrics:
         enabled: true
