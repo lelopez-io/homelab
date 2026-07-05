@@ -5,9 +5,192 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Each release corresponds to an article in the [Home Lab V2 tutorial series](https://lelopez.io/blog/homelab-v2-00-talos-kubernetes-homelab-series).
+Each release corresponds to an article in the [Building with Talos](https://lelopez.io/blog/homelab-v2-00-talos-kubernetes-homelab-series) (V2) or [Security Hardening](https://lelopez.io/blog/homelab-v3-00-security-hardening-series) (V3) series, or a standalone guide. Articles without repository changes (console-side setup, operations guides) are indexed in the README documentation table instead.
 
 ## [Unreleased]
+
+## [1.13.4] - 2026-07-03
+
+### Security
+
+-   Pin the Minecraft server image by digest — it came from the chart's default (`:latest`) and never appeared in the HelmRelease values
+
+## [1.13.3] - 2026-07-03
+
+### Security
+
+-   Restore digest pins across all app images (Plex, FileBrowser, both playit sidecars, Factorio server) — digests had not survived version bumps
+
+## [1.13.2] - 2026-07-03
+
+> [Factorio Playit Public Access](https://lelopez.io/blog/homelab-v2-11a-factorio-playit-public-access) (amended)
+
+### Fixed
+
+-   Pin playit-agent to 1.0.5 and route its IPC socket to `/tmp` — mirrors the Minecraft fix
+
+## [1.13.1] - 2026-07-03
+
+> [Minecraft Playit Public Access](https://lelopez.io/blog/homelab-v2-12a-minecraft-playit-public-access) (amended)
+
+### Fixed
+
+-   Pin playit-agent to 1.0.5 and route its IPC socket to `/tmp` — `:latest` had pulled an agent that broke the sidecar
+
+## [1.13.0] - 2026-07-03
+
+### Added
+
+-   frpc tunnel client (`frp-tunnel` app): outbound-only reverse tunnel from the cluster to a self-hosted public frps
+-   Publish the tunnel URL to plex.tv via `ADVERTISE_IP`, moved from ConfigMap into the sops-encrypted Secret
+
+## [1.12.0] - 2026-04-11
+
+### Added
+
+-   FileBrowser sidecar on the Plex pod for browser-based media uploads
+
+## [1.11.0] - 2026-03-07
+
+> [SecureBoot & Encryption Prep](https://lelopez.io/blog/homelab-v3-13-secureboot-encryption-prep)
+
+### Security
+
+-   UEFI SecureBoot and TPM-sealed LUKS2 disk encryption in cluster config; Talos upgraded to v1.12.4
+
+## [1.10.3] - 2026-03-01
+
+> [Plex Performance](https://lelopez.io/blog/homelab-v3-12a-plex-performance)
+
+### Fixed
+
+-   Preserve client IPs with `externalTrafficPolicy: Local`
+
+## [1.10.2] - 2026-03-01
+
+> [Plex Hardening](https://lelopez.io/blog/homelab-v3-12-plex-hardening)
+
+### Changed
+
+-   Remove old unencrypted PVCs and the migration job
+
+## [1.10.1] - 2026-03-01
+
+### Security
+
+-   Switch Plex to encrypted PVCs with read-only media mount
+
+## [1.10.0] - 2026-03-01
+
+### Security
+
+-   Encrypted PVCs and NetworkPolicy for Plex
+
+## [1.9.2] - 2026-03-01
+
+### Fixed
+
+-   Disable new save generation on Factorio startup
+
+## [1.9.1] - 2026-02-28
+
+### Changed
+
+-   Bump Factorio server version
+
+## [1.9.0] - 2026-02-28
+
+> [Factorio Hardening](https://lelopez.io/blog/homelab-v3-11-factorio-hardening)
+
+### Security
+
+-   Encrypted storage, NetworkPolicy, and pinned chart version for Factorio
+
+## [1.8.0] - 2026-02-28
+
+> [Minecraft Hardening](https://lelopez.io/blog/homelab-v3-10-minecraft-hardening)
+
+### Security
+
+-   Encrypted storage, NetworkPolicy, and pinned chart version for Minecraft
+
+## [1.7.2] - 2026-02-28
+
+> [Longhorn Upgrade](https://lelopez.io/blog/homelab-v3-09a-longhorn-upgrade)
+
+### Changed
+
+-   Upgrade Longhorn to 1.9.2
+
+## [1.7.1] - 2026-02-28
+
+### Changed
+
+-   Upgrade Longhorn to 1.8.1
+
+## [1.7.0] - 2026-02-28
+
+> [Longhorn Hardening](https://lelopez.io/blog/homelab-v3-09-longhorn-hardening)
+
+### Security
+
+-   Volume encryption, NetworkPolicy, and pinned chart version for Longhorn
+
+## [1.6.0] - 2026-02-28
+
+> [MetalLB & Ingress Hardening](https://lelopez.io/blog/homelab-v3-08-metallb-ingress-hardening)
+
+### Security
+
+-   Pinned chart versions and NetworkPolicies for MetalLB and ingress-nginx
+
+## [1.5.0] - 2026-02-28
+
+> [Tailscale Hardening](https://lelopez.io/blog/homelab-v3-07-tailscale-hardening)
+
+### Security
+
+-   Pinned chart version, tag-based ACLs, and NetworkPolicy for Tailscale
+
+## [1.4.0] - 2026-02-28
+
+> [Plex LAN Configuration](https://lelopez.io/blog/homelab-v3-06-plex-lan-configuration)
+
+### Changed
+
+-   Static MetalLB IP and `ADVERTISE_IP` for cross-VLAN direct play
+
+## [1.3.0] - 2026-02-26
+
+> [MetalLB Migration](https://lelopez.io/blog/homelab-v3-05-metallb-migration)
+
+### Changed
+
+-   Migrate MetalLB IP pools to the Lab VLAN
+
+## [1.2.0] - 2026-02-26
+
+> [Tailscale Migration](https://lelopez.io/blog/homelab-v3-04-tailscale-migration)
+
+### Changed
+
+-   Migrate Tailscale subnet routes to the Lab VLAN
+
+## [1.1.0] - 2026-02-22
+
+> [Talos Migration](https://lelopez.io/blog/homelab-v3-03-talos-migration)
+
+### Changed
+
+-   Node IPs, gateway, and etcd subnets moved to the Lab VLAN
+
+## [1.0.1] - 2026-02-17
+
+> [MetalLB Talos L2 Fix](https://lelopez.io/blog/homelab-v2-08a-metallb-talos-l2-fix) (amended)
+
+### Fixed
+
+-   Ignore the node exclusion label for MetalLB L2 announcements
 
 ## [1.0.0] - 2026-01-08
 
@@ -206,6 +389,31 @@ Hardware selection and procurement for 3-node cluster.
 Series introduction and goals.
 
 [unreleased]: https://github.com/lelopez-io/homelab/compare/v1.0.0...HEAD
+[1.13.4]: https://github.com/lelopez-io/homelab/compare/v1.13.3...v1.13.4
+[1.13.3]: https://github.com/lelopez-io/homelab/compare/v1.13.2...v1.13.3
+[1.13.2]: https://github.com/lelopez-io/homelab/compare/v1.13.1...v1.13.2
+[1.13.1]: https://github.com/lelopez-io/homelab/compare/v1.13.0...v1.13.1
+[1.13.0]: https://github.com/lelopez-io/homelab/compare/v1.12.0...v1.13.0
+[1.12.0]: https://github.com/lelopez-io/homelab/compare/v1.11.0...v1.12.0
+[1.11.0]: https://github.com/lelopez-io/homelab/compare/v1.10.3...v1.11.0
+[1.10.3]: https://github.com/lelopez-io/homelab/compare/v1.10.2...v1.10.3
+[1.10.2]: https://github.com/lelopez-io/homelab/compare/v1.10.1...v1.10.2
+[1.10.1]: https://github.com/lelopez-io/homelab/compare/v1.10.0...v1.10.1
+[1.10.0]: https://github.com/lelopez-io/homelab/compare/v1.9.2...v1.10.0
+[1.9.2]: https://github.com/lelopez-io/homelab/compare/v1.9.1...v1.9.2
+[1.9.1]: https://github.com/lelopez-io/homelab/compare/v1.9.0...v1.9.1
+[1.9.0]: https://github.com/lelopez-io/homelab/compare/v1.8.0...v1.9.0
+[1.8.0]: https://github.com/lelopez-io/homelab/compare/v1.7.2...v1.8.0
+[1.7.2]: https://github.com/lelopez-io/homelab/compare/v1.7.1...v1.7.2
+[1.7.1]: https://github.com/lelopez-io/homelab/compare/v1.7.0...v1.7.1
+[1.7.0]: https://github.com/lelopez-io/homelab/compare/v1.6.0...v1.7.0
+[1.6.0]: https://github.com/lelopez-io/homelab/compare/v1.5.0...v1.6.0
+[1.5.0]: https://github.com/lelopez-io/homelab/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/lelopez-io/homelab/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/lelopez-io/homelab/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/lelopez-io/homelab/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/lelopez-io/homelab/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/lelopez-io/homelab/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/lelopez-io/homelab/compare/v0.12.3...v1.0.0
 [0.12.3]: https://github.com/lelopez-io/homelab/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/lelopez-io/homelab/compare/v0.12.1...v0.12.2
