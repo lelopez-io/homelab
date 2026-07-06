@@ -1,0 +1,44 @@
+#!/bin/sh
+# Enforce the release-tag rules before anything reaches a remote:
+#   - names that parse as semver are RESERVED for releases: must be full
+#     vX.Y.Z (optionally -prerelease), annotated, GPG-signed, and pointing
+#     at a commit on main (tags are repo-global refs and Flux's selector
+#     has no branch scope, so releases-ship-main is enforced here)
+#   - loose semver-ish names (v3, v2.0, 2026.07) are rejected outright, since
+#     Flux's parser would coerce them into release candidates
+#   - word-shaped names (test-sig, milestone-foo) pass untouched
+# The signature check here is presence-only; Flux does the cryptographic
+# verification. Escape hatch for bulk historical pushes: git push --no-verify.
+
+strict='^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'
+loose='^v?[0-9]+(\.[0-9]+){0,2}(-.*)?$'
+zero='0000000000000000000000000000000000000000'
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    case "$remote_ref" in
+        refs/tags/*) ;;
+        *) continue ;;
+    esac
+    tag=${remote_ref#refs/tags/}
+    [ "$local_sha" = "$zero" ] && continue # tag deletion
+
+    if printf '%s' "$tag" | grep -Eq "$strict"; then
+        if [ "$(git cat-file -t "$local_sha")" != "tag" ]; then
+            echo "pre-push: '$tag' is release-shaped but lightweight; sign it (git tag -s)" >&2
+            exit 1
+        fi
+        if ! git cat-file tag "$local_sha" | grep -q 'BEGIN PGP SIGNATURE'; then
+            echo "pre-push: '$tag' is release-shaped but unsigned; sign it (git tag -s)" >&2
+            exit 1
+        fi
+        if ! git merge-base --is-ancestor "$local_sha^{commit}" refs/heads/main; then
+            echo "pre-push: '$tag' points at a commit not on main; releases ship main" >&2
+            exit 1
+        fi
+    elif printf '%s' "$tag" | grep -Eq "$loose"; then
+        echo "pre-push: '$tag' parses as semver but is not a full vX.Y.Z release." >&2
+        echo "  Reserve semver names for releases; use a word-shaped name instead." >&2
+        exit 1
+    fi
+done
+exit 0
