@@ -267,6 +267,9 @@ This repository accompanies tutorial series documenting the complete build proce
 | 12a | [Plex Performance](https://lelopez.io/blog/homelab-v3-12a-plex-performance)                                | [v1.10.3](https://github.com/lelopez-io/homelab/tree/v1.10.3)   |
 | 13  | [SecureBoot & Encryption Prep](https://lelopez.io/blog/homelab-v3-13-secureboot-encryption-prep)           | [v1.11.0](https://github.com/lelopez-io/homelab/tree/v1.11.0)   |
 | 14  | [Secure Node Re-image](https://lelopez.io/blog/homelab-v3-14-secure-node-reimage)                          |                                                                 |
+| 15  | [Image Digest Pinning](https://lelopez.io/blog/homelab-v3-15-image-digest-pinning)                         | [v1.13.4](https://github.com/lelopez-io/homelab/tree/v1.13.4)   |
+| 16  | [GPG Identity](https://lelopez.io/blog/homelab-v3-16-gpg-identity)                                          |                                                                 |
+| 17  | [Signed Release Deploys](https://lelopez.io/blog/homelab-v3-17-signed-release-deploys)                     | [v1.14.0](https://github.com/lelopez-io/homelab/tree/v1.14.0)   |
 
 ## License
 

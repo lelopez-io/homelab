@@ -9,13 +9,32 @@ Each release corresponds to an article in the [Building with Talos](https://lelo
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-12
+
+> [Security Hardening Series](https://lelopez.io/blog/homelab-v3-00-security-hardening-series)
+
+Security Hardening (V3) series complete — from VLAN segmentation to a signed-release deploy gate.
+
+## [1.14.0] - 2026-07-11
+
+> [Signed Release Deploys](https://lelopez.io/blog/homelab-v3-17-signed-release-deploys)
+
+### Security
+
+-   Flux deploys the highest GPG-signed semver tag instead of branch HEAD — commits flow freely to `main`, only a signed release changes the cluster
+-   pre-push hook enforces release-tag rules: semver names reserved for releases, annotated, signed, pointing at a commit on `main`
+
 ## [1.13.4] - 2026-07-03
+
+> [Image Digest Pinning](https://lelopez.io/blog/homelab-v3-15-image-digest-pinning)
 
 ### Security
 
 -   Pin the Minecraft server image by digest — it came from the chart's default (`:latest`) and never appeared in the HelmRelease values
 
 ## [1.13.3] - 2026-07-03
+
+> [Image Digest Pinning](https://lelopez.io/blog/homelab-v3-15-image-digest-pinning)
 
 ### Security
 
@@ -388,7 +407,9 @@ Hardware selection and procurement for 3-node cluster.
 
 Series introduction and goals.
 
-[unreleased]: https://github.com/lelopez-io/homelab/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/lelopez-io/homelab/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/lelopez-io/homelab/compare/v1.14.0...v2.0.0
+[1.14.0]: https://github.com/lelopez-io/homelab/compare/v1.13.4...v1.14.0
 [1.13.4]: https://github.com/lelopez-io/homelab/compare/v1.13.3...v1.13.4
 [1.13.3]: https://github.com/lelopez-io/homelab/compare/v1.13.2...v1.13.3
 [1.13.2]: https://github.com/lelopez-io/homelab/compare/v1.13.1...v1.13.2
