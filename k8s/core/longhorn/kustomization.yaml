@@ -8,3 +8,4 @@ resources:
   - secret.sops.yaml
   - storageclass-encrypted.yaml
   - networkpolicy.yaml
+  - ui.flux.yaml

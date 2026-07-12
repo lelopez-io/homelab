@@ -1,0 +1,10 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ingress.yaml
+  # TODO(tier-demos gate): sops-create both secrets, then uncomment:
+  #   longhorn-ui-vars (flux-system) — LONGHORN_HOST=<ui host under sub.<domain>>
+  #   longhorn-basic-auth (longhorn-system) — data.auth: htpasswd entry
+  # - secret-vars.sops.yaml
+  # - secret-basicauth.sops.yaml
