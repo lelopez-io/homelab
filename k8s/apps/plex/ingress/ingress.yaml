@@ -1,0 +1,30 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: filebrowser
+  namespace: plex
+  annotations:
+    # Uploads are the whole point — don't buffer or cap media files.
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+spec:
+  ingressClassName: nginx
+  # Bare tls block — served by the controller's default certificate (the
+  # sub-tier wildcard); no per-host cert, no CT-log entry. Auth is
+  # FileBrowser's own login now that --noauth is retired: the household
+  # reaches the shared tier (Trusted → ingress:443), so network position
+  # alone no longer authorizes.
+  tls:
+    - hosts:
+        - "${FILES_HOST}"
+  rules:
+    - host: "${FILES_HOST}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: filebrowser
+                port:
+                  number: 80

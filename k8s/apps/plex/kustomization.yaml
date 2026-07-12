@@ -9,3 +9,4 @@ resources:
   - helmrelease.yaml
   - networkpolicy.yaml
   - filebrowser-service.yaml
+  - filebrowser-ingress.flux.yaml
