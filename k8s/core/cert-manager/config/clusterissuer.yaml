@@ -1,0 +1,22 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-dns
+spec:
+  acme:
+    # No email: Let's Encrypt treats it as optional, and omitting it keeps
+    # identity out of the public repo. Expiry is a non-event — cert-manager
+    # renews at 2/3 lifetime.
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-dns-account
+    solvers:
+      # DNS-01 discovers the zone from the certificate's dnsNames — the
+      # domain itself never appears in this manifest. Wildcard-only certs
+      # keep service names out of Certificate Transparency logs.
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token

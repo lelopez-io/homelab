@@ -5,4 +5,5 @@ resources:
   - namespace.yaml
   - secret.sops.yaml
   - helmrelease.yaml
+  - config.flux.yaml
   - networkpolicy.yaml
