@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: frp-canary
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./k8s/apps/frp-tunnel/canary
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: sync
+  postBuild:
+    # Injects the public-tier domain from sops — it never appears in
+    # plain manifests.
+    substituteFrom:
+      - kind: Secret
+        name: cert-manager-vars

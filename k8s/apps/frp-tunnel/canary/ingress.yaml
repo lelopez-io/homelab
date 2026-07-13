@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary
+  namespace: frp-tunnel
+spec:
+  ingressClassName: nginx
+  # The tier wildcard rides each public Ingress explicitly — the
+  # controller's default certificate stays the private tier's.
+  tls:
+    - hosts:
+        - "canary.${VIA_DOMAIN}"
+      secretName: via-wildcard-tls
+  rules:
+    - host: "canary.${VIA_DOMAIN}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                # Deliberately nonexistent: the canary proves termination,
+                # not a service. Real services differ only here.
+                name: canary
+                port:
+                  number: 80
