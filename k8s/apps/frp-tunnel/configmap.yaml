@@ -35,3 +35,13 @@ data:
     localIP = "192.168.10.42"
     localPort = 443
     remotePort = 8443
+
+    # Factorio — WAN players ride the tunnel (LB 34197/udp → frps → here);
+    # LAN players use factorio.lan (wildcard → ingress udp-services).
+    # Replaces playit.gg. Target is the cluster service, not a MetalLB IP.
+    [[proxies]]
+    name = "factorio"
+    type = "udp"
+    localIP = "factorio-factorio-server-charts.factorio.svc.cluster.local"
+    localPort = 34197
+    remotePort = 34197
