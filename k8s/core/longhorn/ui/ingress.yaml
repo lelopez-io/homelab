@@ -1,0 +1,32 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: longhorn-ui
+  namespace: longhorn-system
+  annotations:
+    # Admin service on the shared private tier: since the household rule
+    # (Trusted → ingress:443) makes the whole tier network-reachable,
+    # the guardrail is per-service auth — Longhorn ships none of its own.
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: longhorn-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "longhorn"
+spec:
+  ingressClassName: nginx
+  # Bare tls block — served by the controller's default certificate (the
+  # sub-tier wildcard). No secretName, no cert-manager annotation: a
+  # per-host certificate (and its CT-log entry) can't exist by accident.
+  tls:
+    - hosts:
+        - "${LONGHORN_HOST}"
+  rules:
+    - host: "${LONGHORN_HOST}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: longhorn-frontend
+                port:
+                  number: 80

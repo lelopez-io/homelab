@@ -1,0 +1,9 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ingress.yaml
+  # sops files live in the PARENT longhorn kustomization: decryption is
+  # configured on sync, and this child flux kustomization applies without it,
+  # so a sops file here dry-runs as ciphertext and fails. Only plaintext
+  # manifests (substitution-injected) belong in a child directory.
