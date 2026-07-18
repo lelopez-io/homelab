@@ -45,3 +45,20 @@ data:
     localIP = "factorio-factorio-server-charts.factorio.svc.cluster.local"
     localPort = 34197
     remotePort = 34197
+
+    # Minecraft — WAN players ride the tunnel (LB 25565/tcp + 19132/udp →
+    # frps → here); LAN players use minecraft.lan / bedrock.lan (wildcard →
+    # the home gateway). Replaces playit.gg.
+    [[proxies]]
+    name = "minecraft"
+    type = "tcp"
+    localIP = "minecraft.minecraft.svc.cluster.local"
+    localPort = 25565
+    remotePort = 25565
+
+    [[proxies]]
+    name = "minecraft-bedrock"
+    type = "udp"
+    localIP = "minecraft-bedrock.minecraft.svc.cluster.local"
+    localPort = 19132
+    remotePort = 19132
