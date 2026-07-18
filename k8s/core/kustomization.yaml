@@ -6,5 +6,6 @@ resources:
   - metallb
   - ingress-nginx.flux.yaml
   - cert-manager
+  - reflector
   - longhorn
   - gpu
