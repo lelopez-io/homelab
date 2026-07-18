@@ -45,7 +45,10 @@ spec:
       memory: 4096M
       viewDistance: 32
       enableCommandBlock: true
-      serviceType: LoadBalancer
+      # ClusterIP: WAN players arrive via the frp lanes (frpc targets the
+      # cluster DNS name), LAN players via the ingress tcp/udp-services maps
+      # (minecraft.lan, bedrock.lan). No per-service MetalLB IPs.
+      serviceType: ClusterIP
       rcon:
         enabled: true
       extraPorts:
@@ -54,7 +57,7 @@ spec:
           protocol: UDP
           service:
             enabled: true
-            type: LoadBalancer
+            type: ClusterIP
             port: 19132
     persistence:
       dataDir:
