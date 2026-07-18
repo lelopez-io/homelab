@@ -30,7 +30,7 @@ spec:
       retries: 3
   values:
     image:
-      tag: "2.0.73@sha256:6471fbfb7eab3abf55bb53fed632606ecf17bf930891bccddff724afab9ed94c"
+      tag: "2.0.77@sha256:35237d3cb047107cecbf7a8ef6c4fab41acc65548b65526a1b15a5dd0cb670be"
       pullPolicy: IfNotPresent
     hostNetworkEnabled: false
     # ClusterIP: WAN players arrive via the frp lane (frpc targets the
