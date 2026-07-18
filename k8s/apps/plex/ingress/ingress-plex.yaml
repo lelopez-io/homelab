@@ -1,0 +1,39 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: plex
+  namespace: plex
+spec:
+  ingressClassName: nginx
+  tls:
+    # WAN door — the public-tier wildcard mirrored into this namespace;
+    # TLS terminates at home (the edge only ever relays ciphertext).
+    - hosts:
+        - "${PLEX_HOST}"
+      secretName: via-wildcard-tls
+    # LAN door — bare block: the controller's default certificate (the
+    # private-tier wildcard), same as every other home service.
+    - hosts:
+        - "${PLEX_LAN_HOST}"
+  rules:
+    - host: "${PLEX_HOST}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: plex-plex-media-server
+                port:
+                  number: 32400
+    - host: "${PLEX_LAN_HOST}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: plex-plex-media-server
+                port:
+                  number: 32400

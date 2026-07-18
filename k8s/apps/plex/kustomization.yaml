@@ -11,4 +11,5 @@ resources:
   - filebrowser-service.yaml
   - secret-vars.sops.yaml
   - secret-via-mirror.yaml
+  - secret-host-vars.sops.yaml
   - filebrowser-ingress.flux.yaml
