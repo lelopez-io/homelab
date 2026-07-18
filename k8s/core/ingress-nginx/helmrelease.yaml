@@ -21,6 +21,12 @@ spec:
     remediation:
       retries: 3
   values:
+    # Private-tier game lanes: LAN players reach game servers by name (the
+    # *.lan wildcard resolves here); the stream proxy forwards to the
+    # cluster service. One line per port — no per-service IPs, no
+    # edge-repo DNS work.
+    udp:
+      "34197": "factorio/factorio-factorio-server-charts:34197"
     controller:
       service:
         type: LoadBalancer
