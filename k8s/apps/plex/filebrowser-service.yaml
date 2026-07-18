@@ -5,7 +5,8 @@ metadata:
   name: filebrowser
   namespace: plex
 spec:
-  type: LoadBalancer
+  # ClusterIP now — reach is via the private-tier Ingress (files host),
+  # not a direct LAN LoadBalancer; the Trusted->:80 firewall rule retires.
   selector:
     app.kubernetes.io/name: plex-media-server
     app.kubernetes.io/instance: plex

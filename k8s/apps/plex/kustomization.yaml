@@ -9,3 +9,5 @@ resources:
   - helmrelease.yaml
   - networkpolicy.yaml
   - filebrowser-service.yaml
+  - secret-vars.sops.yaml
+  - filebrowser-ingress.flux.yaml
