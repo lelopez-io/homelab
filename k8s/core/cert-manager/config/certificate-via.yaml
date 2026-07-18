@@ -1,0 +1,21 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: via-wildcard
+  namespace: ingress-nginx
+spec:
+  secretName: via-wildcard-tls
+  secretTemplate:
+    annotations:
+      # Allows reflector mirrors, created only by an explicit per-namespace
+      # stub (the tier's opt-in) — never automatically.
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+  dnsNames:
+    # Substituted by Flux from the cert-manager-vars secret — the domain
+    # never appears in the public repo. The literal *. keeps kustomize from
+    # stripping the quotes envsubst needs: an unquoted * is a YAML alias.
+    - "*.${VIA_DOMAIN}"
+  issuerRef:
+    name: letsencrypt-dns
+    kind: ClusterIssuer

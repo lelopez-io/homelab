@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - clusterissuer.yaml
   - certificate.yaml
+  - certificate-via.yaml
