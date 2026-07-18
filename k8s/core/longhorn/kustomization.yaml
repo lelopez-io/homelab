@@ -6,5 +6,6 @@ resources:
   - helmrepository.yaml
   - helmrelease.yaml
   - secret.sops.yaml
+  - secret-vars.sops.yaml
   - storageclass-encrypted.yaml
   - networkpolicy.yaml
