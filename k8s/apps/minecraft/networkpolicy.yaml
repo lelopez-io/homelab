@@ -17,7 +17,7 @@ spec:
       ports:
         - protocol: UDP
           port: 53
-    # Internet (Mojang auth, playit.gg, plugin downloads)
+    # Internet (Mojang auth, plugin downloads)
     # Block private ranges
     - to:
         - ipBlock:
