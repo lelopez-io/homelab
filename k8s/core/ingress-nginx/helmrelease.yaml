@@ -25,8 +25,11 @@ spec:
     # *.lan wildcard resolves here); the stream proxy forwards to the
     # cluster service. One line per port — no per-service IPs, no
     # edge-repo DNS work.
+    tcp:
+      "25565": "minecraft/minecraft:25565"
     udp:
       "34197": "factorio/factorio-factorio-server-charts:34197"
+      "19132": "minecraft/minecraft-bedrock:19132"
     controller:
       service:
         type: LoadBalancer
