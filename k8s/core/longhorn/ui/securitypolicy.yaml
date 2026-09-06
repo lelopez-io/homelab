@@ -1,0 +1,17 @@
+---
+# Envoy Gateway reads htpasswd users from the ".htpasswd" key, not the
+# nginx "auth" key, so the shared secret carries both until nginx retires.
+# Only SHA hashes work: htpasswd -s.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: longhorn-ui
+  namespace: longhorn-system
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: longhorn-ui
+  basicAuth:
+    users:
+      name: longhorn-basic-auth
