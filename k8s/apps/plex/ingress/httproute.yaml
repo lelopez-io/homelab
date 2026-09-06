@@ -1,0 +1,23 @@
+---
+# The Ingress's proxy-body-size: "0" has nothing to carry over: Envoy
+# imposes no request body limit by default, so uploads stay uncapped.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: filebrowser
+  namespace: plex
+spec:
+  parentRefs:
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: https-sub
+  hostnames:
+    - "${FILES_HOST}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: filebrowser
+          port: 80
