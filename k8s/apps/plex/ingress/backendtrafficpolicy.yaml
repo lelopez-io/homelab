@@ -1,0 +1,17 @@
+---
+# Large uploads outlive Envoy's 15s default route timeout, and no fixed
+# ceiling fits multi-gigabyte media, so the timeout is disabled: "0s" maps
+# to Envoy's route timeout of 0, which means no limit.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: filebrowser
+  namespace: plex
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: filebrowser
+  timeout:
+    http:
+      requestTimeout: 0s
