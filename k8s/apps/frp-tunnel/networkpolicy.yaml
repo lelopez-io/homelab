@@ -25,17 +25,39 @@ spec:
               - 10.0.0.0/8
               - 172.16.0.0/12
               - 192.168.0.0/16
-    # Specific RFC1918 exception for Plex MetalLB IP (passthrough target).
+    # Lane backends are selected by pod, not by Service or MetalLB IP:
+    # kube-proxy rewrites those to the backend pod and its targetPort before
+    # the policy is evaluated, so an ipBlock for the IP never matches.
+    # Plex passthrough (MetalLB 192.168.10.40:32400 -> pod 32400).
     - to:
-        - ipBlock:
-            cidr: 192.168.10.40/32
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: plex
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: plex-media-server
       ports:
         - protocol: TCP
           port: 32400
-    # Home ingress — the HTTP tier's termination target.
+    # Home ingress, the HTTP tier's termination target (MetalLB .42:443).
     - to:
-        - ipBlock:
-            cidr: 192.168.10.42/32
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: controller
       ports:
         - protocol: TCP
           port: 443
+    # Factorio WAN lane: the Service maps 34197/udp to the chart's pod port.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: factorio
+          podSelector:
+            matchLabels:
+              app: factorio-factorio-server-charts
+      ports:
+        - protocol: UDP
+          port: 31497
