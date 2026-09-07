@@ -41,5 +41,10 @@ spec:
     - to:
         - ipBlock:
             cidr: 192.168.10.0/24
-
+    # LAN clients reaching a MetalLB Service through the subnet router land
+    # on its backend pod, since kube-proxy rewrites the Service IP before
+    # kube-router evaluates egress. The /24 above covers only the pre-DNAT IP.
+    - to:
+        - ipBlock:
+            cidr: 10.244.0.0/16
 
