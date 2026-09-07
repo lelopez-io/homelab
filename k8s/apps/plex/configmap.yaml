@@ -1,8 +1,0 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: plex-vars
-  namespace: plex
-data:
-  PLEX_IP: "192.168.10.40"
