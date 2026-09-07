@@ -1,0 +1,16 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: via-wildcard
+  # Issued where it terminates, like sub-wildcard. No reflector annotation:
+  # TLS ends at the Gateway, so nothing mirrors this secret out.
+  namespace: envoy-gateway-system
+spec:
+  secretName: via-wildcard-tls
+  dnsNames:
+    # Same Flux substitution and quoting as sub-wildcard's dnsNames.
+    - "*.${VIA_DOMAIN}"
+  issuerRef:
+    name: letsencrypt-dns
+    kind: ClusterIssuer

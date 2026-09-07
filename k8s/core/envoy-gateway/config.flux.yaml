@@ -1,0 +1,33 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: envoy-gateway-config
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./k8s/core/envoy-gateway/config
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    # cert-manager-config supplies the ClusterIssuer the tier certificates
+    # use, metallb-config the static pool the proxy Service pins.
+    - name: envoy-gateway
+    - name: cert-manager-config
+    - name: metallb-config
+  healthChecks:
+    # A Kustomization dry-runs every object before applying any, so the
+    # chart's CRDs must exist first: wait for the release.
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: envoy-gateway
+      namespace: envoy-gateway-system
+  postBuild:
+    # Injects both tier domains from sops, so they never appear in plain
+    # manifests.
+    substituteFrom:
+      - kind: Secret
+        name: cert-manager-vars
