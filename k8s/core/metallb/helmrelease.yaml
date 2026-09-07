@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: metallb
-      version: "0.15.3"
+      version: "0.16.1"
       sourceRef:
         kind: HelmRepository
         name: metallb
@@ -21,5 +21,8 @@ spec:
     remediation:
       retries: 3
   values:
+    # L2-only here (no BGPPeers), so the frr-k8s BGP backend stays off.
+    frrk8s:
+      enabled: false
     speaker:
       ignoreExcludeLB: true
