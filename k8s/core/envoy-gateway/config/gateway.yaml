@@ -39,6 +39,30 @@ spec:
           selector:
             matchLabels:
               gateway.lan/routes: "true"
+    - name: minecraft
+      # LAN game lane, moved off the nginx tcp stream map.
+      port: 25565
+      protocol: TCP
+      allowedRoutes:
+        kinds:
+          - kind: TCPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.lan/routes: "true"
+    - name: minecraft-bedrock
+      # LAN game lane, moved off the nginx udp stream map.
+      port: 19132
+      protocol: UDP
+      allowedRoutes:
+        kinds:
+          - kind: UDPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.lan/routes: "true"
     - name: https-via
       port: 443
       protocol: HTTPS
