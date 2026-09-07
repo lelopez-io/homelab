@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - tailscale
   - metallb
-  - ingress-nginx.flux.yaml
   - envoy-gateway.flux.yaml
   - cert-manager
   - reflector
