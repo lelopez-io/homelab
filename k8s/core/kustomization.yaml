@@ -6,7 +6,6 @@ resources:
   - metallb
   - envoy-gateway.flux.yaml
   - cert-manager
-  - reflector
   - longhorn
   - gpu
   - kube-router
