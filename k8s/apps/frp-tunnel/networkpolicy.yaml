@@ -28,17 +28,6 @@ spec:
     # Lane backends are selected by pod, not by Service or MetalLB IP:
     # kube-proxy rewrites those to the backend pod and its targetPort before
     # the policy is evaluated, so an ipBlock for the IP never matches.
-    # Plex passthrough (MetalLB 192.168.10.40:32400 -> pod 32400).
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: plex
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: plex-media-server
-      ports:
-        - protocol: TCP
-          port: 32400
     # Envoy Gateway's proxy pods for Gateway home. Egress matches post-DNAT,
     # so this is the proxy's container port: the 443 listener is remapped to
     # 10443 (Envoy Gateway shifts privileged ports by 10000).

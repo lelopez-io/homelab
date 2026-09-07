@@ -18,14 +18,6 @@ data:
     log.to = "console"
     log.level = "info"
 
-    # Plex passthrough — forwards public 32400 (via frps) to Plex MetalLB IP.
-    [[proxies]]
-    name = "plex"
-    type = "tcp"
-    localIP = "192.168.10.40"
-    localPort = 32400
-    remotePort = 32400
-
     # Public HTTP tier — one lane for every tier hostname: the edge routes
     # by SNI without decrypting, the gateway terminates the tier wildcard
     # and fans out by hostname.
