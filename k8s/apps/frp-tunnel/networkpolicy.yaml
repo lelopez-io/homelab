@@ -64,3 +64,18 @@ spec:
       ports:
         - protocol: UDP
           port: 31497
+    # Minecraft WAN lanes: Java tcp 25565 and Bedrock udp 19132 to the server
+    # pod. Same post-DNAT reason as the lanes above: the Service DNS names
+    # rewrite to the pod before egress, so match the pod, not the Service.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: minecraft
+          podSelector:
+            matchLabels:
+              app: minecraft
+      ports:
+        - protocol: TCP
+          port: 25565
+        - protocol: UDP
+          port: 19132
