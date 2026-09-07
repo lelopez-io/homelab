@@ -1,0 +1,9 @@
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: HTTPRouteFilter
+metadata:
+  name: canary-direct-response
+  namespace: frp-tunnel
+spec:
+  directResponse:
+    statusCode: 200
