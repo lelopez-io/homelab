@@ -1,0 +1,19 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sub-wildcard
+  # Issued where it terminates: a Gateway listener can only reference a
+  # secret in its own namespace without a ReferenceGrant. A second issuance
+  # of the ingress-nginx names, one per edge stack while tiers move.
+  namespace: envoy-gateway-system
+spec:
+  secretName: sub-wildcard-tls
+  dnsNames:
+    # Substituted by Flux from the cert-manager-vars secret, so the domain
+    # never appears in the public repo. The quotes keep kustomize from
+    # reading the * as a YAML alias before envsubst runs.
+    - "*.${SUB_DOMAIN}"
+  issuerRef:
+    name: letsencrypt-dns
+    kind: ClusterIssuer
