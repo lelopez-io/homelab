@@ -1,0 +1,28 @@
+---
+# One route serves both doors: each listener's wildcard hostname intersects
+# only its matching name here, so the LAN door answers the sub host and the
+# WAN door the via host — the same via lane the edge relays by SNI.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: plex
+  namespace: plex
+spec:
+  parentRefs:
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: https-sub
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: https-via
+  hostnames:
+    - "${PLEX_HOST}"
+    - "${PLEX_VIA_HOST}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: plex-plex-media-server
+          port: 32400

@@ -4,3 +4,5 @@ kind: Kustomization
 resources:
   - httproute.yaml
   - backendtrafficpolicy.yaml
+  - httproute-plex.yaml
+  - backendtrafficpolicy-plex.yaml
