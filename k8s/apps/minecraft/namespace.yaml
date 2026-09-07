@@ -3,4 +3,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: minecraft
+  labels:
+    # Opt-in for the Gateway named home to admit routes from this namespace.
+    gateway.lan/routes: "true"
 
