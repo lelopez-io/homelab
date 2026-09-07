@@ -29,3 +29,9 @@ spec:
     - to:
         - ipBlock:
             cidr: 192.168.10.0/24
+    # Longhorn's control plane: the CSI plugin reaches longhorn-backend, which
+    # kube-proxy rewrites to a manager pod before kube-router evaluates egress.
+    # Without the pod network here, no Longhorn volume can mount.
+    - to:
+        - ipBlock:
+            cidr: 10.244.0.0/16
