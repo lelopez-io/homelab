@@ -11,7 +11,7 @@ spec:
       # The chart bundles the Envoy Gateway CRDs and the full Gateway API
       # set, experimental kinds (TCPRoute, UDPRoute) included.
       chart: gateway-helm
-      version: "v1.9.0"
+      version: "v1.9.1"
       sourceRef:
         kind: HelmRepository
         name: envoyproxy
