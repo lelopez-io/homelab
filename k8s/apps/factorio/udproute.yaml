@@ -1,0 +1,15 @@
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: UDPRoute
+metadata:
+  name: factorio
+  namespace: factorio
+spec:
+  parentRefs:
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: factorio
+  rules:
+    - backendRefs:
+        - name: factorio-factorio-server-charts
+          port: 34197
