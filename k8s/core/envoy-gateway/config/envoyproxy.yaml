@@ -1,0 +1,29 @@
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: home-proxy
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        annotations:
+          # Pins a free address from the MetalLB static pool, so tier DNS
+          # records get a stable target beside nginx on .42.
+          metallb.universe.tf/loadBalancerIPs: "192.168.10.43"
+      envoyDeployment:
+        replicas: 2
+        container:
+          resources:
+            # Requests reserve room on the node. The limit caps what a
+            # connection flood costs it. No cpu limit: a throttled edge
+            # slows every request through it.
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+      envoyPDB:
+        minAvailable: 1
