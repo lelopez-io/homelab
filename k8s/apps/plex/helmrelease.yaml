@@ -29,6 +29,8 @@ spec:
       targetPath: extraEnv.PLEX_CLAIM
     - kind: Secret
       name: plex-claim
+      # Flux injects valuesFrom through Helm strvals, where "," separates
+      # assignments, so the advertise list escapes its comma as "\,".
       valuesKey: advertise-ip
       targetPath: extraEnv.ADVERTISE_IP
   values:
