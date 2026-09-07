@@ -3,3 +3,8 @@
 
 # Generated Talos configs (regenerate with talhelper genconfig)
 talos/clusterconfig/
+
+# etcd snapshots the drill captures into the tree. The plaintext .db holds
+# every cluster secret; the .age copy is still the full state. Keep them out.
+etcd-backup-*
+*.snapshot
