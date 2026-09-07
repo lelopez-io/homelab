@@ -39,17 +39,20 @@ spec:
       ports:
         - protocol: TCP
           port: 32400
-    # Home ingress, the HTTP tier's termination target (MetalLB .42:443).
+    # Envoy Gateway's proxy pods for Gateway home. Egress matches post-DNAT,
+    # so this is the proxy's container port: the 443 listener is remapped to
+    # 10443 (Envoy Gateway shifts privileged ports by 10000).
     - to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: ingress-nginx
+              kubernetes.io/metadata.name: envoy-gateway-system
           podSelector:
             matchLabels:
-              app.kubernetes.io/component: controller
+              gateway.envoyproxy.io/owning-gateway-name: home
+              gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
       ports:
         - protocol: TCP
-          port: 443
+          port: 10443
     # Factorio WAN lane: the Service maps 34197/udp to the chart's pod port.
     - to:
         - namespaceSelector:
