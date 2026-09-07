@@ -27,12 +27,12 @@ data:
     remotePort = 32400
 
     # Public HTTP tier — one lane for every tier hostname: the edge routes
-    # by SNI without decrypting, the home ingress terminates the tier
-    # wildcard and fans out by hostname.
+    # by SNI without decrypting, the gateway terminates the tier wildcard
+    # and fans out by hostname.
     [[proxies]]
     name = "https-tier"
     type = "tcp"
-    localIP = "192.168.10.42"
+    localIP = "192.168.10.43"
     localPort = 443
     remotePort = 8443
 
