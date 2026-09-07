@@ -4,8 +4,7 @@ kind: Certificate
 metadata:
   name: sub-wildcard
   # Issued where it terminates: a Gateway listener can only reference a
-  # secret in its own namespace without a ReferenceGrant. A second issuance
-  # of the ingress-nginx names, one per edge stack while tiers move.
+  # secret in its own namespace without a ReferenceGrant.
   namespace: envoy-gateway-system
 spec:
   secretName: sub-wildcard-tls
