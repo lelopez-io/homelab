@@ -8,6 +8,9 @@ resources:
   - secret.sops.yaml
   - secret-vars.sops.yaml
   - secret-basicauth.sops.yaml
+  - secret-backup-target.sops.yaml
+  - secret-backup-vars.sops.yaml
+  - backup.flux.yaml
   - storageclass-encrypted.yaml
   - networkpolicy.yaml
   - ui.flux.yaml
