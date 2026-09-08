@@ -1,7 +1,7 @@
 ---
-# Envoy Gateway reads htpasswd users from the ".htpasswd" key, not the
-# nginx "auth" key, so the shared secret carries both until nginx retires.
-# Only SHA hashes work: htpasswd -s.
+# Envoy Gateway reads users from the ".htpasswd" key and verifies SHA-1
+# lines only (htpasswd -s). A hash that drifts from the stored password
+# surfaces as a 401 re-prompt loop, so regenerate the line, never hand-edit.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
 metadata:
