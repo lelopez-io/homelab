@@ -1,0 +1,20 @@
+---
+# The main longhorn egress policy doesn't reach the storage subnet, so the
+# backup mount to the NAS on 445 is rejected. CIDR injected from sops to keep
+# the NAS address out of this public repo.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: longhorn-backup
+  namespace: longhorn-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: ${BACKUP_TARGET_CIDR}
+      ports:
+        - protocol: TCP
+          port: 445
