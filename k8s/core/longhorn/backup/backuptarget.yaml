@@ -1,0 +1,12 @@
+---
+# backupTargetURL is injected from the longhorn-backup-vars sops Secret via
+# backup.flux.yaml, so the NAS host and share stay out of this public repo.
+apiVersion: longhorn.io/v1beta2
+kind: BackupTarget
+metadata:
+  name: default
+  namespace: longhorn-system
+spec:
+  backupTargetURL: ${BACKUP_TARGET_URL}
+  credentialSecret: longhorn-backup-target
+  pollInterval: 5m0s
