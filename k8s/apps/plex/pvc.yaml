@@ -24,3 +24,18 @@ spec:
   resources:
     requests:
       storage: 500Gi
+---
+# File Browser keeps its users and their password hashes in this database, so
+# it has to outlive the pod rather than start from quick setup on each restart.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebrowser-db
+  namespace: plex
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-encrypted
+  resources:
+    requests:
+      storage: 1Gi
