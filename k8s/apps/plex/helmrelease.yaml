@@ -88,8 +88,9 @@ spec:
                   args:
                     - --root=/srv
                     - --database=/database/filebrowser.db
-                  # Quick setup reads this bcrypt hash only when it creates the
-                  # database; later password changes live in the database itself.
+                  # Holds a bcrypt hash, not the password. Quick setup reads it only
+                  # when it creates the database, so rotating this Secret later
+                  # changes nothing; rotate the password in the app instead.
                   env:
                     - name: FB_PASSWORD
                       valueFrom:
