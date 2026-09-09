@@ -78,7 +78,8 @@ spec:
                 path: /spec/template/spec/volumes/-
                 value:
                   name: filebrowser-db
-                  emptyDir: {}
+                  persistentVolumeClaim:
+                    claimName: filebrowser-db
               - op: add
                 path: /spec/template/spec/containers/-
                 value:
@@ -87,6 +88,14 @@ spec:
                   args:
                     - --root=/srv
                     - --database=/database/filebrowser.db
+                  # Quick setup reads this bcrypt hash only when it creates the
+                  # database; later password changes live in the database itself.
+                  env:
+                    - name: FB_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: filebrowser-admin
+                          key: FB_PASSWORD
                   ports:
                     - containerPort: 80
                   volumeMounts:

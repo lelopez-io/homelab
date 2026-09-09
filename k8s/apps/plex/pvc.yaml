@@ -24,3 +24,19 @@ spec:
   resources:
     requests:
       storage: 500Gi
+---
+# File Browser's database: users and their password hashes live here, so it
+# has to outlive the pod. On an emptyDir every restart re-ran quick setup and
+# reset the admin login to the documented default.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebrowser-db
+  namespace: plex
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-encrypted
+  resources:
+    requests:
+      storage: 1Gi
