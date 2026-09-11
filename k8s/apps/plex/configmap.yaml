@@ -1,0 +1,11 @@
+---
+# Pinned from the pool that does not auto-assign, because this address is
+# published to clients in the advertise list: a reassignment on reschedule
+# would strand every player that dialled the old one.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plex-vars
+  namespace: plex
+data:
+  PLEX_IP: "192.168.10.40"
