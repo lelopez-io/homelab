@@ -33,6 +33,10 @@ spec:
       # assignments, so the advertise list escapes its comma as "\,".
       valuesKey: advertise-ip
       targetPath: extraEnv.ADVERTISE_IP
+    - kind: ConfigMap
+      name: plex-vars
+      valuesKey: PLEX_IP
+      targetPath: service.annotations.metallb\.universe\.tf/loadBalancerIPs
   values:
     image:
       tag: "1.42.2.10156-f737b826c@sha256:9c03c26b9479ba9a09935f3367459bfdc8d21545f42ed2a13258983c5be1b252"
@@ -41,11 +45,12 @@ spec:
       TZ: "America/Denver"
 
     service:
-      # The gateway fronts Plex now, so the LoadBalancer and its
-      # client-IP-preserving externalTrafficPolicy retire; real client
-      # addresses arrive via X-Forwarded-For.
-      type: ClusterIP
+      # Plex reads the connection peer, never a forwarded header, to decide
+      # local vs remote, so any proxy in front makes every viewer remote and
+      # the LAN Networks list unmatchable. Local policy keeps the peer intact.
+      type: LoadBalancer
       port: 32400
+      externalTrafficPolicy: Local
 
     pms:
       configExistingClaim: plex-config-encrypted
