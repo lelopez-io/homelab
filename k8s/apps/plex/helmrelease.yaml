@@ -80,6 +80,30 @@ spec:
               name: plex-plex-media-server
             patch: |
               - op: add
+                path: /spec/template/spec/initContainers
+                value:
+                  # Which networks count as local is the other half of preserving
+                  # the client address, and the image exposes no variable for it,
+                  # so it is written into the preferences file before Plex reads.
+                  - name: lan-networks
+                    image: busybox:1.36
+                    command:
+                      - sh
+                      - -c
+                      - |
+                        set -e
+                        P="/config/Library/Application Support/Plex Media Server/Preferences.xml"
+                        [ -f "$P" ] || exit 0
+                        if grep -q 'LanNetworksBandwidth=' "$P"; then
+                          sed -i 's#LanNetworksBandwidth="[^"]*"#LanNetworksBandwidth="192.168.0.0/16"#' "$P"
+                        else
+                          sed -i 's#/>[[:space:]]*$# LanNetworksBandwidth="192.168.0.0/16"/>#' "$P"
+                        fi
+                        grep -o 'LanNetworksBandwidth="[^"]*"' "$P"
+                    volumeMounts:
+                      - name: pms-config
+                        mountPath: /config
+              - op: add
                 path: /spec/template/spec/volumes/-
                 value:
                   name: filebrowser-db
