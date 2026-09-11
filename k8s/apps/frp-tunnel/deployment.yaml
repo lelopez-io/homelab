@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frpc
-          image: fatedier/frpc:v0.69.0@sha256:2e7653fc08b28013f598ff20b024a7d8cce0f5ea810cab9e2e90ae7ce4687a6e
+          image: fatedier/frpc:v0.71.0@sha256:99ece6a2b62cfc68731e0df289af804ff1c699911cfc47871856434f1d6d53ee
           imagePullPolicy: IfNotPresent
           args:
             - "-c"
