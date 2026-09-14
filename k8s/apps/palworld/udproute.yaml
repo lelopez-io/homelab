@@ -1,0 +1,15 @@
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: UDPRoute
+metadata:
+  name: palworld
+  namespace: palworld
+spec:
+  parentRefs:
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: palworld
+  rules:
+    - backendRefs:
+        - name: palworld-svc
+          port: 8211
