@@ -68,3 +68,14 @@ spec:
           port: 25565
         - protocol: UDP
           port: 19132
+    # Palworld WAN lane, matched by pod for the post-DNAT reason above.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: palworld
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: palworld-server
+      ports:
+        - protocol: UDP
+          port: 8211
