@@ -1,0 +1,76 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: palworld
+  namespace: palworld
+spec:
+  interval: 24h
+  url: https://twinki14.github.io/palworld-server-chart
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: palworld
+  namespace: palworld
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: palworld
+      version: "2.7.1"
+      sourceRef:
+        kind: HelmRepository
+        name: palworld
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  # The chart reads a join password from a Secret only alongside public
+  # listing, and this server stays unlisted, so the password comes in as
+  # a value instead.
+  valuesFrom:
+    - kind: Secret
+      name: palworld-secrets
+      valuesKey: server-password
+      targetPath: server.config.env.SERVER_PASSWORD
+  values:
+    server:
+      image:
+        tag: "v2.7.3@sha256:aee17c5ea7b52c0fdbc2f86c446c02bfdab8788eed3867ea7c34261874ab2ec9"
+        imagePullPolicy: IfNotPresent
+      # Reached by DNS name from the gateway and the tunnel, so it needs no
+      # address of its own.
+      service:
+        type: ClusterIP
+      storage:
+        main:
+          external: true
+          externalName: palworld-data-encrypted
+      config:
+        # Blank renders a random suffix at each upgrade and restarts the pod.
+        server_name: "Openlandmark"
+        server_description: "Experience is merely the name men gave to their mistakes."
+        max_players: 10
+        community:
+          enable: false
+        rcon:
+          enable: true
+          # The chart's generated password re-rolls on every upgrade and
+          # restarts the pod.
+          externalPassword:
+            name: palworld-secrets
+            key: rcon-password
+        env:
+          # Backups land on the data volume, so prune them before they fill it.
+          DELETE_OLD_BACKUPS: "true"
+          OLD_BACKUP_DAYS: "14"
+      resources:
+        requests:
+          memory: 8Gi
+          cpu: 2000m
+        limits:
+          memory: 12Gi
+          cpu: 4000m
