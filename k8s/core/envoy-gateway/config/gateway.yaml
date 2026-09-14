@@ -63,6 +63,17 @@ spec:
           selector:
             matchLabels:
               gateway.lan/routes: "true"
+    - name: palworld
+      port: 8211
+      protocol: UDP
+      allowedRoutes:
+        kinds:
+          - kind: UDPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.lan/routes: "true"
     - name: https-via
       port: 443
       protocol: HTTPS
