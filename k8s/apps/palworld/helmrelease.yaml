@@ -64,6 +64,12 @@ spec:
             name: palworld-secrets
             key: rcon-password
         env:
+          # Off by default; friends want to see who is on from the menu.
+          SHOW_PLAYER_LIST: "true"
+          # Hunger at half rate for players and Pals: feeding was the chore the
+          # players wanted less of.
+          PLAYER_STOMACH_DECREASE_RATE: "0.5"
+          PAL_STOMACH_DECREASE_RATE: "0.5"
           # Backups land on the data volume, so prune them before they fill it.
           DELETE_OLD_BACKUPS: "true"
           OLD_BACKUP_DAYS: "14"
