@@ -73,6 +73,9 @@ spec:
           # Backups land on the data volume, so prune them before they fill it.
           DELETE_OLD_BACKUPS: "true"
           OLD_BACKUP_DAYS: "14"
+          # The image backs up at midnight UTC, which is early evening at home
+          # and mid-session. 09:00 UTC is the small hours locally year-round.
+          BACKUP_CRON_EXPRESSION: "0 9 * * *"
       resources:
         requests:
           memory: 8Gi
