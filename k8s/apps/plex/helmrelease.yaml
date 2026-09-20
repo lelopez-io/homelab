@@ -114,6 +114,12 @@ spec:
                 value:
                   name: filebrowser
                   image: filebrowser/filebrowser:v2.31.2@sha256:a4da9ca8364b0a1fc5dd36f7add92582bf673c0ae0bda8dd9bd13062c41d1715
+                  # v2.63 switched to a non-root image, but both volumes it
+                  # writes were created by the root-running version, and one of
+                  # them is the media library. Chowning that is worse than this.
+                  securityContext:
+                    runAsUser: 0
+                    runAsGroup: 0
                   args:
                     - --root=/srv
                     - --database=/database/filebrowser.db
