@@ -86,7 +86,7 @@ spec:
                   # the client address, and the image exposes no variable for it,
                   # so it is written into the preferences file before Plex reads.
                   - name: lan-networks
-                    image: busybox:1.36
+                    image: busybox:1.38
                     command:
                       - sh
                       - -c
