@@ -113,7 +113,10 @@ spec:
                 path: /spec/template/spec/containers/-
                 value:
                   name: filebrowser
-                  image: filebrowser/filebrowser:v2.31.2@sha256:a4da9ca8364b0a1fc5dd36f7add92582bf673c0ae0bda8dd9bd13062c41d1715
+                  # Upstream archived this project on 2026-09-01, so this is the
+                  # last release there will ever be: no further fixes of any kind,
+                  # security included. Replacing it is tracked work, not a bump.
+                  image: filebrowser/filebrowser:v2.63.23@sha256:a469ea076d4a1b4b1d86a41d130f2f536cd9da996a2b1fb39c0d7635f9d89b9a
                   args:
                     - --root=/srv
                     - --database=/database/filebrowser.db
