@@ -1,6 +1,8 @@
 ---
-# The entrypoint includes every .conf under /cfg, so this file is the whole
-# configuration and the container takes no arguments.
+# The entrypoint includes every .conf under /cfg, so these files are the whole
+# configuration and the container takes no arguments. The accounts block is a
+# sops Secret projected into the same directory, because copyparty expands
+# environment variables in a config file's path and never in its contents.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -18,11 +20,6 @@ data:
       xff-src: lan
       rproxy: 1
       no-robots
-
-    [accounts]
-      # Expanded from the environment at startup, so the password is neither
-      # in this file nor on a command line.
-      admin: ${CPP_ADMIN_PW}
 
     [/]
       /w
