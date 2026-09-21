@@ -80,6 +80,17 @@ spec:
               name: plex-plex-media-server
             patch: |
               - op: add
+                path: /spec/template/spec/securityContext
+                value:
+                  # Volumes here are group-owned rather than user-owned, so several
+                  # unprivileged processes can share them. Kubernetes applies the
+                  # group to the volume, joins every container to it, and sets
+                  # setgid on directories so new files inherit it.
+                  fsGroup: 2000
+                  # The walk is skipped once the volume root already matches, which
+                  # keeps it off the startup path for every later restart.
+                  fsGroupChangePolicy: OnRootMismatch
+              - op: add
                 path: /spec/template/spec/initContainers
                 value:
                   # Which networks count as local is the other half of preserving
