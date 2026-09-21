@@ -95,9 +95,15 @@ spec:
         hostPath:
           path: /dev/dri
           type: Directory
+      # Claim name predates the tool that now uses it; it holds cached
+      # thumbnails rather than a database. Renaming it would mean replacing
+      # the volume for no gain.
       - name: filebrowser-db
         persistentVolumeClaim:
           claimName: filebrowser-db
+      - name: copyparty-config
+        configMap:
+          name: copyparty-config
 
     extraVolumeMounts:
       - name: media
@@ -107,34 +113,46 @@ spec:
         mountPath: /dev/dri
 
     extraContainers:
-      - name: filebrowser
-        # Upstream archived this project on 2026-09-01, so this is the
-        # last release there will ever be: no further fixes of any kind,
-        # security included. Replacing it is tracked work, not a bump.
-        image: filebrowser/filebrowser:v2.63.23@sha256:a469ea076d4a1b4b1d86a41d130f2f536cd9da996a2b1fb39c0d7635f9d89b9a
-        args:
-          - --root=/srv
-          - --database=/database/filebrowser.db
-        # Holds a bcrypt hash, not the password. Quick setup reads it only
-        # when it creates the database, so rotating this Secret later
-        # changes nothing; rotate the password in the app instead.
+      - name: copyparty
+        image: copyparty/ac:1.20.24@sha256:0e276e2ca595d1b45df613573f094b789b9a8b41ff87cc55130db1ec9763c164
+        # The image declares no user, so this is the only thing keeping the
+        # upload path off root. Its writable directories are world-writable
+        # and its port is unprivileged, so nothing else is needed.
+        securityContext:
+          runAsUser: 1000
+        # No arguments: the entrypoint includes every .conf under /cfg, and
+        # the config reads the password from the environment so it never
+        # reaches a command line.
         env:
-          - name: FB_PASSWORD
+          - name: CPP_ADMIN_PW
             valueFrom:
               secretKeyRef:
-                name: filebrowser-admin
-                key: FB_PASSWORD
+                name: copyparty-admin
+                key: CPP_ADMIN_PW
         ports:
-          - containerPort: 80
+          - containerPort: 3923
+        # Every route requires an account, so there is no unauthenticated
+        # endpoint to probe. A listening socket is the most that can be asked.
+        readinessProbe:
+          tcpSocket:
+            port: 3923
+          initialDelaySeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 3923
+          initialDelaySeconds: 30
         volumeMounts:
           - name: media
-            mountPath: /srv
+            mountPath: /w
+          - name: copyparty-config
+            mountPath: /cfg
+            readOnly: true
           - name: filebrowser-db
-            mountPath: /database
+            mountPath: /state
         resources:
           requests:
             cpu: 50m
             memory: 64Mi
           limits:
             cpu: 500m
-            memory: 256Mi
+            memory: 512Mi

@@ -10,5 +10,6 @@ resources:
   - networkpolicy.yaml
   - filebrowser-service.yaml
   - secret-vars.sops.yaml
-  - secret-filebrowser.sops.yaml
+  - configmap-copyparty.yaml
+  - secret-copyparty.sops.yaml
   - filebrowser-ingress.flux.yaml

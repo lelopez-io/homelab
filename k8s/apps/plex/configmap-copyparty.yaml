@@ -1,0 +1,32 @@
+---
+# The entrypoint includes every .conf under /cfg, so this file is the whole
+# configuration and the container takes no arguments.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: copyparty-config
+  namespace: plex
+data:
+  copyparty.conf: |
+    [global]
+      p: 3923
+      # Default is a dot-directory at the top of the served tree, which would
+      # put thumbnails inside the media library for Plex to scan.
+      hist: /state/hist/
+      # Without these every request looks like it came from the gateway, and
+      # the built-in lockout would ban the gateway rather than an attacker.
+      xff-src: lan
+      rproxy: 1
+      no-robots
+
+    [accounts]
+      # Expanded from the environment at startup, so the password is neither
+      # in this file nor on a command line.
+      admin: ${CPP_ADMIN_PW}
+
+    [/]
+      /w
+      accs:
+        # Read, write, move and delete. Withholding admin keeps config reload
+        # and uploader addresses out of reach of the only account.
+        rwmd: admin

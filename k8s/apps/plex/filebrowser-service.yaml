@@ -12,4 +12,5 @@ spec:
     app.kubernetes.io/instance: plex
   ports:
     - port: 80
-      targetPort: 80
+      # The route addresses the service port, so only the container side moves.
+      targetPort: 3923
