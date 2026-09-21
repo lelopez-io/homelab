@@ -54,8 +54,39 @@ spec:
 
     pms:
       configExistingClaim: plex-config-encrypted
+      podSecurityContext:
+        # Volumes here are group-owned rather than user-owned, so several
+        # unprivileged processes can share them. Kubernetes applies the
+        # group to the volume, joins every container to it, and sets
+        # setgid on directories so new files inherit it.
+        fsGroup: 2000
+        # The walk is skipped once the volume root already matches, which
+        # keeps it off the startup path for every later restart.
+        fsGroupChangePolicy: OnRootMismatch
 
-    # Media and GPU volumes
+    extraInitContainers:
+      # Which networks count as local is the other half of preserving
+      # the client address, and the image exposes no variable for it,
+      # so it is written into the preferences file before Plex reads.
+      - name: lan-networks
+        image: busybox:1.38
+        command:
+          - sh
+          - -c
+          - |
+            set -e
+            P="/config/Library/Application Support/Plex Media Server/Preferences.xml"
+            [ -f "$P" ] || exit 0
+            if grep -q 'LanNetworksBandwidth=' "$P"; then
+              sed -i 's#LanNetworksBandwidth="[^"]*"#LanNetworksBandwidth="192.168.0.0/16"#' "$P"
+            else
+              sed -i 's#/>[[:space:]]*$# LanNetworksBandwidth="192.168.0.0/16"/>#' "$P"
+            fi
+            grep -o 'LanNetworksBandwidth="[^"]*"' "$P"
+        volumeMounts:
+          - name: pms-config
+            mountPath: /config
+
     extraVolumes:
       - name: media
         persistentVolumeClaim:
@@ -64,6 +95,9 @@ spec:
         hostPath:
           path: /dev/dri
           type: Directory
+      - name: filebrowser-db
+        persistentVolumeClaim:
+          claimName: filebrowser-db
 
     extraVolumeMounts:
       - name: media
@@ -72,85 +106,35 @@ spec:
       - name: dev-dri
         mountPath: /dev/dri
 
-  postRenderers:
-    - kustomize:
-        patches:
-          - target:
-              kind: StatefulSet
-              name: plex-plex-media-server
-            patch: |
-              - op: add
-                path: /spec/template/spec/securityContext
-                value:
-                  # Volumes here are group-owned rather than user-owned, so several
-                  # unprivileged processes can share them. Kubernetes applies the
-                  # group to the volume, joins every container to it, and sets
-                  # setgid on directories so new files inherit it.
-                  fsGroup: 2000
-                  # The walk is skipped once the volume root already matches, which
-                  # keeps it off the startup path for every later restart.
-                  fsGroupChangePolicy: OnRootMismatch
-              - op: add
-                path: /spec/template/spec/initContainers
-                value:
-                  # Which networks count as local is the other half of preserving
-                  # the client address, and the image exposes no variable for it,
-                  # so it is written into the preferences file before Plex reads.
-                  - name: lan-networks
-                    image: busybox:1.38
-                    command:
-                      - sh
-                      - -c
-                      - |
-                        set -e
-                        P="/config/Library/Application Support/Plex Media Server/Preferences.xml"
-                        [ -f "$P" ] || exit 0
-                        if grep -q 'LanNetworksBandwidth=' "$P"; then
-                          sed -i 's#LanNetworksBandwidth="[^"]*"#LanNetworksBandwidth="192.168.0.0/16"#' "$P"
-                        else
-                          sed -i 's#/>[[:space:]]*$# LanNetworksBandwidth="192.168.0.0/16"/>#' "$P"
-                        fi
-                        grep -o 'LanNetworksBandwidth="[^"]*"' "$P"
-                    volumeMounts:
-                      - name: pms-config
-                        mountPath: /config
-              - op: add
-                path: /spec/template/spec/volumes/-
-                value:
-                  name: filebrowser-db
-                  persistentVolumeClaim:
-                    claimName: filebrowser-db
-              - op: add
-                path: /spec/template/spec/containers/-
-                value:
-                  name: filebrowser
-                  # Upstream archived this project on 2026-09-01, so this is the
-                  # last release there will ever be: no further fixes of any kind,
-                  # security included. Replacing it is tracked work, not a bump.
-                  image: filebrowser/filebrowser:v2.63.23@sha256:a469ea076d4a1b4b1d86a41d130f2f536cd9da996a2b1fb39c0d7635f9d89b9a
-                  args:
-                    - --root=/srv
-                    - --database=/database/filebrowser.db
-                  # Holds a bcrypt hash, not the password. Quick setup reads it only
-                  # when it creates the database, so rotating this Secret later
-                  # changes nothing; rotate the password in the app instead.
-                  env:
-                    - name: FB_PASSWORD
-                      valueFrom:
-                        secretKeyRef:
-                          name: filebrowser-admin
-                          key: FB_PASSWORD
-                  ports:
-                    - containerPort: 80
-                  volumeMounts:
-                    - name: media
-                      mountPath: /srv
-                    - name: filebrowser-db
-                      mountPath: /database
-                  resources:
-                    requests:
-                      cpu: 50m
-                      memory: 64Mi
-                    limits:
-                      cpu: 500m
-                      memory: 256Mi
+    extraContainers:
+      - name: filebrowser
+        # Upstream archived this project on 2026-09-01, so this is the
+        # last release there will ever be: no further fixes of any kind,
+        # security included. Replacing it is tracked work, not a bump.
+        image: filebrowser/filebrowser:v2.63.23@sha256:a469ea076d4a1b4b1d86a41d130f2f536cd9da996a2b1fb39c0d7635f9d89b9a
+        args:
+          - --root=/srv
+          - --database=/database/filebrowser.db
+        # Holds a bcrypt hash, not the password. Quick setup reads it only
+        # when it creates the database, so rotating this Secret later
+        # changes nothing; rotate the password in the app instead.
+        env:
+          - name: FB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: filebrowser-admin
+                key: FB_PASSWORD
+        ports:
+          - containerPort: 80
+        volumeMounts:
+          - name: media
+            mountPath: /srv
+          - name: filebrowser-db
+            mountPath: /database
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
