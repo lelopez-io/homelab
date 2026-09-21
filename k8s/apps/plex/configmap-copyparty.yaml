@@ -27,3 +27,8 @@ data:
         # Read, write, move and delete. Withholding admin keeps config reload
         # and uploader addresses out of reach of the only account.
         rwmd: admin
+      flags:
+        # Honours a .hidden file listing names to omit, which keeps the
+        # filesystem's lost+found out of the listing. Cosmetic only: a
+        # zip or tar download still includes whatever it hides.
+        dothidden
