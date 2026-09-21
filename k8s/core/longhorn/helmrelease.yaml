@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: longhorn
-      version: "1.11.3"
+      version: "1.12.1"
       sourceRef:
         kind: HelmRepository
         name: longhorn
@@ -24,6 +24,13 @@ spec:
       # started. A failure must stop here rather than retry into that.
       retries: 0
   values:
+    # 1.12 turns six ingress policies on by default, and a confirmed
+    # priority-zero defect in them blocks volume attach: the engine logs
+    # into its own target from the host namespace, which they do not admit.
+    # Off until the patch that fixes it ships, which leaves this exactly
+    # where the previous version stood rather than opting into a known break.
+    networkPolicies:
+      restrictInternalTraffic: false
     defaultSettings:
       # Start with 2 replicas (we have 2 nodes, will add 3rd)
       defaultReplicaCount: 2
