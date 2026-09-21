@@ -19,10 +19,7 @@ spec:
       retries: 3
   upgrade:
     remediation:
-      # Flux remediates a failed upgrade by rolling the chart back, and
-      # Longhorn refuses to run a version older than the one that last
-      # started. A failure must stop here rather than retry into that.
-      retries: 0
+      retries: 3
   values:
     # 1.12 turns six ingress policies on by default, and a confirmed
     # priority-zero defect in them blocks volume attach: the engine logs
