@@ -101,9 +101,17 @@ spec:
       - name: filebrowser-db
         persistentVolumeClaim:
           claimName: filebrowser-db
+      # Both land in /cfg, which the entrypoint includes wholesale. The
+      # accounts file is a Secret because copyparty reads the password
+      # straight out of the config text; it has no way to take one from the
+      # environment. Sorting puts accounts before the volume that grants to it.
       - name: copyparty-config
-        configMap:
-          name: copyparty-config
+        projected:
+          sources:
+            - configMap:
+                name: copyparty-config
+            - secret:
+                name: copyparty-accounts
 
     extraVolumeMounts:
       - name: media
@@ -120,16 +128,9 @@ spec:
         # and its port is unprivileged, so nothing else is needed.
         securityContext:
           runAsUser: 1000
-        # No arguments: the entrypoint includes every .conf under /cfg, and
-        # the config reads the password from the environment so it never
-        # reaches a command line.
+        # No arguments: the entrypoint includes every .conf under /cfg.
         env:
-          - name: CPP_ADMIN_PW
-            valueFrom:
-              secretKeyRef:
-                name: copyparty-admin
-                key: CPP_ADMIN_PW
-          # The image points this at /cfg, a read-only ConfigMap here. Left
+          # The image points this at /cfg, which is read-only here. Left
           # alone copyparty falls back to /tmp, calls it untrusted, and drops
           # sessions, putting the password in a header on every request. The
           # baked-in config includes /cfg by path, so discovery is unaffected.
