@@ -19,7 +19,10 @@ spec:
       retries: 3
   upgrade:
     remediation:
-      retries: 3
+      # Flux remediates a failed upgrade by rolling the chart back, and
+      # Longhorn refuses to run a version older than the one that last
+      # started. A failure must stop here rather than retry into that.
+      retries: 0
   values:
     defaultSettings:
       # Start with 2 replicas (we have 2 nodes, will add 3rd)
