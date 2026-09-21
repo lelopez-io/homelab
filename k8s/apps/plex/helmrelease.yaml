@@ -129,6 +129,12 @@ spec:
               secretKeyRef:
                 name: copyparty-admin
                 key: CPP_ADMIN_PW
+          # The image points this at /cfg, a read-only ConfigMap here. Left
+          # alone copyparty falls back to /tmp, calls it untrusted, and drops
+          # sessions, putting the password in a header on every request. The
+          # baked-in config includes /cfg by path, so discovery is unaffected.
+          - name: XDG_CONFIG_HOME
+            value: /state
         ports:
           - containerPort: 3923
         # Every route requires an account, so there is no unauthenticated
