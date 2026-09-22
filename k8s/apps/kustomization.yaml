@@ -6,4 +6,4 @@ resources:
   - minecraft
   - palworld
   - frp-tunnel
-
+  - forgejo

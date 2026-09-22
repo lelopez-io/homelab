@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: forgejo-ingress
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./k8s/apps/forgejo/ingress
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: sync
+  postBuild:
+    # Injects the forge hostname from sops — the domain never appears in
+    # plain manifests (same pattern as plex-filebrowser-ingress).
+    substituteFrom:
+      - kind: Secret
+        name: forgejo-vars
