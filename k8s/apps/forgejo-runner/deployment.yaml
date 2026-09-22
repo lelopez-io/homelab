@@ -1,0 +1,95 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo-runner
+  namespace: forgejo-runner
+  labels:
+    app.kubernetes.io/name: forgejo-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: forgejo-runner
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: forgejo-runner
+    spec:
+      containers:
+        # No registration step: the daemon presents the identity from its
+        # config and announces its labels on every start, so there is nothing
+        # to pre-create and nothing to keep between restarts.
+        - name: runner
+          image: code.forgejo.org/forgejo/runner:13.2.0@sha256:ca3d5eea46004789a175d1369eec6829d3ea9bfbe2011a06625b4bdaa55f7552
+          command:
+            - forgejo-runner
+            - --config
+            - /etc/runner/config.yml
+            - daemon
+          workingDir: /data
+          env:
+            - name: DOCKER_HOST
+              value: tcp://localhost:2376
+            - name: DOCKER_CERT_PATH
+              value: /certs/client
+            - name: DOCKER_TLS_VERIFY
+              value: "1"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/runner
+              readOnly: true
+            - name: token
+              mountPath: /etc/runner-token
+              readOnly: true
+            - name: docker-certs
+              mountPath: /certs
+              readOnly: true
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+        # Workflow steps execute against this daemon, so nothing a workflow
+        # builds or runs touches the node's container runtime.
+        - name: dind
+          image: docker.io/library/docker:29.8.1-dind@sha256:3f3c01aaaebf7cce837356b688b7c059a4749f10bd7660dec7c58fc454a283f0
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: /certs
+          volumeMounts:
+            - name: docker-certs
+              mountPath: /certs
+            - name: dind-storage
+              mountPath: /var/lib/docker
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          securityContext:
+            privileged: true
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: forgejo-runner-config
+        - name: token
+          secret:
+            secretName: forgejo-runner-token
+        - name: docker-certs
+          emptyDir: {}
+        - name: dind-storage
+          emptyDir: {}

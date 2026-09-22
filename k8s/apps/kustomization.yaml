@@ -7,3 +7,4 @@ resources:
   - palworld
   - frp-tunnel
   - forgejo
+  - forgejo-runner
