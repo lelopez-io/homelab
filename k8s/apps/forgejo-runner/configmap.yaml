@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forgejo-runner-config
+  namespace: forgejo-runner
+data:
+  config.yml: |
+    log:
+      level: info
+
+    runner:
+      capacity: 2
+      timeout: 1h
+
+    cache:
+      enabled: true
+
+    container:
+      # Job containers run inside the dind sidecar rather than on the node,
+      # reached through DOCKER_HOST on the runner container.
+      network: bridge
+
+    connections:
+      homelab:
+        # The in-cluster service, so polling neither leaves the cluster nor
+        # depends on the gateway, DNS or a certificate being healthy.
+        url: http://forgejo-http.forgejo.svc.cluster.local
+        # Ours to choose, and the whole of the runner's identity. Keeping it
+        # here rather than letting the server assign one is what makes a
+        # restart reconnect as the same runner with no state to persist.
+        uuid: fe442b5a-e444-4ad7-9339-17804f758e8e
+        # Read from a file so the token stays in a Secret rather than here.
+        token_url: file:/etc/runner-token/token
+        # A job selects its image by label. Pinned by digest because these
+        # run untrusted workflow code, which argues for pinning rather than
+        # against it.
+        labels:
+          - "docker:docker://node:22-bookworm@sha256:dd5847a04b0deee391fa145f1f4c6d214196668b6bcc7988ebed67249f226844"
+          - "ubuntu-latest:docker://ghcr.io/catthehacker/ubuntu:act-24.04@sha256:62d572b92f9f32d3427b6d220ad1f9dca9c7b6ffad37d295425037dbff78abaf"
