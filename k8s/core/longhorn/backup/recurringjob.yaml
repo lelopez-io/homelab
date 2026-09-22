@@ -1,0 +1,21 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: daily-backup
+  namespace: longhorn-system
+spec:
+  # Longhorn labels every volume into the "default" group as it creates it,
+  # so targeting the group covers what exists and whatever is added later
+  # without a per-volume opt-in.
+  groups:
+    - default
+  task: backup
+  # Evaluated in UTC.
+  cron: "0 9 * * *"
+  # Backups are incremental and block-level with reference counting, so the
+  # retained set costs deltas rather than seven copies, and expiring an old
+  # one cannot invalidate a newer one.
+  retain: 7
+  # Caps simultaneous transfers so one large volume cannot starve the rest.
+  concurrency: 2
