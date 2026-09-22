@@ -1,0 +1,109 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: forgejo
+  namespace: forgejo
+spec:
+  type: oci
+  interval: 24h
+  url: oci://code.forgejo.org/forgejo-helm
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: forgejo
+  namespace: forgejo
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: forgejo
+      version: "17.1.7"
+      sourceRef:
+        kind: HelmRepository
+        name: forgejo
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  # Hostnames live in the sops secret — the repo is public, the domain isn't.
+  valuesFrom:
+    - kind: Secret
+      name: forgejo-secrets
+      valuesKey: email
+      targetPath: gitea.admin.email
+    - kind: Secret
+      name: forgejo-secrets
+      valuesKey: host
+      targetPath: gitea.config.server.DOMAIN
+    - kind: Secret
+      name: forgejo-secrets
+      valuesKey: root-url
+      targetPath: gitea.config.server.ROOT_URL
+  values:
+    # Single replica on a ReadWriteOnce Longhorn volume — replace, don't roll.
+    strategy:
+      type: Recreate
+
+    image:
+      tag: "15.0.9"
+      digest: sha256:caf1bca332f95cdcf124227a4bfa3b49bbbfbbc8a5e4a97406921cb581165413
+
+    persistence:
+      enabled: true
+      create: false
+      claimName: forgejo-data-encrypted
+
+    # An HTTPRoute on the gateway serves this instead, so the chart's own
+    # Ingress stays off. TLS is the sub-tier wildcard the gateway listener
+    # already holds, which is what keeps any name for this service out of
+    # the CT logs: no per-service certificate is ever issued.
+    ingress:
+      enabled: false
+
+    service:
+      http:
+        type: ClusterIP
+        port: 80
+      # Git-over-SSH bypasses the ingress: dedicated MetalLB IP, standard
+      # port, SSH does its own crypto. Clone URLs advertise the IP.
+      ssh:
+        type: LoadBalancer
+        port: 22
+        annotations:
+          metallb.universe.tf/loadBalancerIPs: "192.168.10.41"
+
+    gitea:
+      admin:
+        existingSecret: forgejo-secrets
+      config:
+        APP_NAME: "Homelab Forge"
+        server:
+          SSH_DOMAIN: 192.168.10.41
+          SSH_PORT: 22
+          SSH_LISTEN_PORT: 2222
+        database:
+          DB_TYPE: sqlite3
+        service:
+          DISABLE_REGISTRATION: true
+          REQUIRE_SIGNIN_VIEW: true
+        actions:
+          ENABLED: true
+        webhook:
+          # Allow webhooks to in-cluster targets (e.g. Flux receivers)
+          ALLOWED_HOST_LIST: private
+
+    # Helm test hook pod uses an unpinned busybox:latest — not needed.
+    test:
+      enabled: false
+
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 2Gi
+        cpu: 2000m
