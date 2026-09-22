@@ -27,10 +27,10 @@ data:
           # The in-cluster service, so polling neither leaves the cluster nor
           # depends on the gateway, DNS or a certificate being healthy.
           url: http://forgejo-http.forgejo.svc.cluster.local
-          # Ours to choose, and the whole of the runner's identity. Keeping it
-          # here rather than letting the server assign one is what makes a
-          # restart reconnect as the same runner with no state to persist.
-          uuid: fe442b5a-e444-4ad7-9339-17804f758e8e
+          # Issued by the forge when the runner registered, paired with the
+          # token beside it. Naming both here is what lets a replaced pod
+          # reconnect as the same runner with nothing kept on disk.
+          uuid: e10fc075-289b-45af-a7da-2efcef21ab50
           # Read from a file so the token stays in a Secret rather than here.
           token_url: file:/etc/runner-token/token
           # A job selects its image by label. Pinned by digest because these
