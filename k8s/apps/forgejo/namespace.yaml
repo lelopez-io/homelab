@@ -3,3 +3,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: forgejo
+  labels:
+    # The gateway's private listener admits routes only from namespaces
+    # carrying this, so without it the HTTPRoute is rejected as not allowed
+    # by any listener while still resolving its backend.
+    gateway.lan/routes: "true"
