@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - backuptarget.yaml
   - networkpolicy.yaml
+  - recurringjob.yaml
