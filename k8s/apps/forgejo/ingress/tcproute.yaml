@@ -1,0 +1,15 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: TCPRoute
+metadata:
+  name: forgejo-ssh
+  namespace: forgejo
+spec:
+  parentRefs:
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: git-ssh
+  rules:
+    - backendRefs:
+        - name: forgejo-ssh
+          port: 22

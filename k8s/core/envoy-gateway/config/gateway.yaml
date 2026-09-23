@@ -51,6 +51,20 @@ spec:
           selector:
             matchLabels:
               gateway.lan/routes: "true"
+    - name: git-ssh
+      # The forge's git lane. Raw TCP, so ssh keeps its own crypto and the
+      # gateway only carries bytes; sharing this address is what lets the
+      # wildcard resolve the forge's one hostname for both web and git.
+      port: 22
+      protocol: TCP
+      allowedRoutes:
+        kinds:
+          - kind: TCPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.lan/routes: "true"
     - name: minecraft-bedrock
       # LAN game lane, moved off the nginx udp stream map.
       port: 19132
