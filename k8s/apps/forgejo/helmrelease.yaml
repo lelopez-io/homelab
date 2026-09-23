@@ -41,6 +41,10 @@ spec:
       targetPath: gitea.config.server.DOMAIN
     - kind: Secret
       name: forgejo-secrets
+      valuesKey: host
+      targetPath: gitea.config.server.SSH_DOMAIN
+    - kind: Secret
+      name: forgejo-secrets
       valuesKey: root-url
       targetPath: gitea.config.server.ROOT_URL
   values:
@@ -68,13 +72,12 @@ spec:
       http:
         type: ClusterIP
         port: 80
-      # Git-over-SSH bypasses the ingress: dedicated MetalLB IP, standard
-      # port, SSH does its own crypto. Clone URLs advertise the IP.
+      # A TCPRoute carries git over SSH on the gateway's own address, the
+      # same way the game lanes do, so clone URLs use the forge's hostname
+      # rather than an address that would have to be remembered.
       ssh:
-        type: LoadBalancer
+        type: ClusterIP
         port: 22
-        annotations:
-          metallb.universe.tf/loadBalancerIPs: "192.168.10.41"
 
     gitea:
       admin:
@@ -82,7 +85,6 @@ spec:
       config:
         APP_NAME: "Homelab Forge"
         server:
-          SSH_DOMAIN: 192.168.10.41
           SSH_PORT: 22
           SSH_LISTEN_PORT: 2222
         database:
