@@ -1,0 +1,16 @@
+---
+# Object data. The gateway replicates nothing itself: durability is the
+# storage class's two replicas, and the daily job copies this off the
+# cluster the way it does every other volume.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: versitygw-data
+  namespace: versitygw
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn-encrypted
+  resources:
+    requests:
+      storage: 20Gi
