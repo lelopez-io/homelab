@@ -8,3 +8,4 @@ resources:
   - frp-tunnel
   - forgejo
   - forgejo-runner
+  - versitygw
