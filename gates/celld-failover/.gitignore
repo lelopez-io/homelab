@@ -1,0 +1,4 @@
+# Ledgers and verifier reports are captures from runs, not source.
+*.ndjson
+*.report.json
+__pycache__/
