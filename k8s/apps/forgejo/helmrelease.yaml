@@ -89,6 +89,12 @@ spec:
           SSH_LISTEN_PORT: 2222
         database:
           DB_TYPE: sqlite3
+        repository:
+          # Pushing to a path that does not exist creates the repository.
+          # There is no confirmation and there cannot be: git offers no way
+          # to prompt mid-push, which is why it ships off. A typo makes a
+          # repository rather than an error, private by default.
+          ENABLE_PUSH_CREATE_USER: true
         service:
           DISABLE_REGISTRATION: true
           REQUIRE_SIGNIN_VIEW: true
