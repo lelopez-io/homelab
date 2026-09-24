@@ -1,0 +1,95 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: celld
+  namespace: celld
+  labels:
+    app.kubernetes.io/name: celld
+spec:
+  replicas: 3
+  serviceName: celld-peer
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celld
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: celld
+    spec:
+      affinity:
+        podAntiAffinity:
+          # Correctness, not availability: a write counts as durable once
+          # a peer process holds it, and two processes on one machine
+          # means one failure takes both copies while all looks healthy.
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: celld
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: celld
+          # Mixed versions cannot share a fleet, so upgrades do not roll:
+          # scale to zero, edit the digest, scale back.
+          image: ghcr.io/denoland/celld:v0.5.1@sha256:9df15352bcbb92a8d73dabadc349383ccd3d7851b2ba4ccffe2c956f2f9fc93f
+          args:
+            - --bucket
+            - s3://cells
+            - --endpoint
+            - http://versitygw.versitygw.svc.cluster.local:7070
+            - --region
+            - us-east-1
+            - --listen
+            - 0.0.0.0:8080
+            - --internal-listen
+            - 0.0.0.0:8081
+            # Peers reach a process by its stable pod name; the headless
+            # service is what makes that name resolve to the pod itself.
+            - --advertise
+            - $(POD_NAME).celld-peer.celld.svc.cluster.local:8081
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            # The Secret is created out of band and is not tracked in this
+            # repo yet; key names mirror the versitygw credential.
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: celld-bucket
+                  key: rootAccessKeyId
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: celld-bucket
+                  key: rootSecretAccessKey
+            - name: CELLD_WATCH
+              value: /var/lib/celld/state
+          ports:
+            - name: app
+              containerPort: 8080
+            - name: internal
+              containerPort: 8081
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/celld
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        # Scratch, not state, unlike the volumes elsewhere in this repo:
+        # the bucket holds the durable copy and the machine's own partition
+        # is already encrypted, so a volume underneath would only
+        # replicate bytes whose home is elsewhere.
+        - name: state
+          emptyDir: {}

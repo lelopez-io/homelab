@@ -1,0 +1,38 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: celld
+  namespace: celld
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    # Peer transport between the fleet's own processes. Without it, a
+    # write a peer could hold in milliseconds pays a bucket round trip.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: celld
+      ports:
+        - protocol: TCP
+          port: 8081
+    # The fleet's bucket, behind the versitygw service. The port is the
+    # container's, not the service's, because kube-router filters after
+    # kube-proxy has already rewritten the destination.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: versitygw
+      ports:
+        - protocol: TCP
+          port: 7070
