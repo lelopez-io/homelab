@@ -7,3 +7,12 @@ resources:
   - statefulset.yaml
   - service.yaml
   - networkpolicy.yaml
+  - cronjob-torn-scan.yaml
+configMapGenerator:
+  - name: torn-scan
+    files:
+      - torn-scan.sh
+# No name hash: kustomize does not rewrite a configMap reference inside a
+# CronJob job template, so a suffixed name would leave the mount dangling.
+generatorOptions:
+  disableNameSuffixHash: true
