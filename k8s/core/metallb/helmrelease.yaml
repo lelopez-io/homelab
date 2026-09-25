@@ -24,5 +24,11 @@ spec:
     # L2-only here (no BGPPeers), so the frr-k8s BGP backend stays off.
     frrk8s:
       enabled: false
+    controller:
+      securityContext:
+        # The speaker shares this namespace and needs host networking, so the
+        # namespace label stays privileged and constrains nothing here.
+        seccompProfile:
+          type: RuntimeDefault
     speaker:
       ignoreExcludeLB: true
