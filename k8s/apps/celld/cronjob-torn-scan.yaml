@@ -39,10 +39,97 @@ spec:
               # The scheduled run remediates: allowlisted state rebuilds in
               # seconds, so waiting for a human extends the outage. The
               # hard-coded allowlist in the script is what makes it safe to
-              # hand a schedule this power.
+              # hand a schedule this power. --prefixes keeps the job's cost
+              # bounded as durable data in the bucket grows; the audit job
+              # below covers the rest.
               command:
                 - /scan/torn-scan.sh
                 - --quarantine
+                - --prefixes
+              env:
+                - name: AWS_ENDPOINT_URL
+                  value: http://versitygw.versitygw.svc.cluster.local:7070
+                - name: AWS_REGION
+                  value: us-east-1
+                - name: BUCKET
+                  value: cells
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: celld-bucket
+                      key: rootAccessKeyId
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: celld-bucket
+                      key: rootSecretAccessKey
+                - name: HOME
+                  value: /tmp
+              volumeMounts:
+                - name: script
+                  mountPath: /scan
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "10m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "500m"
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+          volumes:
+            - name: script
+              configMap:
+                name: torn-scan
+                defaultMode: 0555
+            - name: tmp
+              emptyDir: {}
+---
+# The full-bucket counterpart. Torn durable data gets a manual restore
+# either way, so this job only reports: daily detection costs nothing next
+# to that response time, and the cadence matches the off-cluster backup,
+# so a reported tear has a pre-failure copy to restore from.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: torn-scan-audit
+  namespace: celld
+  labels:
+    app.kubernetes.io/name: torn-scan-audit
+spec:
+  schedule: "17 3 * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 6
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: torn-scan-audit
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: scan
+              image: amazon/aws-cli:2.37.3@sha256:83f8ffe939569070c5b66d22231862ab78718766d9d8e4c44ca84dd0be5569a5
+              command:
+                - /scan/torn-scan.sh
               env:
                 - name: AWS_ENDPOINT_URL
                   value: http://versitygw.versitygw.svc.cluster.local:7070
