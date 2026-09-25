@@ -1,0 +1,134 @@
+name: oidc-gate
+
+# No pull_request trigger: on a public repository it would let anyone
+# who opens one mint a token.
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  gate:
+    # Picked for its image's toolset; this step installs nothing.
+    runs-on: ubuntu-latest
+    permissions:
+      # Without this the runner injects no ACTIONS_ID_TOKEN_REQUEST_* variables.
+      id-token: write
+    steps:
+      - name: Authenticate to the API server with the forge-issued token
+        shell: bash
+        env:
+          KUBE_APISERVER: ${{ secrets.KUBE_APISERVER }}
+          KUBE_CA_B64: ${{ secrets.KUBE_CA_B64 }}
+          OIDC_AUDIENCE: ${{ vars.OIDC_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          umask 077
+
+          missing=0
+          for v in KUBE_APISERVER KUBE_CA_B64 GITHUB_REPOSITORY GITHUB_REF \
+              ACTIONS_ID_TOKEN_REQUEST_URL ACTIONS_ID_TOKEN_REQUEST_TOKEN; do
+            if [ -z "${!v:-}" ]; then
+              echo "missing input: $v (README.md names it)" >&2
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+          for tool in curl jq base64; do
+            command -v "$tool" >/dev/null || { echo "missing tool: $tool" >&2; exit 1; }
+          done
+
+          expected="forge:repo:${GITHUB_REPOSITORY}:ref:${GITHUB_REF}"
+          echo "probing for identity: $expected"
+
+          aud="${OIDC_AUDIENCE:-}"
+          if [ -z "$aud" ]; then
+            aud="${GITHUB_SERVER_URL:-}/${GITHUB_REPOSITORY_OWNER:-}"
+          fi
+          case "$aud" in
+            http://*|https://*) ;;
+            *)
+              echo "cannot derive the token audience; set the OIDC_AUDIENCE repository variable" >&2
+              exit 1
+              ;;
+          esac
+
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          printf '%s' "$KUBE_CA_B64" | base64 -d > "$tmp/ca.crt"
+          grep -q 'BEGIN CERTIFICATE' "$tmp/ca.crt" || {
+            echo "KUBE_CA_B64 did not decode to a PEM certificate" >&2
+            exit 1
+          }
+
+          # Nothing here may put the token in argv, a file, or a log line,
+          # including failure paths.
+          if tokresp=$(curl -sS --fail-with-body --max-time 20 --get \
+              --config <(printf 'header = "Authorization: bearer %s"\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN") \
+              --data-urlencode "audience=$aud" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL" 2> "$tmp/tokerr"); then
+            :
+          else
+            rc=$?
+            sed "s|$ACTIONS_ID_TOKEN_REQUEST_URL|<oidc-request-url>|g" "$tmp/tokerr" >&2
+            echo "GATE FAILED: the forge did not issue an OIDC token (curl exit $rc)" >&2
+            exit 1
+          fi
+          token=$(printf '%s' "$tokresp" | jq -re '.value') || {
+            echo "GATE FAILED: the token response had no .value field" >&2
+            exit 1
+          }
+
+          apiserver="${KUBE_APISERVER%/}"
+          if code=$(curl -sS --max-time 20 \
+              --cacert "$tmp/ca.crt" \
+              --config <(printf 'header = "Authorization: Bearer %s"\n' "$token") \
+              --header 'Accept: application/json' \
+              --header 'Content-Type: application/json' \
+              --data '{"apiVersion":"authentication.k8s.io/v1","kind":"SelfSubjectReview"}' \
+              -o "$tmp/ssr.json" -w '%{http_code}' \
+              "$apiserver/apis/authentication.k8s.io/v1/selfsubjectreviews" 2> "$tmp/apierr"); then
+            :
+          else
+            rc=$?
+            sed "s|$apiserver|<apiserver>|g" "$tmp/apierr" >&2
+            echo "GATE FAILED: could not reach the API server (curl exit $rc)" >&2
+            exit 1
+          fi
+
+          msg=$(jq -r '.message // empty' "$tmp/ssr.json" 2>/dev/null || true)
+          case "$code" in
+            200)
+              user=$(jq -r '.status.userInfo.username // empty' "$tmp/ssr.json")
+              echo "selfsubjectreviews answered 200; attributed username: $user"
+              if [ "$user" = "$expected" ]; then
+                echo "GATE PASSED (200): authenticated as $expected"
+              else
+                echo "GATE FAILED: attributed user '$user', expected '$expected'" >&2
+                exit 1
+              fi
+              ;;
+            403)
+              echo "selfsubjectreviews answered 403: $msg"
+              if printf '%s' "$msg" | grep -qF "$expected"; then
+                echo "GATE PASSED (403): authenticated as $expected; authorization refused, which is what this gate exists to show"
+              else
+                echo "GATE FAILED: the 403 named no expected user ('$expected')" >&2
+                exit 1
+              fi
+              ;;
+            401)
+              echo "selfsubjectreviews answered 401: $msg" >&2
+              echo "GATE FAILED (401): the API server rejected the token; authentication never happened" >&2
+              exit 1
+              ;;
+            404)
+              echo "selfsubjectreviews answered 404: authentication.k8s.io/v1 is not served here" >&2
+              echo "GATE FAILED: the cluster predates SelfSubjectReview v1; README has the v1beta1 edit" >&2
+              exit 1
+              ;;
+            *)
+              echo "selfsubjectreviews answered $code: $msg" >&2
+              echo "GATE FAILED: unexpected status" >&2
+              exit 1
+              ;;
+          esac
