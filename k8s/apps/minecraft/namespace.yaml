@@ -4,6 +4,12 @@ kind: Namespace
 metadata:
   name: minecraft
   labels:
+    # A server-side dry run confirmed every pod here already meets
+    # restricted, so this pins the level rather than tightening it: a future
+    # workload that needs more is rejected at admission, not discovered later.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
     # Opt-in for the Gateway named home to admit routes from this namespace.
     gateway.lan/routes: "true"
 

@@ -3,3 +3,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: versitygw
+  labels:
+    # A server-side dry run confirmed every pod here already meets
+    # restricted, so this pins the level rather than tightening it: a future
+    # workload that needs more is rejected at admission, not discovered later.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
