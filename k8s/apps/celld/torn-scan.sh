@@ -12,6 +12,10 @@
 # runtime rebuilds on demand: fleet/capacity-v1.json and nodes/*.json.
 # Anything else matching the signature is reported and left in place.
 #
+# --prefixes limits the listing to fleet/ and nodes/, the prefixes whose
+# tears stop routing. Scope is a cost knob, not a safety boundary: the
+# quarantine allowlist is the same either way.
+#
 # Exit codes, because "found nothing" and "could not run" must differ:
 #   0  scan completed, nothing torn
 #   1  scan completed, torn objects found (quarantined if allowlisted)
@@ -22,11 +26,14 @@ set -u
 fail() { echo "torn-scan: $*" >&2; exit 2; }
 
 QUARANTINE=0
-case "${1:-}" in
-  --quarantine) QUARANTINE=1 ;;
-  "" | --report) ;;
-  *) fail "unknown argument '${1}'; usage: torn-scan.sh [--quarantine]" ;;
-esac
+PREFIXES=0
+for arg in "$@"; do
+  case "$arg" in
+    --quarantine) QUARANTINE=1 ;;
+    --prefixes) PREFIXES=1 ;;
+    *) fail "unknown argument '$arg'; usage: torn-scan.sh [--quarantine] [--prefixes]" ;;
+  esac
+done
 
 [ -n "${BUCKET:-}" ] || fail "BUCKET is not set; name the bucket to scan"
 [ -n "${AWS_ENDPOINT_URL:-}" ] || fail "AWS_ENDPOINT_URL is not set; name the gateway"
@@ -53,9 +60,21 @@ ERR="$WORK/stderr"
 aws_s3 head-bucket --bucket "$BUCKET" >/dev/null 2>"$ERR" ||
   fail "head-bucket $BUCKET failed (endpoint, credentials, network): $(cat "$ERR")"
 
-aws_s3 list-objects-v2 --bucket "$BUCKET" \
-  --query 'Contents[].[Key,Size]' --output text >"$WORK/objects" 2>"$ERR" ||
-  fail "list-objects-v2 $BUCKET failed: $(cat "$ERR")"
+# The scheduled job runs with --prefixes so its cost stays bounded as the
+# durable data in the same bucket grows: those two prefixes are the ones
+# whose tears stop routing. The default mode still covers the whole bucket.
+if [ "$PREFIXES" -eq 1 ]; then
+  : >"$WORK/objects"
+  for prefix in fleet/ nodes/; do
+    aws_s3 list-objects-v2 --bucket "$BUCKET" --prefix "$prefix" \
+      --query 'Contents[].[Key,Size]' --output text >>"$WORK/objects" 2>"$ERR" ||
+      fail "list-objects-v2 $BUCKET ($prefix) failed: $(cat "$ERR")"
+  done
+else
+  aws_s3 list-objects-v2 --bucket "$BUCKET" \
+    --query 'Contents[].[Key,Size]' --output text >"$WORK/objects" 2>"$ERR" ||
+    fail "list-objects-v2 $BUCKET failed: $(cat "$ERR")"
+fi
 
 allowlisted() {
   case "$1" in
@@ -143,7 +162,12 @@ while IFS="$(printf '\t')" read -r key size; do
   fi
 done <"$WORK/objects"
 
-echo "torn-scan: $checked non-empty objects in $BUCKET: $torn torn, $quarantined quarantined"
+if [ "$PREFIXES" -eq 1 ]; then
+  scope="prefixes fleet/ nodes/"
+else
+  scope="full bucket"
+fi
+echo "torn-scan: $checked non-empty objects in $BUCKET ($scope): $torn torn, $quarantined quarantined"
 
 if [ "$incomplete" -ne 0 ]; then
   echo "torn-scan: INCOMPLETE: at least one step failed; treat the results as partial" >&2

@@ -91,8 +91,18 @@ check "no .torn- keys created" "0" "$(find "$ROOT/cells" -name '*.torn-*' | wc -
 check "all 8 originals still present" "8" "$(find "$ROOT/cells" -type f | wc -l | tr -d ' ')"
 check "stderr is empty on a clean run" "0" "$(wc -c </tmp/torn-stderr | tr -d ' ')"
 
-echo "== 2. quarantine mode"
-out="$(scan --quarantine 2>/tmp/torn-stderr)"; rc=$?
+echo "== 2. prefix scope leaves durable data out of the listing"
+out="$(scan --prefixes 2>/tmp/torn-stderr)"; rc=$?
+echo "$out"
+check "exit code is 1 (torn found)" 1 "$rc"
+for k in fleet/capacity-v1.json nodes/node-a.json nodes/archive/node-d.json; do
+  check "reports $k" "present" "$(echo "$out" | grep -qF "$k" && echo present || echo absent)"
+done
+check "apps/ledger/main.json is out of scope" "absent" "$(echo "$out" | grep -qF 'apps/ledger' && echo present || echo absent)"
+check "summary names the scope" "present" "$(echo "$out" | grep -q 'prefixes fleet/ nodes/' && echo present || echo absent)"
+
+echo "== 3. quarantine mode (the scheduled invocation: --quarantine --prefixes)"
+out="$(scan --quarantine --prefixes 2>/tmp/torn-stderr)"; rc=$?
 echo "$out"
 check "exit code is 1 (torn found)" 1 "$rc"
 check "exactly 2 quarantined" "2" "$(echo "$out" | grep -c QUARANTINED)"
@@ -101,7 +111,7 @@ check "node-a.json moved" "gone" "$(test -e "$ROOT/cells/nodes/node-a.json" && e
 check "quarantine copy of capacity kept" "4096" "$(stat -f %z "$ROOT"/cells/fleet/capacity-v1.json.torn-* 2>/dev/null || echo missing)"
 check "quarantine copy of node-a kept" "2048" "$(stat -f %z "$ROOT"/cells/nodes/node-a.json.torn-* 2>/dev/null || echo missing)"
 
-echo "== 3. out-of-allowlist objects are untouched"
+echo "== 4. out-of-allowlist objects are untouched"
 for f in nodes/archive/node-d.json apps/ledger/main.json nodes/node-e.json; do
   before="$(grep "  $f\$" "$ROOT/before.sums" | awk '{print $1}')"
   after="$(shasum -a 256 "$ROOT/cells/$f" | awk '{print $1}')"
@@ -110,25 +120,25 @@ done
 check "healthy node-b.json untouched" "present" "$(test -e "$ROOT/cells/nodes/node-b.json" && echo present || echo gone)"
 check "empty node-c.json untouched" "present" "$(test -e "$ROOT/cells/nodes/node-c.json" && echo present || echo gone)"
 
-echo "== 4. a re-scan skips its own quarantine copies"
+echo "== 5. a re-scan skips its own quarantine copies"
 out="$(scan 2>/tmp/torn-stderr)"; rc=$?
 echo "$out"
 check "exit code is 1 (only the out-of-allowlist fixtures remain)" 1 "$rc"
 check "no .torn- key is reported" "0" "$(echo "$out" | grep -c '\\.torn-')"
 
-echo "== 5. clean store reports exit 0 (found nothing)"
+echo "== 6. clean store reports exit 0 (found nothing)"
 rm "$ROOT/cells/nodes/archive/node-d.json" "$ROOT/cells/apps/ledger/main.json" "$ROOT/cells/nodes/node-e.json"
 out="$(scan 2>/tmp/torn-stderr)"; rc=$?
 echo "$out"
 check "exit code is 0" 0 "$rc"
 
-echo "== 6. bad credentials report exit 2 (could not run)"
+echo "== 7. bad credentials report exit 2 (could not run)"
 export AWS_SECRET_ACCESS_KEY="wrong"
 out="$(scan 2>/tmp/torn-stderr)"; rc=$?
 check "exit code is 2" 2 "$rc"
 check "stderr names the failing step" "present" "$(grep -q 'head-bucket' /tmp/torn-stderr && echo present || echo absent)"
 
-echo "== 7. unreachable endpoint reports exit 2"
+echo "== 8. unreachable endpoint reports exit 2"
 export AWS_SECRET_ACCESS_KEY="tornscansecret"
 export AWS_ENDPOINT_URL="http://gateway:9999"
 out="$(scan 2>/tmp/torn-stderr)"; rc=$?
