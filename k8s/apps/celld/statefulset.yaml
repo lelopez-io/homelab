@@ -27,6 +27,16 @@ spec:
                 matchLabels:
                   app.kubernetes.io/name: celld
               topologyKey: kubernetes.io/hostname
+      # The image ships no user and the runtime does not need one: celld
+      # binds 8080 and 8081, both unprivileged, and the only path it writes
+      # is the scratch volume, which fsGroup makes group-writable.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: celld
           # Mixed versions cannot share a fleet, so upgrades do not roll:
