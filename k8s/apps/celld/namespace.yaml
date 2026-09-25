@@ -4,6 +4,12 @@ kind: Namespace
 metadata:
   name: celld
   labels:
+    # Held back until a rollout proved the fleet comes back non-root, so a
+    # label could not block the change that makes it true. v2.29.0 did that:
+    # three processes, uid 65532, zero restarts.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
     # The gateway's private listener admits routes only from namespaces
     # carrying this, so without it the HTTPRoute is rejected as not allowed
     # by any listener while still resolving its backend.
