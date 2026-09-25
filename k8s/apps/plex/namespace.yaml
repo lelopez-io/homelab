@@ -5,6 +5,9 @@ metadata:
   name: plex
   labels:
     gateway.lan/routes: "true"
+    # Hardware transcoding mounts the GPU device as a host path, the only
+    # need above baseline; no level in between permits one. Claiming the GPU
+    # through DRA would drop it, which the pinned chart cannot yet express.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged

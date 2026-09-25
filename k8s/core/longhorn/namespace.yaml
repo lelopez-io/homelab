@@ -5,6 +5,7 @@ metadata:
   name: longhorn-system
   labels:
     gateway.lan/routes: "true"
+    # The CSI driver and storage engines need host paths and extra capabilities.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged

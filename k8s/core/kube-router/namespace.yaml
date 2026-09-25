@@ -4,6 +4,7 @@ kind: Namespace
 metadata:
   name: kube-router
   labels:
+    # The CNI needs host namespaces, host paths and a privileged container.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged

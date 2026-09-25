@@ -4,6 +4,7 @@ kind: Namespace
 metadata:
   name: tailscale
   labels:
+    # The subnet router needs a privileged container to open a tun device.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged

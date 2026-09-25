@@ -4,6 +4,7 @@ kind: Namespace
 metadata:
   name: intel-gpu-resource-driver
   labels:
+    # The DRA kubelet plugin runs privileged to manage the GPU device.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
