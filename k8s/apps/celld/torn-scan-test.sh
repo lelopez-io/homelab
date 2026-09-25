@@ -32,10 +32,14 @@ head -c 512 /dev/zero >"$ROOT/cells/nodes/archive/node-d.json"
 head -c 8192 /dev/zero >"$ROOT/cells/apps/ledger/main.json"
 # healthy JSON at an allowlist-adjacent path
 printf '{"links":[]}' >"$ROOT/cells/fleet/topology.json"
-# NULs followed by a brace: damaged, but not the torn signature
+# NULs followed by a brace: damaged, but not the torn signature. This is
+# the fixture that makes the confirming full read load-bearing.
 { head -c 100 /dev/zero; printf '{'; } >"$ROOT/cells/nodes/node-e.json"
+# whitespace without a NUL in sight: a candidate that the full read
+# confirms as torn
+head -c 512 /dev/zero | tr '\0' ' ' >"$ROOT/cells/apps/ledger/notes.json"
 
-for f in nodes/archive/node-d.json apps/ledger/main.json nodes/node-e.json; do
+for f in nodes/archive/node-d.json apps/ledger/main.json nodes/node-e.json apps/ledger/notes.json; do
   shasum -a 256 "$ROOT/cells/$f" | awk -v f="$f" '{print $1"  "f}'
 done >"$ROOT/before.sums"
 
@@ -79,16 +83,27 @@ export AWS_ENDPOINT_URL="http://gateway:7070"
 export AWS_ACCESS_KEY_ID="tornscan"
 export AWS_SECRET_ACCESS_KEY="tornscansecret"
 
+echo "== 0. the gateway honors range reads"
+# The one-byte clearing read only saves the transfer if the gateway
+# respects Range, so prove that against this gateway version first.
+cl="$(docker run --rm --network "$NET" \
+  -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
+  "$SCAN_IMAGE" --endpoint-url "$AWS_ENDPOINT_URL" \
+  s3api get-object --bucket cells --key nodes/node-b.json \
+  --range bytes=0-0 /tmp/byte0 --query 'ContentLength' --output text 2>/dev/null)"
+check "range read of a 26-byte object returns one byte" "1" "$cl"
+
 echo "== 1. report mode on a store with torn objects"
 out="$(scan 2>/tmp/torn-stderr)"; rc=$?
 echo "$out"
 check "exit code is 1 (torn found)" 1 "$rc"
-for k in fleet/capacity-v1.json nodes/node-a.json nodes/archive/node-d.json apps/ledger/main.json; do
+for k in fleet/capacity-v1.json nodes/node-a.json nodes/archive/node-d.json apps/ledger/main.json apps/ledger/notes.json; do
   check "reports $k" "present" "$(echo "$out" | grep -qF "$k" && echo present || echo absent)"
 done
+check "node-e.json (NULs then brace) is not reported" "absent" "$(echo "$out" | grep -qF 'node-e' && echo present || echo absent)"
 check "nothing quarantined in report mode" "0" "$(echo "$out" | grep -c QUARANTINED)"
 check "no .torn- keys created" "0" "$(find "$ROOT/cells" -name '*.torn-*' | wc -l | tr -d ' ')"
-check "all 8 originals still present" "8" "$(find "$ROOT/cells" -type f | wc -l | tr -d ' ')"
+check "all 9 originals still present" "9" "$(find "$ROOT/cells" -type f | wc -l | tr -d ' ')"
 check "stderr is empty on a clean run" "0" "$(wc -c </tmp/torn-stderr | tr -d ' ')"
 
 echo "== 2. prefix scope leaves durable data out of the listing"
@@ -99,6 +114,7 @@ for k in fleet/capacity-v1.json nodes/node-a.json nodes/archive/node-d.json; do
   check "reports $k" "present" "$(echo "$out" | grep -qF "$k" && echo present || echo absent)"
 done
 check "apps/ledger/main.json is out of scope" "absent" "$(echo "$out" | grep -qF 'apps/ledger' && echo present || echo absent)"
+check "node-e.json survives the candidate path unreported" "absent" "$(echo "$out" | grep -qF 'node-e' && echo present || echo absent)"
 check "summary names the scope" "present" "$(echo "$out" | grep -q 'prefixes fleet/ nodes/' && echo present || echo absent)"
 
 echo "== 3. quarantine mode (the scheduled invocation: --quarantine --prefixes)"
@@ -112,7 +128,7 @@ check "quarantine copy of capacity kept" "4096" "$(stat -f %z "$ROOT"/cells/flee
 check "quarantine copy of node-a kept" "2048" "$(stat -f %z "$ROOT"/cells/nodes/node-a.json.torn-* 2>/dev/null || echo missing)"
 
 echo "== 4. out-of-allowlist objects are untouched"
-for f in nodes/archive/node-d.json apps/ledger/main.json nodes/node-e.json; do
+for f in nodes/archive/node-d.json apps/ledger/main.json nodes/node-e.json apps/ledger/notes.json; do
   before="$(grep "  $f\$" "$ROOT/before.sums" | awk '{print $1}')"
   after="$(shasum -a 256 "$ROOT/cells/$f" | awk '{print $1}')"
   check "$f untouched" "$before" "$after"
@@ -127,7 +143,7 @@ check "exit code is 1 (only the out-of-allowlist fixtures remain)" 1 "$rc"
 check "no .torn- key is reported" "0" "$(echo "$out" | grep -c '\\.torn-')"
 
 echo "== 6. clean store reports exit 0 (found nothing)"
-rm "$ROOT/cells/nodes/archive/node-d.json" "$ROOT/cells/apps/ledger/main.json" "$ROOT/cells/nodes/node-e.json"
+rm "$ROOT/cells/nodes/archive/node-d.json" "$ROOT/cells/apps/ledger/main.json" "$ROOT/cells/apps/ledger/notes.json" "$ROOT/cells/nodes/node-e.json"
 out="$(scan 2>/tmp/torn-stderr)"; rc=$?
 echo "$out"
 check "exit code is 0" 0 "$rc"

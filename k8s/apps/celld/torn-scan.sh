@@ -111,6 +111,15 @@ quarantine() {
   return 0
 }
 
+note_read_failure() {
+  if aws_s3 head-object --bucket "$BUCKET" --key "$1" >/dev/null 2>&1; then
+    echo "torn-scan: could not read $1: $(cat "$ERR")" >&2
+    incomplete=1
+  else
+    echo "torn-scan: $1 vanished between listing and read; skipped"
+  fi
+}
+
 checked=0
 torn=0
 quarantined=0
@@ -134,16 +143,20 @@ while IFS="$(printf '\t')" read -r key size; do
   [ "$size" -eq 0 ] && continue
   checked=$((checked + 1))
 
-  if ! aws_s3 get-object --bucket "$BUCKET" --key "$key" "$WORK/object" >/dev/null 2>"$ERR"; then
-    if aws_s3 head-object --bucket "$BUCKET" --key "$key" >/dev/null 2>&1; then
-      echo "torn-scan: could not read $key: $(cat "$ERR")" >&2
-      incomplete=1
-    else
-      echo "torn-scan: $key vanished between listing and read; skipped"
-    fi
+  # Byte zero decides most objects, since every record here opens with a
+  # brace. A first byte inside the whitespace set only makes a candidate:
+  # leading whitespace is legal JSON, so a full read confirms the tear.
+  if ! aws_s3 get-object --bucket "$BUCKET" --key "$key" --range bytes=0-0 \
+    "$WORK/byte0" >/dev/null 2>"$ERR"; then
+    note_read_failure "$key"
     continue
   fi
+  [ -z "$(tr -d '\0 \t\n\r' <"$WORK/byte0" | head -c 1)" ] || continue
 
+  if ! aws_s3 get-object --bucket "$BUCKET" --key "$key" "$WORK/object" >/dev/null 2>"$ERR"; then
+    note_read_failure "$key"
+    continue
+  fi
   [ -z "$(tr -d '\0 \t\n\r' <"$WORK/object" | head -c 1)" ] || continue
   torn=$((torn + 1))
 
