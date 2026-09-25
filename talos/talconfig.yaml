@@ -18,7 +18,6 @@ cluster:
     advertisedSubnets:
       - 192.168.10.0/24
 
-# DRA feature gates for control plane components
 controlPlane:
   patches:
     - |-
@@ -27,6 +26,13 @@ controlPlane:
           extraArgs:
             feature-gates: DynamicResourceAllocation=true
             runtime-config: resource.k8s.io/v1=true
+            # The forge issues OIDC tokens to its own Actions runs, so an app
+            # repository reaches the API server with no stored credential. sub
+            # as the username puts the branch in it, so RBAC can pin a branch.
+            oidc-issuer-url: ${FORGE_ROOT}/api/actions
+            oidc-client-id: ${FORGE_ROOT}/${FORGE_OWNER}
+            oidc-username-claim: sub
+            oidc-username-prefix: "forge:"
         controllerManager:
           extraArgs:
             feature-gates: DynamicResourceAllocation=true
