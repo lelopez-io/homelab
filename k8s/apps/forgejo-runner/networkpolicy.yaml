@@ -27,6 +27,28 @@ spec:
       ports:
         - protocol: TCP
           port: 80
+    # Kubernetes API for jobs that deploy with a forge-issued OIDC token,
+    # reached at the control plane node IPs after kube-proxy rewrites the
+    # kubernetes Service address.
+    - to:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+      ports:
+        - protocol: TCP
+          port: 6443
+    # The object store, so a job can upload a Worker bundle to its fleet's
+    # bucket. The port is the container's, for the reason given above.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: versitygw
+      ports:
+        - protocol: TCP
+          port: 7070
     # Internet (job images, package registries, action downloads)
     # Block private ranges
     - to:
