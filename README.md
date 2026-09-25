@@ -36,9 +36,13 @@ To manage the cluster from a new machine (requires the age private key):
 ```bash
 cd <path-to-homelab>/talos
 
-# Regenerate configs (only needed once per machine)
-# Process substitution keeps the key in memory without writing to disk
-SOPS_AGE_KEY_FILE=<(op document get "sops-key | homelab") talhelper genconfig
+# Regenerate configs. Required before every apply-config, not once per
+# machine: clusterconfig/ is gitignored build output, so an older copy
+# silently ships an older cluster.
+# SOPS_AGE_KEY_CMD holds a command rather than a key, so the key reaches
+# sops without passing through argv, the environment, or disk. It is re-run
+# per encrypted file, which a process substitution cannot survive.
+SOPS_AGE_KEY_CMD="op document get 'sops-key | homelab'" talhelper genconfig
 
 # Set environment variables
 export TALOSCONFIG=$(pwd)/clusterconfig/talosconfig
