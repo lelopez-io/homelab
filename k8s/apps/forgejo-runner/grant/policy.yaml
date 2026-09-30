@@ -1,0 +1,45 @@
+---
+# RBAC cannot say "your own namespaces", so this does. A namespace belongs
+# to a forge run when it carries the run's repository as a label, and a
+# run may create one only labelled that way and under the restricted pod
+# security standard, so it cannot relax what the platform enforces.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: forge-runs
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["*"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["*"]
+  matchConditions:
+    - name: forge-run
+      expression: "request.userInfo.username.startsWith('forge:repo:')"
+  variables:
+    - name: repository
+      expression: "request.userInfo.username.split(':')[2].split('/')[1]"
+    - name: isNamespace
+      expression: "request.resource.group == '' && request.resource.resource == 'namespaces'"
+    - name: labels
+      expression: >-
+        variables.isNamespace
+          ? (request.operation == 'DELETE' ? oldObject : object).metadata.?labels.orValue({})
+          : namespaceObject.metadata.?labels.orValue({})
+  validations:
+    - expression: "variables.labels[?'forge/repository'].orValue('') == variables.repository"
+      messageExpression: "'a forge run may only touch namespaces labelled forge/repository=' + variables.repository"
+    - expression: >-
+        !variables.isNamespace || request.operation == 'DELETE' ||
+        variables.labels[?'pod-security.kubernetes.io/enforce'].orValue('') == 'restricted'
+      message: "a forge app's namespace must enforce the restricted pod security standard"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: forge-runs
+spec:
+  policyName: forge-runs
+  validationActions: ["Deny"]
