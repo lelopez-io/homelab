@@ -26,13 +26,19 @@ controlPlane:
           extraArgs:
             feature-gates: DynamicResourceAllocation=true
             runtime-config: resource.k8s.io/v1=true
-            # The forge issues OIDC tokens to its own Actions runs, so an app
-            # repository reaches the API server with no stored credential. sub
-            # as the username puts the branch in it, so RBAC can pin a branch.
+            # The forge issues OIDC tokens to its own Actions runs, so a forge
+            # repository reaches the API server with no stored credential. The
+            # repository in sub is what the admission policy keys namespaces on.
             oidc-issuer-url: ${FORGE_ROOT}/api/actions
             oidc-client-id: ${FORGE_ROOT}/${FORGE_OWNER}
             oidc-username-claim: sub
             oidc-username-prefix: "forge:"
+            # One group for every run of the owner's repositories, so one
+            # ClusterRoleBinding in k8s/apps/forgejo-runner covers them all, and
+            # no identity at all unless the run is from a tag.
+            oidc-groups-claim: repository_owner
+            oidc-groups-prefix: "forge:"
+            oidc-required-claim: ref_type=tag
         controllerManager:
           extraArgs:
             feature-gates: DynamicResourceAllocation=true
