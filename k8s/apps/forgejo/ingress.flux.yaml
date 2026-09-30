@@ -15,8 +15,6 @@ spec:
   dependsOn:
     - name: sync
   postBuild:
-    # Injects the forge hostname from sops — the domain never appears in
-    # plain manifests (same pattern as plex-filebrowser-ingress).
     substituteFrom:
       - kind: Secret
         name: forgejo-vars
