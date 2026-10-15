@@ -20,6 +20,10 @@ data:
       xff-src: lan
       rproxy: 1
       no-robots
+      # The thumbnailer starts one ffmpeg per node CPU, not per CPU in the
+      # container limit. A folder of 1080p episodes ran sixteen at once and
+      # the kernel killed the container at its memory limit.
+      th-mt: 2
 
     [/]
       /w
