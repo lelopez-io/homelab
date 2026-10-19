@@ -1,0 +1,26 @@
+---
+# The operator exposes a LoadBalancer of class tailscale as a tailnet
+# service, named by the hostname annotation: svc:forge forwards its 443
+# and 22 to the gateway's forge-only listeners on 8443 and 2222.
+apiVersion: v1
+kind: Service
+metadata:
+  name: forge
+  namespace: envoy-gateway-system
+  annotations:
+    tailscale.com/proxy-group: ingress
+    tailscale.com/hostname: forge
+spec:
+  type: LoadBalancer
+  # The tailscale class keeps MetalLB from allocating a LAN address.
+  loadBalancerClass: tailscale
+  selector:
+    gateway.envoyproxy.io/owning-gateway-name: home
+    gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8443
+    - name: ssh
+      port: 22
+      targetPort: 2222

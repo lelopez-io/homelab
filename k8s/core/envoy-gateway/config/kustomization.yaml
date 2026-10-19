@@ -8,3 +8,4 @@ resources:
   - envoyproxy.yaml
   - gateway.yaml
   - httproute-redirect.yaml
+  - service-forge.yaml
