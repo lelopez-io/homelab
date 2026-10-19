@@ -1,6 +1,6 @@
 ---
 # Bound to the group every forge run carries; talos/talconfig.yaml is where
-# the group is set and runs are limited to tags. No RBAC kinds, so a run
+# the group is set and runs are limited to tags and one dev branch. No RBAC kinds, so a run
 # cannot widen its own grant, and policy.yaml decides its namespaces.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

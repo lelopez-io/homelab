@@ -57,6 +57,10 @@ controlPlane:
                     url: ${FORGE_ROOT}/api/actions
                     audiences:
                       - ${FORGE_ROOT}/${FORGE_OWNER}
+                      # A colon cannot occur in an owner name, so the default
+                      # matches nothing until FORGE_OWNER_2 is set.
+                      - "${FORGE_ROOT}/${FORGE_OWNER_2:-unset:}"
+                    audienceMatchPolicy: MatchAny
                   # The repository in sub is what the admission policy keys
                   # namespaces on.
                   claimMappings:
@@ -69,10 +73,16 @@ controlPlane:
                     groups:
                       claim: repository_owner
                       prefix: "forge:"
-                  # No identity at all unless the run is from a tag.
+                  # Tags gate anything public or production. The second owner's
+                  # dev branch is the one exception, for its development site, and
+                  # only from a push: pull_request_target also carries the base ref.
                   claimValidationRules:
-                    - expression: claims.ref_type == 'tag'
-                      message: forge runs authenticate from a tag only
+                    - expression: >-
+                        claims.ref_type == 'tag' ||
+                        (claims.repository_owner == '${FORGE_OWNER_2:-unset:}' &&
+                        claims.ref == 'refs/heads/dev' &&
+                        claims.event_name == 'push')
+                      message: forge runs authenticate from a tag or the dev branch of the second owner
 
 
 nodes:
