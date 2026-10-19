@@ -2,7 +2,9 @@
 # RBAC cannot say "your own namespaces", so this does. A namespace belongs
 # to a forge run when it carries the run's repository as a label, and a
 # run may create one only labelled that way and under the restricted pod
-# security standard, so it cannot relax what the platform enforces.
+# security standard, so it cannot relax what the platform enforces. It may
+# not set a gateway.lan/ label either: the gateway's listeners admit routes
+# from namespaces by that label, so setting it would open them to the run.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -35,6 +37,10 @@ spec:
         !variables.isNamespace || request.operation == 'DELETE' ||
         variables.labels[?'pod-security.kubernetes.io/enforce'].orValue('') == 'restricted'
       message: "a forge app's namespace must enforce the restricted pod security standard"
+    - expression: >-
+        !variables.isNamespace || request.operation == 'DELETE' ||
+        !variables.labels.exists(k, k.startsWith('gateway.lan/'))
+      message: "a forge app's namespace may not carry a gateway.lan/ label"
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
