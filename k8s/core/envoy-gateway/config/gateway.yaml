@@ -65,6 +65,36 @@ spec:
           selector:
             matchLabels:
               gateway.lan/routes: "true"
+    - name: forge-tailnet-https
+      # The forge's tailnet web lane: the annotated Service maps svc:forge's
+      # 443 here. The hostname pin keeps the lane serving the forge alone
+      # whatever name a client sends, on the tier cert it already presents.
+      port: 8443
+      protocol: HTTPS
+      hostname: "${FORGE_HOST}"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: sub-wildcard-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.lan/routes: "true"
+    - name: forge-tailnet-ssh
+      # The forge's tailnet git lane: svc:forge maps its 22 here. Raw TCP
+      # like git-ssh, so ssh keeps its own crypto end to end.
+      port: 2222
+      protocol: TCP
+      allowedRoutes:
+        kinds:
+          - kind: TCPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.lan/routes: "true"
     - name: minecraft-bedrock
       # LAN game lane, moved off the nginx udp stream map.
       port: 19132
