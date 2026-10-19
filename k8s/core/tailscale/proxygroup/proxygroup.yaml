@@ -1,0 +1,13 @@
+---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: ingress
+spec:
+  type: ingress
+  replicas: 2
+  hostnamePrefix: ingress
+  # No proxyClass: the control-plane class's anti-affinity against the
+  # connector's pods would exclude every node, and the proxies fit anywhere.
+  # No tags: devices run as the default tag:k8s, which the operator's OAuth
+  # client already owns, so the tailnet policy approves services for tag:k8s.
