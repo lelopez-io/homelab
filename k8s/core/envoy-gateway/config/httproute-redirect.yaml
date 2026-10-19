@@ -15,6 +15,7 @@ spec:
   hostnames:
     - "*.${SUB_DOMAIN}"
     - "*.${VIA_DOMAIN}"
+    - "*.${DEV_DOMAIN}"
   rules:
     - filters:
         - type: RequestRedirect

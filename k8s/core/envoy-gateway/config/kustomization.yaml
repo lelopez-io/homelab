@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - certificate.yaml
   - certificate-via.yaml
+  - certificate-dev.yaml
   - gatewayclass.yaml
   - envoyproxy.yaml
   - gateway.yaml

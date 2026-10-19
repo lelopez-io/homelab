@@ -132,3 +132,24 @@ spec:
           selector:
             matchLabels:
               gateway.lan/routes: "true"
+    - name: https-dev
+      # The dev tier, on the tunnel lane the via tier rides. Forge runs
+      # attach their own app's route here and nowhere else, so it admits
+      # namespaces by the forge/repository label rather than by
+      # gateway.lan/routes, which the forge grant forbids a run to set.
+      port: 443
+      protocol: HTTPS
+      hostname: "*.${DEV_DOMAIN}"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: dev-wildcard-tls
+      allowedRoutes:
+        kinds:
+          - kind: HTTPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: forge/repository
+                operator: Exists
