@@ -22,6 +22,11 @@ rules:
   - apiGroups: ["networking.k8s.io"]
     resources: ["networkpolicies"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Routes for the dev tier only: policy.yaml refuses any parentRef but
+  # the gateway's https-dev listener.
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["httproutes"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # Read-only on pods and events, so a run can see why its own job failed.
   - apiGroups: [""]
     resources: ["pods", "pods/log", "events"]

@@ -5,6 +5,8 @@
 # security standard, so it cannot relax what the platform enforces. It may
 # not set a gateway.lan/ label either: the gateway's listeners admit routes
 # from namespaces by that label, so setting it would open them to the run.
+# Its HTTPRoutes may name only the gateway's dev tier listener, and only
+# hosts under its own repository's name.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -30,6 +32,8 @@ spec:
         variables.isNamespace
           ? (request.operation == 'DELETE' ? oldObject : object).metadata.?labels.orValue({})
           : namespaceObject.metadata.?labels.orValue({})
+    - name: isRoute
+      expression: "request.resource.group == 'gateway.networking.k8s.io' && request.resource.resource == 'httproutes'"
   validations:
     - expression: "variables.labels[?'forge/repository'].orValue('') == variables.repository"
       messageExpression: "'a forge run may only touch namespaces labelled forge/repository=' + variables.repository"
@@ -41,6 +45,25 @@ spec:
         !variables.isNamespace || request.operation == 'DELETE' ||
         !variables.labels.exists(k, k.startsWith('gateway.lan/'))
       message: "a forge app's namespace may not carry a gateway.lan/ label"
+    # Every field of a parentRef that picks a listener is pinned, port
+    # included, so no spelling of the reference reaches another one.
+    - expression: >-
+        !variables.isRoute || request.operation == 'DELETE' ||
+        object.spec.?parentRefs.orValue([]).all(p,
+          p.name == 'home' &&
+          p.?namespace.orValue('envoy-gateway-system') == 'envoy-gateway-system' &&
+          p.?group.orValue('gateway.networking.k8s.io') == 'gateway.networking.k8s.io' &&
+          p.?kind.orValue('Gateway') == 'Gateway' &&
+          p.?sectionName.orValue('') == 'https-dev' &&
+          !has(p.port))
+      message: "a forge app's route may only attach to the home gateway's https-dev listener"
+    # The listener's hostname pin bounds the suffix; the dot keeps one
+    # repository's prefix from covering another whose name extends it.
+    - expression: >-
+        !variables.isRoute || request.operation == 'DELETE' ||
+        (object.spec.?hostnames.orValue([]).size() > 0 &&
+          object.spec.hostnames.all(h, h.startsWith(variables.repository + '.')))
+      messageExpression: "'a forge route must name hosts starting with ' + variables.repository + '.'"
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
