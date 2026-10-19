@@ -9,6 +9,9 @@ spec:
     - name: home
       namespace: envoy-gateway-system
       sectionName: git-ssh
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: forge-tailnet-ssh
   rules:
     - backendRefs:
         - name: forgejo-ssh

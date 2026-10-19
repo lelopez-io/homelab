@@ -11,6 +11,9 @@ spec:
     - name: home
       namespace: envoy-gateway-system
       sectionName: https-sub
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: forge-tailnet-https
   hostnames:
     - "${FORGE_HOST}"
   rules:
