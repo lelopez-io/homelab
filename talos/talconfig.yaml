@@ -28,23 +28,51 @@ controlPlane:
             runtime-config: resource.k8s.io/v1=true
             # The forge issues OIDC tokens to its own Actions runs, so a forge
             # repository reaches the API server with no stored credential. The
-            # repository in sub is what the admission policy keys namespaces on.
-            oidc-issuer-url: ${FORGE_ROOT}/api/actions
-            oidc-client-id: ${FORGE_ROOT}/${FORGE_OWNER}
-            oidc-username-claim: sub
-            oidc-username-prefix: "forge:"
-            # One group for every run of the owner's repositories, so one
-            # ClusterRoleBinding in k8s/apps/forgejo-runner covers them all, and
-            # no identity at all unless the run is from a tag.
-            oidc-groups-claim: repository_owner
-            oidc-groups-prefix: "forge:"
-            oidc-required-claim: ref_type=tag
+            # file is the only authenticator source: the API server refuses to
+            # start with both it and any oidc-* flag.
+            authentication-config: /etc/kubernetes/authn/authentication-config.yaml
+          extraVolumes:
+            - hostPath: /var/lib/kube-apiserver-authn
+              mountPath: /etc/kubernetes/authn
+              readonly: true
         controllerManager:
           extraArgs:
             feature-gates: DynamicResourceAllocation=true
         scheduler:
           extraArgs:
             feature-gates: DynamicResourceAllocation=true
+    # Talos writes machine files in the boot sequence only, so a change here
+    # reaches the node on a reboot, never on a live apply.
+    - |-
+      machine:
+        files:
+          - path: /var/lib/kube-apiserver-authn/authentication-config.yaml
+            op: create
+            permissions: 0o644
+            content: |
+              apiVersion: apiserver.config.k8s.io/v1
+              kind: AuthenticationConfiguration
+              jwt:
+                - issuer:
+                    url: ${FORGE_ROOT}/api/actions
+                    audiences:
+                      - ${FORGE_ROOT}/${FORGE_OWNER}
+                  # The repository in sub is what the admission policy keys
+                  # namespaces on.
+                  claimMappings:
+                    username:
+                      claim: sub
+                      prefix: "forge:"
+                    # One group for every run of the owner's repositories, so
+                    # one ClusterRoleBinding in k8s/apps/forgejo-runner covers
+                    # them all.
+                    groups:
+                      claim: repository_owner
+                      prefix: "forge:"
+                  # No identity at all unless the run is from a tag.
+                  claimValidationRules:
+                    - expression: claims.ref_type == 'tag'
+                      message: forge runs authenticate from a tag only
 
 
 nodes:
