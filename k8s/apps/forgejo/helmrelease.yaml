@@ -95,6 +95,9 @@ spec:
           # to prompt mid-push, which is why it ships off. A typo makes a
           # repository rather than an error, private by default.
           ENABLE_PUSH_CREATE_USER: true
+          # The same for an organization's path, for members allowed to
+          # create repositories there.
+          ENABLE_PUSH_CREATE_ORG: true
         service:
           DISABLE_REGISTRATION: true
           REQUIRE_SIGNIN_VIEW: true
