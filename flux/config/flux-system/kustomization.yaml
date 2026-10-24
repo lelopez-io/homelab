@@ -4,6 +4,14 @@ resources:
 - gotk-components.yaml
 - gotk-sync.yaml
 - gpg-public-keys.yaml
+# Mozilla's 2026-10-20 roots, without the two the compromised eMudhra
+# intermediates chain to. source-controller's Go predates the x509 fix;
+# remove once Flux ships on Go 1.26.10 or later.
+configMapGenerator:
+- name: ca-bundle
+  namespace: flux-system
+  files:
+  - ca-certificates.crt=ca-bundle.pem
 patches:
   # Deploy from signed release tags, not branch HEAD: commits (agent or
   # human) flow freely to main and never deploy; only a deliberate,
@@ -27,3 +35,25 @@ patches:
           mode: Tag
           secretRef:
             name: gpg-public-keys
+  # Go on Linux reads SSL_CERT_FILE in place of the image's own roots.
+  - target:
+      kind: Deployment
+      name: source-controller
+    patch: |
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: ca-bundle
+          configMap:
+            name: ca-bundle
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: ca-bundle
+          mountPath: /etc/ssl/ca-bundle
+          readOnly: true
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SSL_CERT_FILE
+          value: /etc/ssl/ca-bundle/ca-certificates.crt
