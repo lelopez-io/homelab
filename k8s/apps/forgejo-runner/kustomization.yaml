@@ -9,3 +9,11 @@ resources:
   - networkpolicy.yaml
   - secret-grant-vars.sops.yaml
   - grant.flux.yaml
+# Mozilla's 2026-10-20 roots, without the two the compromised eMudhra
+# intermediates chain to. The runner clones actions on a Go that predates the
+# x509 fix; remove once it ships on Go 1.26.10 or later.
+configMapGenerator:
+  - name: ca-bundle
+    namespace: forgejo-runner
+    files:
+      - ca-certificates.crt=ca-bundle.pem

@@ -35,7 +35,13 @@ spec:
               value: /certs/client
             - name: DOCKER_TLS_VERIFY
               value: "1"
+            # Go on Linux reads this in place of the image's own roots.
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/ca-bundle/ca-certificates.crt
           volumeMounts:
+            - name: ca-bundle
+              mountPath: /etc/ssl/ca-bundle
+              readOnly: true
             - name: data
               mountPath: /data
             - name: config
@@ -98,3 +104,6 @@ spec:
           emptyDir: {}
         - name: dind-storage
           emptyDir: {}
+        - name: ca-bundle
+          configMap:
+            name: ca-bundle
