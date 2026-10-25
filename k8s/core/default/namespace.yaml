@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+  labels:
+    # Nothing runs here and nothing should: restricted turns away any pod
+    # that is not non-root, seccomped and capability-free, so a stray
+    # apply fails at admission.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+    # Kubernetes never deletes default, so the guard only goes away if
+    # the labels leave this file. The prune label stops Flux deleting the
+    # object itself when the file leaves the tree.
+    kustomize.toolkit.fluxcd.io/prune: disabled
