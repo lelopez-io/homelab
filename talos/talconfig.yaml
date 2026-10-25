@@ -41,6 +41,19 @@ controlPlane:
         scheduler:
           extraArgs:
             feature-gates: DynamicResourceAllocation=true
+    # Merged onto Talos's default, which audits and warns at restricted and
+    # exempts kube-system alone: its static pods and CNI need host access
+    # and start before Flux can label anything.
+    - |-
+      cluster:
+        apiServer:
+          admissionControl:
+            - name: PodSecurity
+              configuration:
+                apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+                kind: PodSecurityConfiguration
+                defaults:
+                  enforce: restricted
     # Talos writes machine files in the boot sequence only, so a change here
     # reaches the node on a reboot, never on a live apply.
     - |-
