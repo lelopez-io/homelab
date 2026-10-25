@@ -1,0 +1,53 @@
+---
+# A namespace's pod security labels are the platform's baseline for what
+# runs in it. Only Flux may lower one, by setting a lower value, removing
+# the label (which drops the namespace to the cluster default) or creating
+# the namespace below restricted, which a delete and recreate would do.
+# Any other creator sets no level below restricted, and an unlabelled
+# create counts as the cluster default. The forge-runs policy holds a
+# forge run to the same, and the two never disagree.
+#
+# The defaults variable mirrors the API server's pod security admission
+# defaults, set in talos/talconfig.yaml. Change the two together.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: pod-security-labels
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["namespaces"]
+  matchConditions:
+    - name: not-flux
+      expression: "request.userInfo.username != 'system:serviceaccount:flux-system:kustomize-controller'"
+  variables:
+    - name: ranks
+      expression: "{'privileged': 0, 'baseline': 1, 'restricted': 2}"
+    - name: defaults
+      expression: "{'enforce': 'restricted', 'audit': 'restricted', 'warn': 'restricted'}"
+    - name: old
+      expression: "request.operation == 'UPDATE' ? oldObject.metadata.?labels.orValue({}) : {}"
+    - name: new
+      expression: "object.metadata.?labels.orValue({})"
+  validations:
+    - expression: >-
+        request.operation != 'UPDATE' || variables.defaults.all(m,
+          variables.ranks[?variables.new[?'pod-security.kubernetes.io/' + m].orValue(variables.defaults[m])].orValue(0) >=
+          variables.ranks[?variables.old[?'pod-security.kubernetes.io/' + m].orValue(variables.defaults[m])].orValue(0))
+      message: "only Flux may lower a namespace's pod security enforce, audit or warn level"
+    - expression: >-
+        request.operation != 'CREATE' || variables.defaults.all(m,
+          variables.ranks[?variables.new[?'pod-security.kubernetes.io/' + m].orValue(variables.defaults[m])].orValue(0) >= 2)
+      message: "only Flux may create a namespace with a pod security level below restricted"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: pod-security-labels
+spec:
+  policyName: pod-security-labels
+  validationActions: ["Deny"]
