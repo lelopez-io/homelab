@@ -101,13 +101,23 @@ burst into latency.
 | Plane valkey | 4Mi | 25m, 64Mi | 256Mi | in-memory cache lost |
 | Plane migrator | not measured | 100m, 256Mi | none yet | the job retries |
 
-Longhorn's instance managers, engine images, share managers and recurring
-job pods are made by the manager, which offers a CPU reservation for the
-first (12% of a node, already set) and no memory request or limit. They
-stay unset.
+Not met: Longhorn's instance managers, engine images, share managers and
+recurring job pods are made by its manager, which offers a CPU reservation
+for the first (12% of a node, already set) and no memory request or limit.
+They have neither. Setting one by mutating those pods was decided against:
+Longhorn may reconcile the pod spec back, and a memory limit on an
+instance manager risks killing the process that holds every volume's
+engine. The next step is a measured limit once there is a usage source:
+read an instance manager's working set through a rebuild, a snapshot and an
+engine upgrade, then set a limit well above its peak.
+
+The init containers of Factorio (2) and Forgejo (3) are sized from their
+scripts and are estimates: 10m and 32Mi requested with 128Mi and 256Mi
+limits for Factorio's, 100m and 128Mi with 512Mi for Forgejo's.
 
 ## Without a quota
 
 kube-router is the cluster's network. A pod refused there leaves a node
 with no pod network, and restoring it needs that network, so the namespace
-carries no quota. Its three pods are a fixed daemonset.
+carries no quota. Its three pods are a fixed daemonset. Its container has a
+256Mi memory limit and no CPU limit: throttling it stalls pod networking.
