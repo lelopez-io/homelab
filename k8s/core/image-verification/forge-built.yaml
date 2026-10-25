@@ -1,9 +1,7 @@
 ---
-# Forge builds are signed with a cosign key whose public half is the Secret
-# below in the kyverno namespace. The forge's OIDC issuer is not one public
-# Fulcio accepts, so a keyless identity is not available for these images.
-# The build must push the signature as the <digest>.sig tag in the forge
-# registry; until it does, every forge image fails this audit.
+# Forge builds are signed with a cosign key held as the Secret below. The
+# forge's OIDC issuer is not one public Fulcio accepts, so there is no keyless
+# identity; the build must push the signature as the <digest>.sig tag.
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:

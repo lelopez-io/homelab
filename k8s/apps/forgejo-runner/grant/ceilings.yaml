@@ -1,17 +1,7 @@
 ---
 # policy.yaml decides which namespaces a run may touch; this decides what it
-# may put in them. A run writes its own NetworkPolicies and workloads, and
-# policies only add up, so the platform's limits hold only if admission
-# refuses what would lift them.
-#
-# Egress: a rule needs explicit peers. A peer is a pod of the run's own
-# namespace, an IPv4 ipBlock that touches no private range or excepts the
-# ranges it contains, or a platform service named in egressPorts, reached
-# on its port only. Ingress: a peer is a pod of the run's own namespace or the
-# gateway's proxies; an ipBlock is never one. A selector names a namespace by
-# its metadata.name label alone, which a run cannot set. Workloads: every
-# image comes from the forge registry by digest and every container carries
-# cpu and memory limits.
+# may put in them. Policies only add up, so admission has to refuse whatever
+# would lift the platform's limits.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -110,6 +100,8 @@ spec:
           !quantity(c.resources.limits['cpu']).isGreaterThan(quantity('1')) &&
           !quantity(c.resources.limits['memory']).isGreaterThan(quantity('1Gi')))
       message: "a forge app's containers may limit at most 1 cpu and 1Gi of memory"
+    # An egress peer is the run's own pods, a platform service on its one port,
+    # or an IPv4 ipBlock that excepts every private range it contains.
     - expression: >-
         !variables.isPolicy || object.spec.?egress.orValue([]).all(r,
           r.?to.orValue([]).size() > 0 &&
@@ -136,6 +128,8 @@ spec:
                   !has(p.endPort))) :
             true))
       message: "a forge app's network policy may not admit egress to private ranges, other than DNS and the platform services it is allowed"
+    # An ingress peer is the run's own pods or the gateway's proxies. A
+    # selector names a namespace by metadata.name alone, which a run cannot set.
     - expression: >-
         !variables.isPolicy || object.spec.?ingress.orValue([]).all(r,
           r.?from.orValue([]).size() > 0 &&

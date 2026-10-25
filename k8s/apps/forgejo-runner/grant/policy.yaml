@@ -1,16 +1,7 @@
 ---
 # RBAC cannot say "your own namespaces", so this does. A namespace belongs
-# to a forge run when it carries the run's repository as a label, and a
-# run may create one only labelled that way and under the restricted pod
-# security standard, so it cannot relax what the platform enforces. An
-# update must find the label already on the stored namespace and leave it
-# unchanged, so a run cannot claim a namespace by labelling it. It may
-# not set a gateway.lan/ label either: the gateway's listeners admit routes
-# from namespaces by that label, so setting it would open them to the run.
-# Its HTTPRoutes may name only the gateway's dev tier listener, and only
-# hosts under its own repository's name. Its Services are ClusterIP only, so
-# the gateway stays the one way in: no load balancer address, node port or
-# external IP.
+# to a forge run when it carries the run's repository as a label, and the
+# run may create, update and deploy into only those.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -54,6 +45,8 @@ spec:
         (oldObject.metadata.?labels.orValue({})[?'forge/repository'].orValue('') == variables.repository &&
           variables.labels[?'forge/repository'] == oldObject.metadata.?labels.orValue({})[?'forge/repository'])
       message: "a forge run may only update a namespace that already carries its forge/repository label, unchanged"
+    # The gateway's listeners admit routes from namespaces by this label, so a
+    # run that set it would open them to itself.
     - expression: >-
         !variables.isNamespace || request.operation == 'DELETE' ||
         !variables.labels.exists(k, k.startsWith('gateway.lan/'))
@@ -77,7 +70,8 @@ spec:
         (object.spec.?hostnames.orValue([]).size() > 0 &&
           object.spec.hostnames.all(h, h.startsWith(variables.repository + '.')))
       messageExpression: "'a forge route must name hosts starting with ' + variables.repository + '.'"
-    # An unset type defaults to ClusterIP.
+    # ClusterIP only, so the gateway stays the one way in. An unset type
+    # defaults to ClusterIP.
     - expression: >-
         !variables.isService || request.operation == 'DELETE' ||
         (object.spec.?type.orValue('ClusterIP') == 'ClusterIP' &&

@@ -1,8 +1,7 @@
 ---
-# The node network. Talos creates these objects once at bootstrap with a tag and
-# never updates them, so the repo owns them from here: Flux applies the
-# digest of the tag that runs today. Pruning is off so removing this
-# directory can never delete the CNI. Steps in k8s/core/pinned-images.md.
+# Talos creates these objects at bootstrap and never updates them, so the repo
+# owns them: Flux applies the digest. Pruning is off so removing this
+# directory never deletes the CNI. Bump steps: k8s/core/pinned-images.md.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
