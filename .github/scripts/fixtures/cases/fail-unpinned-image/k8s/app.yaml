@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pins
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: pins
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: app, namespace: pins}
+spec:
+  securityContext: {runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}
+  containers:
+  - name: app
+    image: busybox:1.38
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities: {drop: ["ALL"]}

@@ -1,0 +1,29 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: host-access
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+  validations:
+    - expression: "object.spec.?volumes.orValue([]).all(v, !has(v.hostPath))"
+      message: "hostPath volumes are only for the platform namespace"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: host-access
+spec:
+  policyName: host-access
+  validationActions: ["Deny"]
+  matchResources:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: ["platform"]
