@@ -117,6 +117,60 @@
   resource: deployments
   as: system:serviceaccount:kube-system:deployment-controller
   object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"nginx:latest"}]}}}}
+- name: "limits at the ceiling"
+  want: admit
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"1","memory":"1Gi"}}}]}}}}
+- name: "limits at the ceiling in other units"
+  want: admit
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"1000m","memory":"1024Mi"}}}]}}}}
+- name: "cpu limit above the ceiling"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"1001m","memory":"64Mi"}}}]}}}}
+- name: "cpu limit far above the ceiling"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"1000","memory":"64Mi"}}}]}}}}
+- name: "memory limit above the ceiling"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"1","memory":"1025Mi"}}}]}}}}
+- name: "memory limit in a larger suffix"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"1","memory":"2G"}}}]}}}}
+- name: "init container above the ceiling"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}],"initContainers":[{"name":"i","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"2","memory":"64Mi"}}}]}}}}
+- name: "image under another owner's path"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/other/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "image under an owner extending the caller's"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner2/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "image directly under the registry"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "owner path with no repository"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "other owner's run with its own path"
+  want: admit
+  resource: deployments
+  as: forge:repo:other/site
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/other/anything@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "other owner's run with the first owner's path"
+  want: deny
+  resource: deployments
+  as: forge:repo:other/site
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
 - name: "baseline deny-all, no rules"
   want: admit
   resource: networkpolicies
