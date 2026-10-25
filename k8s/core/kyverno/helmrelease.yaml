@@ -30,12 +30,9 @@ spec:
     remediation:
       retries: 3
   values:
-    # Only the admission and background controllers run: generate rules
-    # need both, and each other controller is a pod, a ServiceAccount and
-    # a set of cluster grants this cluster has no use for.
+    # Admission and background controllers generate, reports shows audit
+    # results. The cleanup controller is a pod and cluster grants unused.
     cleanupController:
-      enabled: false
-    reportsController:
       enabled: false
     # Each of these is a hook job or test pod with an image of its own.
     # The migration job only rewrites stored CRD versions on an upgrade;
@@ -47,16 +44,10 @@ spec:
     crds:
       migration:
         enabled: false
+    # Reports for admission and a background scan of what already runs,
+    # aggregated into PolicyReports; nothing else.
     features:
-      admissionReports:
-        enabled: false
-      aggregateReports:
-        enabled: false
-      policyReports:
-        enabled: false
       validatingAdmissionPolicyReports:
-        enabled: false
-      backgroundScan:
         enabled: false
 
     # Images are pinned by digest; the tag stays for the reader.
@@ -94,3 +85,13 @@ spec:
         limits:
           cpu: 250m
           memory: 256Mi
+    reportsController:
+      image:
+        tag: v1.19.2@sha256:5fb6d3e738050dbce84f60ecabaede7665fbe0578d07c1e8c912443b035e79c3
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 250m
+          memory: 384Mi
