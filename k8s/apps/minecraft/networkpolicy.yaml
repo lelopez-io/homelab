@@ -7,7 +7,33 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  # Rcon stays closed: its Service is cluster-local and nothing calls it.
+  ingress:
+    # Java and Bedrock players arrive through the gateway's routes on LAN
+    # and through the tunnel's frpc on WAN; both dial the Services, and
+    # the packet lands on these container ports after kube-proxy's rewrite.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: home
+              gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: frp-tunnel
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: frp-tunnel
+              app.kubernetes.io/component: frpc
+      ports:
+        - protocol: TCP
+          port: 25565
+        - protocol: UDP
+          port: 19132
   egress:
     # DNS resolution
     - to:
