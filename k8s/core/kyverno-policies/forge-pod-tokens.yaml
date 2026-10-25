@@ -1,0 +1,32 @@
+# A pod in a forge run's namespace mounts no API token unless it asks.
+# The field is set only where the pod leaves it unset: a pod that names
+# true is left alone, so the admission policy that refuses a mounted
+# token on a run's pod sees the request as written instead of a silent
+# edit. The webhook is scoped to the forge namespaces by label and
+# ignores its own failure; with Kyverno down the pod arrives unmutated
+# and that same policy refuses it, so an outage never lifts the rule.
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
+metadata:
+  name: forge-pod-tokens
+spec:
+  failurePolicy: Ignore
+  reinvocationPolicy: Never
+  matchConditions:
+    - name: field-unset
+      expression: "!has(object.spec.automountServiceAccountToken)"
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: forge/repository
+          operator: Exists
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: >-
+          Object{spec: Object.spec{automountServiceAccountToken: false}}
