@@ -35,6 +35,23 @@ patches:
           mode: Tag
           secretRef:
             name: gpg-public-keys
+  # No scraper and no Receiver exists, so neither policy has a caller
+  # outside flux-system and allow-egress already covers same-namespace
+  # traffic. A future scraper or Receiver adds its caller rule with it.
+  - target:
+      kind: NetworkPolicy
+      name: allow-scraping
+    patch: |
+      - op: replace
+        path: /spec/ingress
+        value: []
+  - target:
+      kind: NetworkPolicy
+      name: allow-webhooks
+    patch: |
+      - op: replace
+        path: /spec/ingress
+        value: []
   # Go on Linux reads SSL_CERT_FILE in place of the image's own roots.
   - target:
       kind: Deployment
