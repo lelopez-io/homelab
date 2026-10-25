@@ -268,3 +268,22 @@ spec:
               - op: add
                 path: /spec/ttlSecondsAfterFinished
                 value: 86400
+          # Celery forks one process per CPU the node has, not per CPU the
+          # pod may use, so on a large node they overrun the chart's memory
+          # limit. Celery's CLI reads its options from CELERY_ variables.
+          - target:
+              kind: Deployment
+              name: plane-worker-wl
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: plane-worker-wl
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: plane-worker
+                        env:
+                          - name: CELERY_WORKER_CONCURRENCY
+                            value: "2"
