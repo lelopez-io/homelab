@@ -7,7 +7,11 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  # Nothing connects in: frpc only dials out, and the canary route answers
+  # from the gateway itself without a backend.
+  ingress: []
   egress:
     # DNS
     - to:
