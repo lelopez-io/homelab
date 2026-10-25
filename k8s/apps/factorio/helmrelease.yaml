@@ -41,6 +41,30 @@ spec:
               - op: add
                 path: /spec/externalTrafficPolicy
                 value: Local
+    # The image entrypoint runs under set -x and would trace its exec line,
+    # password included. The trace goes to /dev/null; the value still shows
+    # in the process args inside the pod.
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: factorio-factorio-server-charts
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: factorio-factorio-server-charts
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: factorio-factorio-server-charts
+                        command:
+                          - /bin/bash
+                          - -c
+                          - |
+                            exec 9>/dev/null
+                            BASH_XTRACEFD=9 exec /docker-entrypoint.sh
   values:
     image:
       tag: "2.0.77@sha256:35237d3cb047107cecbf7a8ef6c4fab41acc65548b65526a1b15a5dd0cb670be"
