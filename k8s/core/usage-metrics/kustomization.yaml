@@ -8,3 +8,10 @@ resources:
   - resourcequota.yaml
   - helmrepository.yaml
   - helmrelease.yaml
+  - prometheus.yaml
+# The hash in the name rolls the pod when the scrape config changes.
+configMapGenerator:
+  - name: prometheus
+    namespace: usage-metrics
+    files:
+      - prometheus.yml

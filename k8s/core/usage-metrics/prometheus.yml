@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 30s
+scrape_configs:
+  # Every container's usage from each kubelet's cAdvisor endpoint. The
+  # kubelets' certificates are self-signed, so the scrape does not verify
+  # them; the token it sends grants only the read of node metrics.
+  - job_name: cadvisor
+    scheme: https
+    metrics_path: /metrics/cadvisor
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tls_config:
+      insecure_skip_verify: true
+    static_configs:
+      - targets:
+          - 192.168.10.30:10250
+          - 192.168.10.31:10250
+          - 192.168.10.32:10250
+    metric_relabel_configs:
+      # What a limit is sized from: memory, CPU, kills, and the limit set.
+      - source_labels: [__name__]
+        regex: container_(cpu_usage_seconds_total|memory_working_set_bytes|memory_rss|memory_max_usage_bytes|oom_events_total|spec_memory_limit_bytes)
+        action: keep
+      # Drop the pod-level and pause-container series, which carry no
+      # container name.
+      - source_labels: [container]
+        regex: .+
+        action: keep
