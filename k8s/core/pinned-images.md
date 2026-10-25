@@ -189,6 +189,25 @@ commit.
 The image is also in `talos/talconfig.yaml` (`cluster.proxy.image`); set both
 digests on every bump.
 
+## Before the digest rule refuses tags in kube-system
+
+The last admission commit makes the rule refuse a tagged image in every
+namespace, so it must be tagged after all three of these, each read-only.
+
+1. The Talos round has applied the control plane digests. Every static pod
+   reports the digest from `talos/talconfig.yaml` in its spec and its
+   `imageID`:
+
+       kubectl -n kube-system get pods -o jsonpath='{range .items[*]}{.spec.nodeName}{"\t"}{.metadata.name}{"\t"}{.spec.containers[0].image}{"\t"}{.status.containerStatuses[0].imageID}{"\n"}{end}' | grep -E 'kube-(apiserver|controller-manager|scheduler)'
+
+   Nine lines, three per node, each image ending in `@sha256:<digest>`.
+2. Every Longhorn volume is on the pinned engine image and the old engine
+   image is gone, by the volume list in the Longhorn section.
+3. The three `kube-system` workloads have rolled all three nodes. Nothing in
+   the cluster may still run by tag, and the output of this must be empty:
+
+       kubectl get pods -A -o jsonpath='{range .items[*]}{range .spec.initContainers[*]}{.image}{"\n"}{end}{range .spec.containers[*]}{.image}{"\n"}{end}{end}' | grep -v '@sha256:'
+
 ## Checking
 
 `k8s/core/admission/tests/rendered.sh` renders `k8s`, `flux/config/flux-system`
