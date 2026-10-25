@@ -7,7 +7,31 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  ingress:
+    # Every pod in the namespace: the apps call the datastores, and
+    # one-shot pods like the migrator start here.
+    - from:
+        - podSelector: {}
+    # The gateway's proxies serve every Plane path: web, space, admin and
+    # live on 3000, api on 8000 and minio on 9000, reached at the pod
+    # after kube-proxy rewrites the Service address.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: home
+              gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+      ports:
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 9000
   egress:
     # DNS resolution
     - to:
