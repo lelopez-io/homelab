@@ -56,6 +56,19 @@ spec:
       tag: "15.0.9"
       digest: sha256:caf1bca332f95cdcf124227a4bfa3b49bbbfbbc8a5e4a97406921cb581165413
 
+    # The rootless image already runs as uid 1000 and the data volume is
+    # already group 1000, so this pins what runs today rather than moving
+    # it. The chart applies the context to its init containers too.
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      runAsNonRoot: true
+      runAsUser: 1000
+      seccompProfile:
+        type: RuntimeDefault
+
     persistence:
       enabled: true
       create: false
