@@ -1,0 +1,32 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: plane
+  namespace: plane
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    # The app's own datastores and services, which all run here. The pod
+    # network sits inside 10.0.0.0/8, so the internet rule below excludes it.
+    - to:
+        - podSelector: {}
+    # Internet (webhooks, outbound mail)
+    # Block private ranges
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
