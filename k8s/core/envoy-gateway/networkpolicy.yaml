@@ -7,7 +7,98 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  ingress:
+    # The proxies dial the controller's xDS from inside the namespace.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+    # The proxy Service runs externalTrafficPolicy Local, so LAN clients
+    # keep their addresses; tailnet devices arrive masqueraded through the
+    # Connector's pods. Ports: Envoy shifts 80, 443 and 22 by 10000.
+    - from:
+        - ipBlock:
+            cidr: 192.168.0.0/16
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+          podSelector:
+            matchLabels:
+              tailscale.com/parent-resource-type: connector
+      ports:
+        - protocol: TCP
+          port: 10080
+        - protocol: TCP
+          port: 10443
+        - protocol: TCP
+          port: 10022
+        - protocol: TCP
+          port: 25565
+        - protocol: UDP
+          port: 34197
+        - protocol: UDP
+          port: 19132
+        - protocol: UDP
+          port: 8211
+    # The tailnet lanes: the tailnet proxies dial the forge and plane
+    # Services, which land on the forge-only and plane-only listeners.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+      ports:
+        - protocol: TCP
+          port: 8443
+        - protocol: TCP
+          port: 8444
+        - protocol: TCP
+          port: 2222
+    # frpc's https-tier lane dials the LAN address's 443, landing here.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: frp-tunnel
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: frp-tunnel
+              app.kubernetes.io/component: frpc
+      ports:
+        - protocol: TCP
+          port: 10443
+    # Two host callers cross nodes to reach the proxies and arrive from the
+    # caller's flannel address: node image pulls, and the API server's JWT
+    # authenticator fetching the forge's OIDC discovery document and JWKS.
+    - from:
+        - ipBlock:
+            cidr: 10.244.0.0/32
+        - ipBlock:
+            cidr: 10.244.1.0/32
+        - ipBlock:
+            cidr: 10.244.2.0/32
+      ports:
+        - protocol: TCP
+          port: 10443
+    # The API server calls the topology-injection webhook (9443) from a
+    # node; the Service picks a pod on any node, so a cross-node call
+    # arrives from the caller's flannel address.
+    - from:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+        - ipBlock:
+            cidr: 10.244.0.0/32
+        - ipBlock:
+            cidr: 10.244.1.0/32
+        - ipBlock:
+            cidr: 10.244.2.0/32
+      ports:
+        - protocol: TCP
+          port: 9443
   egress:
     # DNS
     - to:
