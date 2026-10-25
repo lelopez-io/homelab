@@ -160,6 +160,20 @@ tag back into the DaemonSet; Flux restores the digest at its next reconcile,
 and once the digest rule refuses tags in `kube-system` the upgrade's write is
 refused, so bump the manifest first.
 
+## CoreDNS
+
+`coredns/` follows the flannel recipe: the six objects Talos created (service
+account, cluster role and binding, ConfigMap, Service and Deployment), copied
+from the running cluster, with only the digest of v1.12.4 and the prune-off
+annotation added. The Deployment keeps two replicas and replaces them one at a
+time. Roll out with `kubectl -n kube-system rollout status deploy/coredns` and
+resolve a service name from a pod after each replica. To roll back, revert the
+commit.
+
+The same image is in `talos/talconfig.yaml` (`cluster.coreDNS.image`), which a
+Kubernetes upgrade reads, so set both digests on every bump or the upgrade
+writes one over the other.
+
 ## Checking
 
 `k8s/core/admission/tests/rendered.sh` renders `k8s`, `flux/config/flux-system`

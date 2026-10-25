@@ -13,6 +13,7 @@ resources:
   - generic-device-plugin
   - kube-router
   - flannel
+  - coredns
   - default
   - admission
   - image-verification.flux.yaml
