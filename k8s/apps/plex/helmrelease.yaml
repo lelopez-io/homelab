@@ -54,6 +54,13 @@ spec:
 
     pms:
       configExistingClaim: plex-config-encrypted
+      # Idle working set 173Mi; a scan or transcode was not measured, so no
+      # memory limit yet. No CPU limit: it would stall playback. See the
+      # budgets doc.
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
       podSecurityContext:
         # Volumes here are group-owned rather than user-owned, so several
         # unprivileged processes can share them. Kubernetes applies the
@@ -83,6 +90,12 @@ spec:
               sed -i 's#/>[[:space:]]*$# LanNetworksBandwidth="192.168.0.0/16"/>#' "$P"
             fi
             grep -o 'LanNetworksBandwidth="[^"]*"' "$P"
+        resources:
+          requests:
+            cpu: 1m
+            memory: 8Mi
+          limits:
+            memory: 32Mi
         volumeMounts:
           - name: pms-config
             mountPath: /config
