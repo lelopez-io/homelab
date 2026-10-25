@@ -212,7 +212,9 @@ flowchart TB
 
 ### Network policy
 
-Every namespace carries a NetworkPolicy naming both directions: `egress` lists what the app may reach and `ingress` lists who may connect. A new app declares its callers there from the start; an app nothing calls sets `ingress: []`, so each later caller earns its own line.
+Every namespace whose pods use the pod network carries a NetworkPolicy naming both directions: `egress` lists what the app may reach and `ingress` lists who may connect. A new app declares its callers there from the start; an app nothing calls sets `ingress: []`, so each later caller earns its own line.
+
+A namespace with nothing to run, such as `default`, carries the same policy with no rules, which opens no connection in either direction. A namespace whose pods use only the host network, such as `kube-router`, carries no policy, because policy never filters host traffic; a comment beside its manifests says so.
 
 The rules select pods and name container ports, never a Service address or Service port; the rules themselves carry the reason. An app the gateway serves admits the gateway's proxies, labelled `gateway.envoyproxy.io/owning-gateway-name: home` in `envoy-gateway-system`. Kubelet probes and kubectl port-forward need no rule: kube-router accepts a pod's own node. A host-network caller that can land on another node, such as a webhook call or an image pull, admits the node addresses pinned in `talos/talconfig.yaml` beside each node's flannel address (10.244.0.0, .1.0 and .2.0), which is what a cross-node packet carries.
 
