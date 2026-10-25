@@ -1,0 +1,41 @@
+---
+# A LoadBalancer or NodePort Service, or one with external IPs, puts a port
+# on an address outside the cluster. Only the namespaces that serve the LAN
+# may, so a chart that flips a Service type fails at the apply.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: lan-services
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["services"]
+  validations:
+    - expression: "object.spec.?type.orValue('ClusterIP') in ['ClusterIP', 'ExternalName']"
+      message: "only the namespaces that serve the LAN may expose a LoadBalancer or NodePort Service"
+    - expression: "object.spec.?externalIPs.orValue([]).size() == 0"
+      message: "only the namespaces that serve the LAN may set externalIPs on a Service"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: lan-services
+spec:
+  policyName: lan-services
+  validationActions: ["Deny"]
+  matchResources:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            # The gateway's own Services, on the LAN address and the tailnet.
+            - envoy-gateway-system
+            # The RCON port is reached from the LAN.
+            - factorio
+            # The media server's port is reached from the LAN.
+            - plex
