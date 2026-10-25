@@ -1,0 +1,18 @@
+---
+# The ingress proxies fit anywhere, so this class carries sizes and none of
+# the control-plane class's placement. Sizes match the connector's.
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: proxies
+spec:
+  statefulSet:
+    pod:
+      tailscaleContainer:
+        resources:
+          requests: {cpu: 10m, memory: 64Mi}
+          limits: {memory: 256Mi}
+      tailscaleInitContainer:
+        resources:
+          requests: {cpu: 1m, memory: 8Mi}
+          limits: {memory: 32Mi}
