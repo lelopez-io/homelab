@@ -138,6 +138,14 @@ controlPlane:
       machine:
         sysctls:
           user.max_user_namespaces: "11255"
+    # Each kubelet asks the cluster CA for its serving certificate, which the
+    # approver in kubelet-csr-approver must approve, so that deploys first.
+    # Talos 1.13 takes the config field; the flag is deprecated.
+    - |-
+      machine:
+        kubelet:
+          extraConfig:
+            serverTLSBootstrap: true
 
 
 nodes:
