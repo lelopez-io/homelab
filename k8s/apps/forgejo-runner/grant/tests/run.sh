@@ -5,3 +5,5 @@ set -e
 cd "$(dirname "$0")"
 go run . ../ceilings.yaml cases.yaml registry.test
 go run . ../no-token.yaml cases-no-token.yaml registry.test
+go run . ../policy.yaml cases-namespaces.yaml registry.test
+go run . ../ceilings.yaml cases-namespace-labels.yaml registry.test

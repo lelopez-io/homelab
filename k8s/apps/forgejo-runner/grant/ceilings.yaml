@@ -20,6 +20,10 @@ spec:
   failurePolicy: Fail
   matchConstraints:
     resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["namespaces"]
       - apiGroups: ["networking.k8s.io"]
         apiVersions: ["*"]
         operations: ["CREATE", "UPDATE"]
@@ -45,6 +49,8 @@ spec:
       expression: "request.userInfo.username.split(':')[2].split('/')[0]"
     - name: isPolicy
       expression: "request.resource.resource == 'networkpolicies'"
+    - name: isNamespace
+      expression: "request.resource.resource == 'namespaces'"
     # Platform services a run's egress may reach beyond its own namespace,
     # by namespace: the one port a rule may name, and the app label of the
     # destination pods where the namespace holds more than that service.
@@ -66,9 +72,21 @@ spec:
         object.spec.template.spec
     - name: containers
       expression: >-
-        variables.isPolicy ? [] :
+        variables.isPolicy || variables.isNamespace ? [] :
         variables.podSpec.?containers.orValue([]) + variables.podSpec.?initContainers.orValue([])
   validations:
+    # forge/egress: none withholds the generated internet allow; any other
+    # value would read as unset, so none is the only one. A version label
+    # pins an older, looser restricted standard; only latest is kept.
+    - expression: >-
+        !variables.isNamespace ||
+        object.metadata.?labels[?'forge/egress'].orValue('none') == 'none'
+      message: "a forge app's namespace may only set forge/egress to none"
+    - expression: >-
+        !variables.isNamespace || object.metadata.?labels.orValue({}).all(k,
+          !(k.startsWith('pod-security.kubernetes.io/') && k.endsWith('-version')) ||
+          object.metadata.labels[k] == 'latest')
+      message: "a forge app's namespace may not pin a pod security version"
     # The slash after the registry keeps a longer hostname from matching,
     # the owner's slash keeps one owner's name from covering another whose
     # name extends it, and the digest is exactly 64 hex digits.

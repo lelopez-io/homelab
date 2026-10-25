@@ -1,0 +1,42 @@
+# Judged by ceilings.yaml: the labels a run may put on its namespace.
+- name: "namespace egress none"
+  want: admit
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","forge/egress":"none"}}}
+- name: "namespace no egress label"
+  want: admit
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site"}}}
+- name: "namespace egress internet"
+  want: deny
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","forge/egress":"internet"}}}
+- name: "namespace egress empty"
+  want: deny
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","forge/egress":""}}}
+- name: "namespace enforce-version latest"
+  want: admit
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","pod-security.kubernetes.io/enforce-version":"latest"}}}
+- name: "namespace enforce-version v1.0"
+  want: deny
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","pod-security.kubernetes.io/enforce-version":"v1.0"}}}
+- name: "namespace audit-version v1.18"
+  want: deny
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","pod-security.kubernetes.io/audit-version":"v1.18"}}}
+- name: "namespace warn-version v1.18"
+  want: deny
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","pod-security.kubernetes.io/warn-version":"v1.18"}}}
+- name: "namespace audit and warn restricted"
+  want: admit
+  resource: namespaces
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","pod-security.kubernetes.io/audit":"restricted","pod-security.kubernetes.io/warn":"restricted"}}}
+- name: "non-forge caller may pin a version"
+  want: admit
+  resource: namespaces
+  as: "system:serviceaccount:kube-system:generator"
+  object: {"metadata":{"name":"x","labels":{"pod-security.kubernetes.io/enforce-version":"v1.0"}}}

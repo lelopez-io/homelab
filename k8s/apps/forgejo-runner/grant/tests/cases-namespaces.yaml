@@ -1,0 +1,46 @@
+# Judged by policy.yaml: a run's own namespace, as it is created and updated.
+- name: "create own namespace with forge/egress=none"
+  want: admit
+  resource: namespaces
+  operation: CREATE
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","forge/egress":"none"}}}
+- name: "update own namespace, adding forge/egress=none"
+  want: admit
+  resource: namespaces
+  operation: UPDATE
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","forge/egress":"none"}}}
+  old: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site"}}}
+- name: "update own namespace, forge/egress=none kept"
+  want: admit
+  resource: namespaces
+  operation: UPDATE
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","forge/egress":"none"}}}
+  old: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","forge/egress":"none"}}}
+- name: "update a namespace the repository does not carry yet"
+  want: deny
+  resource: namespaces
+  operation: UPDATE
+  object: {"metadata":{"name":"flux-system","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","forge/egress":"none"}}}
+  old: {"metadata":{"name":"flux-system","labels":{"pod-security.kubernetes.io/enforce":"restricted"}}}
+- name: "update changing the repository label"
+  want: deny
+  resource: namespaces
+  operation: UPDATE
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"other"}}}
+  old: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site"}}}
+- name: "update removing the repository label"
+  want: deny
+  resource: namespaces
+  operation: UPDATE
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted"}}}
+  old: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site"}}}
+- name: "create with a gateway.lan/ label"
+  want: deny
+  resource: namespaces
+  operation: CREATE
+  object: {"metadata":{"name":"site-dev","labels":{"pod-security.kubernetes.io/enforce":"restricted","forge/repository":"site","gateway.lan/routes":"true"}}}
+- name: "create without restricted enforcement"
+  want: deny
+  resource: namespaces
+  operation: CREATE
+  object: {"metadata":{"name":"site-dev","labels":{"forge/repository":"site"}}}
