@@ -4,5 +4,11 @@ kind: Namespace
 metadata:
   name: palworld
   labels:
+    # The image's entrypoint starts as root to remap the steam user to the
+    # configured ids and chown the data volume before dropping to it, which
+    # restricted refuses. Baseline still bars host access and added caps.
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: baseline
     # Opt-in for the Gateway named home to admit routes from this namespace.
     gateway.lan/routes: "true"
