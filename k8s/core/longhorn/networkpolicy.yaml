@@ -8,6 +8,32 @@ spec:
   podSelector: {}
   policyTypes:
     - Egress
+    - Ingress
+  ingress:
+    # The manager API has no login of its own, so only Longhorn's own pods
+    # (CSI, instance managers, engines, the UI) may reach it.
+    - from:
+        - podSelector: {}
+    # The API server's webhook calls (9502) come from the nodes' host
+    # network; across nodes they arrive from the caller's flannel.1 address.
+    - from:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+        - ipBlock:
+            cidr: 10.244.0.0/32
+        - ipBlock:
+            cidr: 10.244.1.0/32
+        - ipBlock:
+            cidr: 10.244.2.0/32
+      ports:
+        - protocol: TCP
+          port: 9502
+        # Port 2049 is not admitted: an RWX mount from another node would need
+        # it added beside the flannel /32s above. Nothing uses RWX today.
   egress:
     - to:
         - namespaceSelector:
