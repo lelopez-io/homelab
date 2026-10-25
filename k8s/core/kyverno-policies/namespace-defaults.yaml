@@ -1,0 +1,64 @@
+# A namespace starts closed and bounded: no traffic in or out, a default
+# size for every container, and a ceiling for the namespace. The rule
+# fires on Namespace CREATE only, so an existing namespace is never
+# touched, whatever later updates it receives. Synchronize puts back a
+# generated object that is deleted or edited, so a workload in the
+# namespace cannot loosen it. A policy added beside it is additive and
+# is how a namespace opens what it needs.
+apiVersion: policies.kyverno.io/v1
+kind: GeneratingPolicy
+metadata:
+  name: namespace-defaults
+spec:
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["namespaces"]
+  evaluation:
+    synchronize:
+      enabled: true
+    generateExisting:
+      enabled: false
+  variables:
+    - name: namespace
+      expression: "object.metadata.name"
+    # A dev site asks for 10m and 16Mi, so the default holds a few dozen.
+    # A namespace needing more is named in `budgets`, its entry replacing
+    # the default whole; its own labels never set it, a run controls them.
+    - name: defaultBudget
+      expression: >-
+        {"requests.cpu": "1", "requests.memory": "1Gi",
+         "limits.cpu": "2", "limits.memory": "2Gi", "pods": "20"}
+    - name: budgets
+      expression: "{}"
+    - name: budget
+      expression: >-
+        variables.budgets[?variables.namespace].orValue(variables.defaultBudget)
+    - name: denyAll
+      expression: >-
+        {"apiVersion": "networking.k8s.io/v1", "kind": "NetworkPolicy",
+         "metadata": {"name": "default-deny"},
+         "spec": {"podSelector": {},
+                  "policyTypes": ["Ingress", "Egress"]}}
+    # A container that names no size gets this one, and none may exceed
+    # the max, which keeps one container from taking the namespace's
+    # whole quota.
+    - name: limitRange
+      expression: >-
+        {"apiVersion": "v1", "kind": "LimitRange",
+         "metadata": {"name": "defaults"},
+         "spec": {"limits": [{"type": "Container",
+           "defaultRequest": {"cpu": "10m", "memory": "32Mi"},
+           "default": {"cpu": "100m", "memory": "128Mi"},
+           "max": {"cpu": "1", "memory": "1Gi"}}]}}
+    - name: quota
+      expression: >-
+        {"apiVersion": "v1", "kind": "ResourceQuota",
+         "metadata": {"name": "budget"},
+         "spec": {"hard": variables.budget}}
+  generate:
+    - expression: >-
+        generator.Apply(variables.namespace,
+          [variables.denyAll, variables.limitRange, variables.quota])
