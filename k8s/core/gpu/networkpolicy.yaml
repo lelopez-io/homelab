@@ -8,6 +8,28 @@ spec:
   podSelector: {}
   policyTypes:
     - Ingress
+    - Egress
   # Kubelet reaches the plugin over its hostPath socket; nothing listens
   # on the pod network.
   ingress: []
+  egress:
+    # DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    # Kubernetes API (publish ResourceSlices), reached at the node after
+    # kube-proxy rewrites the Service
+    - to:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+      ports:
+        - protocol: TCP
+          port: 6443
