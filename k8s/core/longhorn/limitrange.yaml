@@ -1,5 +1,7 @@
 ---
-# A container that names no size gets a small request.
+# A container that names no size gets a small request, and a memory limit so
+# the pods Longhorn makes itself, which offer no setting, have a ceiling. The
+# limit is an estimate: re-size it from a week of the usage history.
 apiVersion: v1
 kind: LimitRange
 metadata:
@@ -11,3 +13,5 @@ spec:
       defaultRequest:
         cpu: 10m
         memory: 32Mi
+      default:
+        memory: 2Gi
