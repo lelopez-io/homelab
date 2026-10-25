@@ -326,10 +326,12 @@ def check_kyverno(docs, candidates):
     for p in docs:
         g = group(p)
         if p.get("kind") not in ("ClusterPolicy", "Policy", "ValidatingPolicy", "GeneratingPolicy",
-                                 "ImageValidatingPolicy") or g not in ("kyverno.io", "policies.kyverno.io"):
+                                 "ImageValidatingPolicy", "MutatingPolicy") or g not in ("kyverno.io", "policies.kyverno.io"):
             continue
         name = meta(p)["name"]
         rules = p.get("spec", {}).get("rules", [])
+        if p["kind"] == "MutatingPolicy" or any("mutate" in r for r in rules):
+            notes.append(f"{p['kind']} {name} mutates, which the gate does not apply; pods are judged as the chart renders them")
         if p["kind"] == "ImageValidatingPolicy" or any("verifyImages" in r for r in rules):
             notes.append(f"{p['kind']} {name} verifies signatures, which needs the registry; not evaluated")
         if p["kind"] == "GeneratingPolicy" or any("generate" in r for r in rules):
