@@ -1,0 +1,57 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: metrics-server
+  namespace: usage-metrics
+spec:
+  interval: 1h
+  # The chart asks cert-manager for the serving certificate, so its CRDs and
+  # the CA injector must be there first.
+  dependsOn:
+    - name: cert-manager
+      namespace: cert-manager
+  chart:
+    spec:
+      chart: metrics-server
+      version: "3.14.0"
+      sourceRef:
+        kind: HelmRepository
+        name: metrics-server
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    image:
+      tag: v0.9.0@sha256:d9862115e7c7881280d3d75ca26bda8ffc0fc213315979575bf23ce9826205c0
+    # The API server verifies the certificate cert-manager issues, whose CA
+    # the injector writes into the APIService.
+    tls:
+      type: cert-manager
+    apiService:
+      insecureSkipTLSVerify: false
+    # The kubelets serve self-signed certificates, so this component cannot
+    # verify them; it holds a token that only reads their metrics.
+    args:
+      - --kubelet-insecure-tls
+    # The system classes are for kube-system only; a pod naming one here
+    # is refused.
+    priorityClassName: ""
+    # One replica, replaced in place: a second pod would double the request
+    # for a gap of a few seconds in a measurement nobody pages on.
+    updateStrategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 0
+        maxUnavailable: 1
+    # Not measured here. The chart's own request, and a memory limit of
+    # twice it; a kill drops current readings until it returns.
+    resources:
+      requests:
+        cpu: 100m
+        memory: 200Mi
+      limits:
+        memory: 400Mi

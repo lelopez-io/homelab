@@ -21,3 +21,51 @@ spec:
       ports:
         - protocol: UDP
           port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: metrics-server
+  namespace: usage-metrics
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: metrics-server
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # The API server calls the aggregated API (10250) from a node, and the
+    # pod may be on another: a cross-node call arrives from the caller's
+    # flannel address, a same-node call passes by itself.
+    - from:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+        - ipBlock:
+            cidr: 10.244.0.0/32
+        - ipBlock:
+            cidr: 10.244.1.0/32
+        - ipBlock:
+            cidr: 10.244.2.0/32
+      ports:
+        - protocol: TCP
+          port: 10250
+  egress:
+    # The kubelets' read-only metrics (10250) and the API server (6443), at
+    # the node addresses.
+    - to:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+      ports:
+        - protocol: TCP
+          port: 10250
+        - protocol: TCP
+          port: 6443
