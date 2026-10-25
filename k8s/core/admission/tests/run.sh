@@ -12,4 +12,5 @@ check() { # policy fixture expected-fail expected-pass
   echo "ok $1"
 }
 check pinned-images pods 4 2
+check host-access host 6 2
 check lan-services services 3 1

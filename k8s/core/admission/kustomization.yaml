@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - pinned-images.yaml
   - lan-services.yaml
+  - host-access.yaml
