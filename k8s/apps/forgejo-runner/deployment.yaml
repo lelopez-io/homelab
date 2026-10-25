@@ -93,6 +93,20 @@ spec:
             limits:
               memory: "4Gi"
               cpu: "2000m"
+          # Ready only once the daemon answers over TLS, so a daemon that
+          # fails to start stalls the rollout instead of failing every job.
+          readinessProbe:
+            exec:
+              command:
+                - docker
+                - --host=tcp://localhost:2376
+                - --tlsverify
+                - --tlscacert=/certs/client/ca.pem
+                - --tlscert=/certs/client/cert.pem
+                - --tlskey=/certs/client/key.pem
+                - version
+            periodSeconds: 10
+            timeoutSeconds: 5
           securityContext:
             privileged: true
       volumes:
