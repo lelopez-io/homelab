@@ -1,0 +1,13 @@
+---
+# One pod, surging to two on a rollout.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: kubelet-csr-approver
+spec:
+  hard:
+    requests.cpu: 50m
+    requests.memory: 128Mi
+    limits.memory: 256Mi
+    pods: "4"
