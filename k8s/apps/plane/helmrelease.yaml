@@ -99,19 +99,26 @@ spec:
       root_user: plane
       storageClass: longhorn-encrypted
       volumeSize: 10Gi
+      assign_cluster_ip: true
 
     # The app images are pinned by digest below, so pulling on every start
-    # fetches nothing new.
+    # fetches nothing new. The chart makes every Service headless; the ones
+    # the gateway routes to get a cluster IP.
     web:
       pullPolicy: IfNotPresent
+      assign_cluster_ip: true
     space:
       pullPolicy: IfNotPresent
+      assign_cluster_ip: true
     admin:
       pullPolicy: IfNotPresent
+      assign_cluster_ip: true
     live:
       pullPolicy: IfNotPresent
+      assign_cluster_ip: true
     api:
       pullPolicy: IfNotPresent
+      assign_cluster_ip: true
     worker:
       pullPolicy: IfNotPresent
     beatworker:
