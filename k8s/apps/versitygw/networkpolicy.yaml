@@ -7,7 +7,26 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  ingress:
+    # Bucket clients: the cell fleet reads and writes its store, and forge
+    # apps that hold bucket credentials reach their buckets. All dial the
+    # Service and land on the container port after the rewrite.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: celld
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: forgejo-runner
+        - namespaceSelector:
+            matchExpressions:
+              - key: forge/repository
+                operator: Exists
+      ports:
+        - protocol: TCP
+          port: 7070
   egress:
     # DNS resolution
     - to:
