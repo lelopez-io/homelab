@@ -28,6 +28,19 @@ spec:
   upgrade:
     remediation:
       retries: 3
+  postRenderers:
+    # The chart has no value for this, and a Cluster policy rewrites a LAN
+    # client to a flannel address whenever the announcing node is not the
+    # pod's: the rcon rule's LAN sources would never match.
+    - kustomize:
+        patches:
+          - target:
+              kind: Service
+              name: factorio-factorio-server-charts-rcon
+            patch: |
+              - op: add
+                path: /spec/externalTrafficPolicy
+                value: Local
   values:
     image:
       tag: "2.0.77@sha256:35237d3cb047107cecbf7a8ef6c4fab41acc65548b65526a1b15a5dd0cb670be"
