@@ -7,7 +7,12 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  # Nothing connects in: the runner polls the forge, and workflow jobs
+  # reach the dind daemon on the pod's own loopback, which policy never
+  # filters.
+  ingress: []
   egress:
     # DNS resolution
     - to:
