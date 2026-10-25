@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: locked
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: locked
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: app, namespace: locked}
+spec:
+  containers:
+  - name: app
+    image: busybox@sha256:0000000000000000000000000000000000000000000000000000000000000000
