@@ -35,7 +35,7 @@ spec:
             - -health-probe-bind-address
             - ":8081"
           env:
-            # The three nodes' names. A request whose username names another
+            # The nodes' names. A request whose username names another
             # node, or whose DNS name does not start with that username, is
             # denied.
             - name: PROVIDER_REGEX
@@ -45,8 +45,8 @@ spec:
             - name: PROVIDER_IP_PREFIXES
               value: 192.168.10.30/32,192.168.10.31/32,192.168.10.32/32
             # The node names are not in cluster DNS, and the policy gives the
-            # pod no DNS egress. So a name is held to the three addresses,
-            # not to its own: that needs an approver that reads the Node.
+            # pod no DNS egress, so a request may name any of the node
+            # addresses above.
             - name: BYPASS_DNS_RESOLUTION
               value: "true"
           ports:
@@ -64,8 +64,7 @@ spec:
             httpGet:
               path: /healthz
               port: health
-          # Estimates: the chart's defaults, which the maintainers size for a
-          # controller that watches one resource kind. Re-size from metrics.
+          # Sized for a controller that watches one resource kind.
           resources:
             requests:
               cpu: 10m

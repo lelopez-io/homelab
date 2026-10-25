@@ -1,6 +1,6 @@
 ---
-# 1 pod, 300m and 576Mi requested: the media server 250m and 512Mi, copyparty
-# 50m and 64Mi. An init container peaks lower. Requests and pods only.
+# Requests and pods only: the media server sets no limit. An init container
+# peaks lower than the running pods.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

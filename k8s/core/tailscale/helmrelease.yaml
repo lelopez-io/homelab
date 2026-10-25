@@ -21,13 +21,13 @@ spec:
     remediation:
       retries: 3
   values:
-    # Digests of v1.104.2; with a digest the chart drops the tag. The proxy
-    # digest reaches every pod the operator starts. Bump: the chart version
-    # and both digests, steps in k8s/core/pinned-images.md.
+    # With a digest the chart drops the tag. The proxy digest reaches every pod
+    # the operator starts. Bump: the chart version and both digests, steps in
+    # k8s/core/pinned-images.md.
     operatorConfig:
       logging: "info"
-      # Idle working set 28Mi, so 256Mi is an estimate; a kill leaves
-      # proxies running and stops new ones. No CPU limit: reconciles burst.
+      # A kill leaves proxies running and stops new ones. No CPU limit:
+      # reconciles burst.
       resources:
         requests: {cpu: 10m, memory: 64Mi}
         limits: {memory: 256Mi}

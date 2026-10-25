@@ -23,9 +23,9 @@ spec:
   variables:
     - name: namespace
       expression: "object.metadata.name"
-    # A dev site asks for 10m and 16Mi, so the default holds a few dozen.
-    # A namespace needing more is named in `budgets`, its entry replacing
-    # the default whole; its own labels never set it, a run controls them.
+    # The default fits a few dozen small containers. A namespace needing more
+    # is named in `budgets`, its entry replacing the default whole; its own
+    # labels never set it, a run controls them.
     - name: defaultBudget
       expression: >-
         {"requests.cpu": "1", "requests.memory": "1Gi",
@@ -81,15 +81,15 @@ spec:
   evaluation:
     synchronize:
       enabled: true
-    # Runs created these namespaces before the policy existed.
+    # Applies to forge namespaces that already exist, not only new ones.
     generateExisting:
       enabled: true
   variables:
     - name: namespace
       expression: "object.metadata.name"
-    # A dev site asks for 10m and 16Mi, so the default holds a few dozen.
-    # A namespace needing more is named in `budgets`, its entry replacing
-    # the default whole; its own labels never set it, a run controls them.
+    # The default fits a few dozen small containers. A namespace needing more
+    # is named in `budgets`, its entry replacing the default whole; its own
+    # labels never set it, a run controls them.
     - name: defaultBudget
       expression: >-
         {"requests.cpu": "1", "requests.memory": "1Gi",

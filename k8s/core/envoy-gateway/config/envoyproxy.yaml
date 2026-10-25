@@ -25,8 +25,8 @@ spec:
               memory: 1Gi
             limits:
               memory: 2Gi
-        # The drain sidecar has no field of its own. Working set 90Mi idle,
-        # so 256Mi is an estimate; a kill cuts a drain short. No cpu limit.
+        # The drain sidecar has no field of its own, so a patch sizes it. A kill
+        # cuts a drain short; no CPU limit.
         patch:
           type: StrategicMerge
           value:

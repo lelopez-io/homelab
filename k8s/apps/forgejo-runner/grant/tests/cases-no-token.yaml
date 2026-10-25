@@ -1,11 +1,10 @@
-# Judged by no-token.yaml. The binding warns today, so these are the
-# decisions Deny would make.
+# Judged by no-token.yaml: the decisions its Deny action would make.
 - name: "mutated pod: automount false, no token volume"
   want: admit
   resource: pods
   labels: {"forge/repository": "site"}
   object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"tmp","emptyDir":{}}]}}
-- name: "unmutated pod as the sites run today: token volume injected"
+- name: "unmutated pod: token volume injected"
   want: deny
   resource: pods
   labels: {"forge/repository": "site"}

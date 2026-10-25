@@ -54,9 +54,8 @@ spec:
 
     pms:
       configExistingClaim: plex-config-encrypted
-      # Idle working set 173Mi; a scan or transcode was not measured, so 4Gi
-      # is a wide estimate (an OOM ends every stream). No CPU limit: it would
-      # stall playback. See the budgets doc.
+      # 4Gi is wide because an OOM ends every stream. No CPU limit: it would
+      # stall playback.
       resources:
         requests:
           cpu: 250m

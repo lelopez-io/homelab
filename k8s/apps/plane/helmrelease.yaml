@@ -266,9 +266,8 @@ spec:
               kind: Job
               metadata:
                 name: plane-minio-bucket
-          # The chart sizes no datastore. Idle working sets: postgres 43Mi,
-          # object store 85Mi, rabbitmq 154Mi, valkey 4Mi; limits are
-          # estimates, and a database gets no CPU limit. See the budgets doc.
+          # The chart sizes no datastore. Memory limits are generous, since a
+          # kill drops connections or work, and a database gets no CPU limit.
           - target:
               kind: StatefulSet
               name: plane-pgdb-wl
@@ -293,7 +292,7 @@ spec:
                     memory: 256Mi
                   limits:
                     memory: 1Gi
-          # Rabbitmq blocks publishers at 40% of its limit, so at 400Mi here.
+          # Rabbitmq blocks publishers at 40% of its memory limit.
           - target:
               kind: StatefulSet
               name: plane-rabbitmq-wl
@@ -356,7 +355,6 @@ spec:
                         key: password
                   - name: REDIS_URL
                     value: redis://:$(REDIS_PASSWORD)@plane-redis.plane.svc.cluster.local:6379/
-          # The migrator runs once per revision and was not measured.
           - target:
               kind: Job
               name: plane-api-migrate-.*

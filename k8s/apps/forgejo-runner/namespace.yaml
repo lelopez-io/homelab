@@ -6,7 +6,7 @@ metadata:
   labels:
     # The rootless job daemon needs unconfined seccomp and an unmasked
     # /proc, both outside the baseline standard, so this namespace keeps the
-    # privileged standard. See deployment.yaml for the daemon itself.
+    # privileged standard.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged

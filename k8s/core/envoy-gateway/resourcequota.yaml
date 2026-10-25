@@ -1,6 +1,6 @@
 ---
-# 2 proxies and a controller, 1120m and 2368Mi requested; a rollout surges one
-# proxy (510m, 1056Mi) and the controller. The shutdown sidecar sets no limit.
+# A rollout surges one proxy and the controller. The shutdown sidecar sets no
+# limit, so limits are not capped.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

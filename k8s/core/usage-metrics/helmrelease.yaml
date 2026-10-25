@@ -43,8 +43,8 @@ spec:
       rollingUpdate:
         maxSurge: 0
         maxUnavailable: 1
-    # Not measured here. The chart's own request, and a memory limit of
-    # twice it; a kill drops current readings until it returns.
+    # The chart's own request, and a memory limit of twice it; a kill drops
+    # current readings until it returns.
     resources:
       requests:
         cpu: 100m

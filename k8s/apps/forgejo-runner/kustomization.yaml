@@ -11,9 +11,9 @@ resources:
   - grant.flux.yaml
   - limitrange.yaml
   - resourcequota.yaml
-# Mozilla's 2026-10-20 roots, without the two the compromised eMudhra
-# intermediates chain to. The runner clones actions on a Go that predates the
-# x509 fix; remove once it ships on Go 1.26.10 or later.
+# Mozilla's roots, without the two the compromised eMudhra intermediates chain
+# to. The runner clones actions on a Go that predates the x509 fix for them,
+# so the bundle is what keeps those intermediates untrusted.
 configMapGenerator:
   - name: ca-bundle
     namespace: forgejo-runner

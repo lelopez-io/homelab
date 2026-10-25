@@ -1,6 +1,6 @@
 ---
-# 3 replicas, 300m and 768Mi requested, 3 and 6Gi limited; a stateful set
-# replaces one pod at a time, so a quarter more covers a resize.
+# Limits are capped because every container sets one. A stateful set replaces
+# one pod at a time, so a quarter more covers a resize.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

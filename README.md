@@ -214,9 +214,19 @@ flowchart TB
 
 Every namespace whose pods use the pod network carries a NetworkPolicy naming both directions: `egress` lists what the app may reach and `ingress` lists who may connect. A new app declares its callers there from the start; an app nothing calls sets `ingress: []`, so each later caller earns its own line.
 
-A namespace with nothing to run, such as `default`, carries the same policy with no rules, which opens no connection in either direction. A namespace whose pods use only the host network, such as `kube-router`, carries no policy, because policy never filters host traffic; a comment beside its manifests says so.
+A namespace with nothing to run, such as `default`, carries the same policy with no rules, which opens no connection in either direction. A namespace whose pods use only the host network, such as `kube-router`, carries no policy, because policy never filters host traffic; a comment beside its manifests says so. `kube-system` carries no NetworkPolicy.
 
-The rules select pods and name container ports, never a Service address or Service port; the rules themselves carry the reason. An app the gateway serves admits the gateway's proxies, labelled `gateway.envoyproxy.io/owning-gateway-name: home` in `envoy-gateway-system`. Kubelet probes and kubectl port-forward need no rule: kube-router accepts a pod's own node. A host-network caller that can land on another node, such as a webhook call or an image pull, admits the node addresses pinned in `talos/talconfig.yaml` beside each node's flannel address (10.244.0.0, .1.0 and .2.0), which is what a cross-node packet carries.
+The rules select pods and name container ports, never a Service address or Service port; the rules themselves carry the reason. An app the gateway serves admits the gateway's proxies, labelled `gateway.envoyproxy.io/owning-gateway-name: home` in `envoy-gateway-system`. Kubelet probes and kubectl port-forward need no rule: kube-router accepts a pod's own node. A host-network caller that can land on another node, such as a webhook call or an image pull, admits each node's address, pinned in `talos/talconfig.yaml`, and its flannel address, which is what a cross-node packet carries.
+
+### Resource budgets
+
+Each platform namespace carries a LimitRange named `defaults` and a ResourceQuota named `budget` beside its Namespace, except node plumbing whose namespace file says why, and the Kyverno policies in `k8s/core/kyverno-policies` generate the same for a new one. A quota is the running total of the namespace's pods, each container counted at its request or the LimitRange default and each pod at the larger of its containers' sum and its largest init container, plus what a rollout adds: one surge pod for every RollingUpdate deployment and a quarter more for a Recreate or stateful workload. Limits are capped only where every container and init container sets one. A larger budget for a forge run's namespace is an entry in the `budgets` map of the Kyverno policy.
+
+Requests follow a container's working set, and memory limits sit two to four times it, wider for storage, databases and Plex. No container has a CPU limit where throttling would turn a burst into latency. `kubectl top pods -A` shows current use. For history, run `kubectl port-forward -n usage-metrics svc/prometheus 9090` and ask `max_over_time(container_memory_working_set_bytes{namespace="plex"}[7d])`, the peak a memory limit is sized above.
+
+### Pinned images
+
+Every platform image runs by digest. `k8s/core/pinned-images.md` has the bump steps for the components whose chart or OS sets the image.
 
 ## Documentation
 

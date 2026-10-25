@@ -1,6 +1,6 @@
 # Each case is judged by the forge-run-ceilings policy as the API server
 # would; run.sh evaluates them. The registry host is a stand-in.
-- name: "site deploy as shipped today"
+- name: "site deploy"
   want: admit
   resource: deployments
   object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}

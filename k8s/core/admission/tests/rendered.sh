@@ -1,7 +1,7 @@
 #!/bin/sh
 # Renders the tree and runs the pinned-images policy over every pod-bearing
-# object, ignoring the bindings' namespace lists. HelmRelease pods go through
-# helm template. Needs kubectl, helm, yq, jq and docker.
+# object. HelmRelease pods go through helm template. Needs kubectl, helm, yq,
+# jq and docker.
 set -eu
 root=$(cd "$(dirname "$0")/../../../.." && pwd)
 out=$(mktemp -d)

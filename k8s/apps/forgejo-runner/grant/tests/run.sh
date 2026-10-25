@@ -1,6 +1,7 @@
 #!/bin/sh
-# Evaluates the grant's admission fixtures with the API server's CEL
-# libraries at the cluster's version. The registry host is a stand-in.
+# Evaluates the grant's admission fixtures with the API server's CEL libraries
+# at the cluster's version; needs go and the module cache or network. Add a case
+# to the cases file of each policy rule you change. The registry host is fake.
 set -e
 cd "$(dirname "$0")"
 go run . ../ceilings.yaml cases.yaml registry.test

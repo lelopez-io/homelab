@@ -1,16 +1,20 @@
 ---
-# Forge builds are signed with a cosign key held as the Secret below. The
-# forge's OIDC issuer is not one public Fulcio accepts, so there is no keyless
-# identity; the build must push the signature as the <digest>.sig tag.
+# Forge builds are signed with a cosign key, the kyverno Secret forge-build-key,
+# created outside this repo. The forge's OIDC issuer is not one public Fulcio
+# accepts, so there is no keyless identity; the build pushes <digest>.sig.
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
   name: verify-forge-built-images
   annotations:
+    # Autogen is off: rewriting a controller's pod template would fight Flux.
     pod-policies.kyverno.io/autogen-controllers: none
 spec:
   background: false
   webhookConfiguration:
+    # Fail: Ignore would lift every rule while Kyverno is down. The skipped
+    # namespaces keep an outage from blocking the restart of Kyverno, Flux or
+    # the cluster's DNS.
     failurePolicy: Fail
     timeoutSeconds: 30
     matchConditions:

@@ -1,6 +1,6 @@
 ---
-# 4 pods, 300m and 448Mi requested, 1500m and 1408Mi limited; a chart bump
-# surges one pod of each of the 3 deployments, so two thirds more.
+# Limits are capped because every container sets one. A chart bump surges one
+# pod of each deployment, so two thirds more than the running total.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

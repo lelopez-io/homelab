@@ -31,7 +31,8 @@ spec:
       retries: 3
   values:
     # Admission and background controllers generate, reports shows audit
-    # results. The cleanup controller is a pod and cluster grants unused.
+    # results. The cleanup controller would be a pod and cluster grants that
+    # nothing uses.
     cleanupController:
       enabled: false
     # Each of these is a hook job or test pod with an image of its own.

@@ -9,8 +9,7 @@ spec:
   policyTypes:
     - Ingress
     - Egress
-  # The app port (8080) stays closed until the first bundle lands; the
-  # route that serves it then names its caller here.
+  # The app port (8080) admits no caller; a route that serves it adds one here.
   ingress:
     # Peer transport between the fleet's own processes.
     - from:

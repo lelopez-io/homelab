@@ -56,9 +56,9 @@ spec:
       tag: "15.0.9"
       digest: sha256:caf1bca332f95cdcf124227a4bfa3b49bbbfbbc8a5e4a97406921cb581165413
 
-    # The rootless image already runs as uid 1000 and the data volume is
-    # already group 1000, so this pins what runs today rather than moving
-    # it. The chart applies the context to its init containers too.
+    # The rootless image runs as uid 1000 and the data volume is group 1000, so
+    # this pins the context instead of moving it. The chart applies it to its
+    # init containers too.
     containerSecurityContext:
       allowPrivilegeEscalation: false
       capabilities:
@@ -132,9 +132,9 @@ spec:
         memory: 2Gi
         cpu: 2000m
 
-    # Estimated, not measured: two shell steps and the configure command,
-    # which migrates the database. A kill reruns them at the next start.
-    # No CPU limit: they sit on the startup path.
+    # Two shell steps and the configure command, which migrates the database; a
+    # kill reruns them at the next start. No CPU limit: they sit on the startup
+    # path.
     initContainers:
       resources:
         requests:

@@ -11,6 +11,9 @@ metadata:
 spec:
   background: false
   webhookConfiguration:
+    # Fail: Ignore would lift every rule while Kyverno is down. The skipped
+    # namespaces keep an outage from blocking the restart of Kyverno, Flux or
+    # the cluster's DNS.
     failurePolicy: Fail
     timeoutSeconds: 30
     matchConditions:
@@ -29,6 +32,8 @@ spec:
       verifyImages:
         - imageReferences: ["quay.io/metallb/*"]
           failureAction: Audit
+          # Audit forbids mutateDigest. Enforce needs it, or a tag could move
+          # after the signature was checked.
           mutateDigest: false
           verifyDigest: false
           required: true

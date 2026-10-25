@@ -54,9 +54,9 @@ controlPlane:
                 kind: PodSecurityConfiguration
                 defaults:
                   enforce: restricted
-    # Requests are estimates from one idle reading of the kubelet's working
-    # sets (apiserver 448-941Mi, controller manager 159Mi, scheduler 69Mi),
-    # rounded up. Re-size them from a week of usage metrics.
+    # Memory limits sit well above the working set: a component killed for
+    # memory takes its node's control plane with it, so the API server's is
+    # the widest.
     - |-
       cluster:
         apiServer:
@@ -123,8 +123,8 @@ controlPlane:
                         claims.event_name == 'push')
                       message: forge runs authenticate from a tag or the dev branch of the second owner
     # The control plane images by digest, the tag kept beside it so the version
-    # shows. Bump: kubernetesVersion plus these five. upgrade-k8s writes plain
-    # tags, so repeat the digests. Steps in k8s/core/pinned-images.md.
+    # shows. Bump: kubernetesVersion plus every image below; upgrade-k8s writes
+    # plain tags, so repeat the digests. Steps: k8s/core/pinned-images.md.
     - |-
       cluster:
         apiServer:
@@ -138,15 +138,14 @@ controlPlane:
         coreDNS:
           image: registry.k8s.io/coredns/coredns:v1.12.4@sha256:986f04c2e15e147d00bdd51e8c51bcef3644b13ff806be7d2ff1b261d6dfbae1
     # KSPP pins this to 0, so no user namespace can be created, by the kubelet
-    # or by a rootless runtime. 11255 is the Talos guide's value. Privileged
-    # containers skip seccomp and can unshare once it is raised.
+    # or by a rootless runtime. Privileged containers skip seccomp and can
+    # unshare once it is raised.
     - |-
       machine:
         sysctls:
           user.max_user_namespaces: "11255"
     # Each kubelet asks the cluster CA for its serving certificate, which the
     # approver in kubelet-csr-approver must approve, so that deploys first.
-    # Talos 1.13 takes the config field; the flag is deprecated.
     - |-
       machine:
         kubelet:

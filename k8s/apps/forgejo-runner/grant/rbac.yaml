@@ -40,8 +40,7 @@ subjects:
   - kind: Group
     name: forge:${FORGE_OWNER}
     apiGroup: rbac.authorization.k8s.io
-  # A colon cannot occur in an owner name, so the default binds nobody
-  # until the second owner is added to forge-grant-vars.
+  # A colon cannot occur in an owner name, so an unset default binds nobody.
   - kind: Group
     name: forge:${FORGE_OWNER_2:-unset:}
     apiGroup: rbac.authorization.k8s.io

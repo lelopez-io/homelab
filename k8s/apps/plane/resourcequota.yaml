@@ -1,7 +1,6 @@
 ---
-# 11 pods, 625m and 1182Mi requested with the datastores sized; the 7
-# deployments surge one pod each (350m, 350Mi) and a migrator job adds 100m
-# and 256Mi: 1075m and 1788Mi at the peak. Requests and pods only.
+# Requests and pods only: the datastores set no limit. The deployments surge
+# one pod each on a rollout, and a migrator job runs beside them.
 apiVersion: v1
 kind: ResourceQuota
 metadata:
