@@ -13,6 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/admission"
 	"k8s.io/apiserver/pkg/admission/plugin/cel"
@@ -34,9 +35,14 @@ type testCase struct {
 	Namespace string                 `json:"namespace"`
 	Resource  string                 `json:"resource"`
 	Object    map[string]interface{} `json:"object"`
+	Old       map[string]interface{} `json:"old"`
+	Operation string                 `json:"operation"`
+	// Labels sit on the namespace a namespaced object is created in.
+	Labels map[string]string `json:"labels"`
 }
 
 var kinds = map[string][3]string{
+	"namespaces":      {"", "Namespace", "namespaces"},
 	"networkpolicies": {"networking.k8s.io", "NetworkPolicy", "networkpolicies"},
 	"pods":            {"", "Pod", "pods"},
 	"deployments":     {"apps", "Deployment", "deployments"},
@@ -112,12 +118,21 @@ func main() {
 		if ns == "" {
 			ns = "site-dev"
 		}
+		op, opts := admission.Create, runtime.Object(&metav1.CreateOptions{})
+		var old runtime.Object
+		if c.Operation == "UPDATE" {
+			op, opts = admission.Update, &metav1.UpdateOptions{}
+			old = &unstructured.Unstructured{Object: c.Old}
+		}
+		if c.Resource == "namespaces" {
+			ns = ""
+		}
 		obj := &unstructured.Unstructured{Object: c.Object}
 		gvk := schema.GroupVersionKind{Group: k[0], Version: "v1", Kind: k[1]}
 		gvr := schema.GroupVersionResource{Group: k[0], Version: "v1", Resource: k[2]}
-		attr := admission.NewAttributesRecord(obj, nil, gvk, ns, "x", gvr, "", admission.Create, &metav1.CreateOptions{}, false, &user.DefaultInfo{Name: who})
-		va := &admission.VersionedAttributes{Attributes: attr, VersionedKind: gvk, VersionedObject: obj}
-		res := validator.Validate(context.Background(), gvr, va, nil, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}, celconfig.RuntimeCELCostBudget, nil)
+		attr := admission.NewAttributesRecord(obj, old, gvk, ns, "x", gvr, "", op, opts, false, &user.DefaultInfo{Name: who})
+		va := &admission.VersionedAttributes{Attributes: attr, VersionedKind: gvk, VersionedObject: obj, VersionedOldObject: old}
+		res := validator.Validate(context.Background(), gvr, va, nil, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns, Labels: c.Labels}}, celconfig.RuntimeCELCostBudget, nil)
 		got, why := "admit", ""
 		for _, d := range res.Decisions {
 			if d.Action != validating.ActionAdmit {
