@@ -46,7 +46,7 @@ spec:
       messageExpression: >-
         'images must be pinned by digest: ' +
         variables.unpinned.map(c, c.image).join(', ')
-# Outside the platform namespaces a tagged image is refused.
+# A tagged image is refused in every namespace but kube-system.
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
@@ -61,15 +61,10 @@ spec:
         - key: kubernetes.io/metadata.name
           operator: NotIn
           values:
-            - cert-manager
-            - envoy-gateway-system
-            - flux-system
             - kube-system
-            - longhorn-system
-            - metallb-system
-            - tailscale
-# In the platform namespaces the rule reports, so tagged images show in events
-# and warnings. Once they are pinned, delete this binding and the list above.
+# kube-system stays on audit until the CNI manifest is owned in this repo by
+# digest. Tagged images there show in events and warnings. Delete this binding
+# and the list above then.
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
@@ -84,10 +79,4 @@ spec:
         - key: kubernetes.io/metadata.name
           operator: In
           values:
-            - cert-manager
-            - envoy-gateway-system
-            - flux-system
             - kube-system
-            - longhorn-system
-            - metallb-system
-            - tailscale
