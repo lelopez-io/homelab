@@ -1,0 +1,61 @@
+---
+# policy.yaml decides which namespaces a run may touch; this decides what it
+# may put in them. Every image comes from the forge registry by digest and
+# every container carries cpu and memory limits, so a branch cannot run an
+# unknown image or starve the nodes.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: forge-run-ceilings
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+      - apiGroups: ["apps"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments", "statefulsets", "daemonsets"]
+      - apiGroups: ["batch"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs", "cronjobs"]
+  matchConditions:
+    - name: forge-run
+      expression: "request.userInfo.username.startsWith('forge:repo:')"
+  variables:
+    - name: podSpec
+      expression: >-
+        request.resource.resource == 'pods' ? object.spec :
+        request.resource.resource == 'cronjobs' ? object.spec.jobTemplate.spec.template.spec :
+        object.spec.template.spec
+    - name: containers
+      expression: >-
+        variables.podSpec.?containers.orValue([]) + variables.podSpec.?initContainers.orValue([])
+  validations:
+    # The dot after the registry keeps a longer hostname from matching, and
+    # the digest is exactly 64 hex digits.
+    - expression: >-
+        variables.containers.all(c,
+          c.image.startsWith('${FORGE_HOST}/') &&
+          c.image.split('@sha256:').size() == 2 &&
+          c.image.split('@sha256:')[0].size() > '${FORGE_HOST}/'.size() &&
+          c.image.split('@sha256:')[1].size() == 64 &&
+          !c.image.split('@sha256:')[1].matches('[^a-f0-9]'))
+      message: "a forge app's images must come from the forge registry, pinned by sha256 digest"
+    - expression: >-
+        variables.containers.all(c, ['cpu', 'memory'].all(r,
+          c.?resources.?limits[?r].hasValue() &&
+          quantity(c.resources.limits[r]).isGreaterThan(quantity('0'))))
+      message: "a forge app's containers must set a cpu and a memory limit"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: forge-run-ceilings
+spec:
+  policyName: forge-run-ceilings
+  validationActions: ["Deny"]
