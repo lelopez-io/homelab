@@ -70,46 +70,47 @@ run's namespace gets the generated one, and a larger one is a change to the
 
 ## Container sizes
 
-The cluster has no metrics server, so there is no busy-hour measurement.
-The source is the kubelet's summary, read over about 40 idle hours: a
+The cluster had no metrics server when these were sized, so there was no
+busy-hour measurement. The source was the kubelet's summary, read over
+about 40 idle hours: a
 working set and an average CPU for each container. Requests follow the
-working set. Memory limits are 2 to 4 times it where the idle size is
-stable and a kill is local; every one is an estimate of a busy hour. The
-busy components, marked none yet, get theirs in a later change sized from a
-week of measurement, since a wrong limit would restart a database or the
-volume engine in the busy hour. No container here has a CPU limit, because
-throttling a storage engine, database, transcode or edge proxy turns a
-burst into latency.
+working set. Memory limits are 2 to 4 times it, wider for the storage
+manager, the databases and Plex, and every one is an estimate of a busy
+hour. The limits on the busy components, Longhorn's pods, Plex and Plane's
+databases, ship in a change that tags only after a week of the usage
+history below, and are re-sized from it, since a wrong limit would restart
+a database or the volume engine in the busy hour. No container here has a
+CPU limit, because throttling a storage engine, database, transcode or
+edge proxy turns a burst into latency.
 
 | Component | Working set seen | Request | Memory limit | An OOM kill |
 |---|---|---|---|---|
-| Longhorn manager | 142 to 719Mi | 50m, 256Mi | none yet | restarts; attach and detach wait, I/O continues |
+| Longhorn manager | 142 to 719Mi | 50m, 256Mi | 1536Mi | restarts; attach and detach wait, I/O continues |
 | Longhorn CSI sidecars | 11 to 59Mi | 10m, 64Mi | 256Mi | provisioning or attach waits |
-| Longhorn CSI plugin | 18 to 66Mi | 10m, 96Mi | none yet | node attach waits |
+| Longhorn CSI plugin | 18 to 66Mi | 10m, 96Mi | 384Mi | node attach waits |
 | Longhorn registrar, probe | 22 to 28Mi | 5m, 32Mi | 128Mi | plugin registration waits |
-| Longhorn UI, driver deployer | 10 to 13Mi | 10m, 32Mi | none yet | UI or deploy waits |
+| Longhorn UI, driver deployer | 10 to 13Mi | 10m, 32Mi | 128Mi | UI or deploy waits |
 | MetalLB speaker | 77Mi | 10m, 64Mi | 256Mi | its node stops answering for addresses |
 | MetalLB controller | 31Mi | 10m, 32Mi | 128Mi | no new address assigned |
 | Tailscale operator | 28Mi | 10m, 64Mi | 256Mi | no new proxies |
 | Tailscale proxy | 22 to 37Mi | 10m, 64Mi | 256Mi | sessions drop until it rejoins |
 | GPU plugin | 149Mi | 10m, 128Mi | 512Mi | device claims wait |
 | Gateway drain sidecar | 90Mi | 10m, 32Mi | 256Mi | a drain is cut short |
-| Plex media server | 173Mi idle | 250m, 512Mi | none yet | every stream and transcode ends |
-| Plane postgres | 43Mi | 100m, 256Mi | none yet | connections drop, log replays |
-| Plane object store | 85Mi | 50m, 256Mi | none yet | uploads fail |
-| Plane rabbitmq | 154Mi | 100m, 256Mi | none yet | in-flight work drops |
+| Plex media server | 173Mi idle | 250m, 512Mi | 4Gi | every stream and transcode ends |
+| Plane postgres | 43Mi | 100m, 256Mi | 1Gi | connections drop, log replays |
+| Plane object store | 85Mi | 50m, 256Mi | 1Gi | uploads fail |
+| Plane rabbitmq | 154Mi | 100m, 256Mi | 1Gi | in-flight work drops |
 | Plane valkey | 4Mi | 25m, 64Mi | 256Mi | in-memory cache lost |
-| Plane migrator | not measured | 100m, 256Mi | none yet | the job retries |
+| Plane migrator | not measured | 100m, 256Mi | 1Gi | the job retries |
 
-Not met: Longhorn's instance managers, engine images, share managers and
-recurring job pods are made by its manager, which offers a CPU reservation
-for the first (12% of a node, already set) and no memory request or limit.
-They have neither. Setting one by mutating those pods was decided against:
-Longhorn may reconcile the pod spec back, and a memory limit on an
-instance manager risks killing the process that holds every volume's
-engine. The next step is a measured limit once there is a usage source:
-read an instance manager's working set through a rebuild, a snapshot and an
-engine upgrade, then set a limit well above its peak.
+Longhorn's instance managers, engine images, share managers and recurring
+job pods are made by its manager, which offers a CPU reservation for the
+first (12% of a node, already set) and no memory setting. The namespace's
+LimitRange carries a default memory limit of 2Gi that reaches them when the
+manager next creates them, with no mutation. An instance manager's working
+set was 197 to 533Mi idle; a kill detaches every volume on its node, so the
+2Gi is an estimate to re-size from a week of history that includes a
+backup, a rebuild and an engine upgrade.
 
 The init containers of Factorio (2) and Forgejo (3) are sized from their
 scripts and are estimates: 10m and 32Mi requested with 128Mi and 256Mi
