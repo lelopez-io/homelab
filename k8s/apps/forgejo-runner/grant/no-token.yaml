@@ -1,0 +1,43 @@
+---
+# A forge app calls no cluster API, so its pods mount no service account
+# token. The platform sets automountServiceAccountToken to false on its pods;
+# this is the backstop, judging the pod after that mutation. Unset and true
+# are both refused, so an outage of the mutation does not lift the rule, and
+# so is a token projected into a volume. A controller creates the pod, so
+# the namespace picks the pods, not the caller. The binding warns until the
+# mutation is live and the pods have rolled; set ["Deny"] to enforce.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: forge-run-no-token
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["*"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+  variables:
+    # Match conditions cannot see the namespace, so the rules test it.
+    - name: forgeNamespace
+      expression: "namespaceObject.metadata.?labels[?'forge/repository'].hasValue()"
+  validations:
+    # Unset counts as not false: the ServiceAccount's default mounts the
+    # token when the mutation is down.
+    - expression: >-
+        !variables.forgeNamespace ||
+        object.spec.?automountServiceAccountToken.orValue(true) == false
+      message: "a forge app's pods must set automountServiceAccountToken: false"
+    - expression: >-
+        !variables.forgeNamespace || object.spec.?volumes.orValue([]).all(v,
+          v.?projected.?sources.orValue([]).all(s, !has(s.serviceAccountToken)))
+      message: "a forge app's pods may not project a service account token"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: forge-run-no-token
+spec:
+  policyName: forge-run-no-token
+  validationActions: ["Warn", "Audit"]
