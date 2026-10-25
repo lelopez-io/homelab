@@ -83,6 +83,21 @@ controlPlane:
                         claims.ref == 'refs/heads/dev' &&
                         claims.event_name == 'push')
                       message: forge runs authenticate from a tag or the dev branch of the second owner
+    # The control plane images by digest, the tag kept beside it so the version
+    # shows. Bump: kubernetesVersion plus these five. upgrade-k8s writes plain
+    # tags, so repeat the digests. Steps in k8s/core/pinned-images.md.
+    - |-
+      cluster:
+        apiServer:
+          image: registry.k8s.io/kube-apiserver:v1.34.1@sha256:b9d7c117f8ac52bed4b13aeed973dc5198f9d93a926e6fe9e0b384f155baa902
+        controllerManager:
+          image: registry.k8s.io/kube-controller-manager:v1.34.1@sha256:2bf47c1b01f51e8963bf2327390883c9fa4ed03ea1b284500a2cba17ce303e89
+        scheduler:
+          image: registry.k8s.io/kube-scheduler:v1.34.1@sha256:6e9fbc4e25a576483e6a233976353a66e4d77eb5d0530e9118e94b7d46fb3500
+        proxy:
+          image: registry.k8s.io/kube-proxy:v1.34.1@sha256:913cc83ca0b5588a81d86ce8eedeb3ed1e9c1326e81852a1ea4f622b74ff749a
+        coreDNS:
+          image: registry.k8s.io/coredns/coredns:v1.12.4@sha256:986f04c2e15e147d00bdd51e8c51bcef3644b13ff806be7d2ff1b261d6dfbae1
     # KSPP pins this to 0, so no user namespace can be created, by the kubelet
     # or by a rootless runtime. 11255 is the Talos guide's value. Privileged
     # containers skip seccomp and can unshare once it is raised.
