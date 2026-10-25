@@ -1,0 +1,56 @@
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: ok-pinned, namespace: app}
+spec:
+  containers:
+    - {name: a, image: "registry.example/a:1@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+  initContainers:
+    - {name: i, image: "registry.example/i@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: bad-tag, namespace: app}
+spec:
+  containers:
+    - {name: a, image: "registry.example/a:1"}
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: bad-init-tag, namespace: app}
+spec:
+  containers:
+    - {name: a, image: "registry.example/a@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+  initContainers:
+    - {name: i, image: "registry.example/i:latest"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: bad-deploy, namespace: app}
+spec:
+  template:
+    spec:
+      containers:
+        - {name: a, image: "registry.example/a:1"}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata: {name: bad-cron, namespace: app}
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - {name: a, image: "registry.example/a:1"}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata: {name: ok-cron, namespace: app}
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - {name: a, image: "registry.example/a@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}

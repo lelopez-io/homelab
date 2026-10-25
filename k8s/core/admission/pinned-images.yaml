@@ -1,0 +1,93 @@
+---
+# A tag moves, a digest does not, so a pod outside the platform namespaces
+# runs only the bytes that were reviewed. The check reads the pod template
+# of each workload kind as well as the pod, so a chart that drops a digest
+# fails at the apply and not later at the ReplicaSet.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: pinned-images
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["UPDATE"]
+        resources: ["pods/ephemeralcontainers"]
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs", "cronjobs"]
+  variables:
+    - name: podSpec
+      expression: >-
+        request.kind.kind == 'Pod' ? object.spec :
+        request.kind.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.spec :
+        object.spec.template.spec
+    - name: containers
+      expression: >-
+        variables.podSpec.containers +
+        variables.podSpec.?initContainers.orValue([]) +
+        variables.podSpec.?ephemeralContainers.orValue([])
+    - name: unpinned
+      expression: >-
+        variables.containers.filter(c, !c.image.matches('@sha256:[a-f0-9]{64}$'))
+  validations:
+    - expression: "variables.unpinned.size() == 0"
+      messageExpression: >-
+        'images must be pinned by digest: ' +
+        variables.unpinned.map(c, c.image).join(', ')
+# Outside the platform namespaces a tagged image is refused.
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: pinned-images
+spec:
+  policyName: pinned-images
+  validationActions: ["Deny"]
+  matchResources:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - cert-manager
+            - envoy-gateway-system
+            - flux-system
+            - kube-system
+            - longhorn-system
+            - metallb-system
+            - tailscale
+# In the platform namespaces the rule reports, so tagged images show in events
+# and warnings. Once they are pinned, delete this binding and the list above.
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: pinned-images-platform
+spec:
+  policyName: pinned-images
+  validationActions: ["Audit", "Warn"]
+  matchResources:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - cert-manager
+            - envoy-gateway-system
+            - flux-system
+            - kube-system
+            - longhorn-system
+            - metallb-system
+            - tailscale
