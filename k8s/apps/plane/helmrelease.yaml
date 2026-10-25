@@ -277,6 +277,48 @@ spec:
                   requests:
                     cpu: 50m
                     memory: 128Mi
+          # The chart has no cache password value, so valkey writes one from
+          # the plane-cache secret into a config file, not its arguments.
+          # Pods read it at start: restart them all after a rotation.
+          - target:
+              kind: StatefulSet
+              name: plane-redis-wl
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/env
+                value:
+                  - name: REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: plane-cache
+                        key: password
+              - op: add
+                path: /spec/template/spec/containers/0/command
+                value:
+                  - sh
+                  - -c
+                  - >-
+                    umask 077
+                    && printf 'requirepass %s\n' "$REDIS_PASSWORD"
+                    > /tmp/valkey.conf
+                    && exec valkey-server /tmp/valkey.conf
+          # An env entry wins over the chart's passwordless REDIS_URL in
+          # envFrom, and $(REDIS_PASSWORD) expands from the entry above it.
+          # Before the worker patch, whose env merges onto this list.
+          - target:
+              kind: (Deployment|Job)
+              name: plane-(api|worker|beat-worker|live)-wl|plane-api-migrate-.*
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/env
+                value:
+                  - name: REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: plane-cache
+                        key: password
+                  - name: REDIS_URL
+                    value: redis://:$(REDIS_PASSWORD)@plane-redis.plane.svc.cluster.local:6379/
           # Each upgrade adds a migrator job named for its revision, and
           # finished ones would otherwise stay in the namespace for good.
           - target:
