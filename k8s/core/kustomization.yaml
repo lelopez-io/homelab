@@ -6,6 +6,7 @@ resources:
   - metallb
   - envoy-gateway.flux.yaml
   - cert-manager
+  - kyverno.flux.yaml
   - longhorn
   - gpu
   - generic-device-plugin
