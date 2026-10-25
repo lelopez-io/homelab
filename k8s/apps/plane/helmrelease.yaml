@@ -267,8 +267,8 @@ spec:
               metadata:
                 name: plane-minio-bucket
           # The chart sizes no datastore. Idle working sets: postgres 43Mi,
-          # object store 85Mi, rabbitmq 154Mi, valkey 4Mi. Only valkey gets a
-          # memory limit yet; a database gets no CPU limit. See the budgets doc.
+          # object store 85Mi, rabbitmq 154Mi, valkey 4Mi; limits are
+          # estimates, and a database gets no CPU limit. See the budgets doc.
           - target:
               kind: StatefulSet
               name: plane-pgdb-wl
@@ -279,6 +279,8 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 256Mi
+                  limits:
+                    memory: 1Gi
           - target:
               kind: StatefulSet
               name: plane-minio-wl
@@ -289,6 +291,8 @@ spec:
                   requests:
                     cpu: 50m
                     memory: 256Mi
+                  limits:
+                    memory: 1Gi
           # Rabbitmq blocks publishers at 40% of its limit, so at 400Mi here.
           - target:
               kind: StatefulSet
@@ -300,6 +304,8 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 256Mi
+                  limits:
+                    memory: 1Gi
           # The chart has no cache password value, so valkey writes one from
           # the plane-cache secret into a config file, not its arguments.
           # Pods read it at start: restart them all after a rotation.
@@ -361,6 +367,8 @@ spec:
                   requests:
                     cpu: 100m
                     memory: 256Mi
+                  limits:
+                    memory: 1Gi
           # Each upgrade adds a migrator job named for its revision, and
           # finished ones would otherwise stay in the namespace for good.
           - target:
