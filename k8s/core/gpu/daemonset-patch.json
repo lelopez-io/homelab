@@ -8,5 +8,18 @@
         "path": "/var/run/cdi"
       }
     }
+  },
+  {
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/resources",
+    "value": {
+      "requests": {
+        "cpu": "10m",
+        "memory": "128Mi"
+      },
+      "limits": {
+        "memory": "512Mi"
+      }
+    }
   }
 ]

@@ -1,6 +1,6 @@
 ---
-# 3 plugin pods, 30m and 96Mi after defaults; a daemonset replaces one node at
-# a time, so the room is for new nodes.
+# 3 plugin pods, 30m and 384Mi requested; a daemonset replaces one node at a
+# time, so the room is for three new nodes at 128Mi each.
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -9,5 +9,5 @@ metadata:
 spec:
   hard:
     requests.cpu: "100m"
-    requests.memory: 256Mi
+    requests.memory: 1Gi
     pods: "6"

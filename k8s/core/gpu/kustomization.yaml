@@ -11,6 +11,9 @@ resources:
 patches:
   # Talos Compatibility
   - path: namespace-patch.yaml
+  # The JSON carries no comments: its resources add a size to the plugin
+  # (149Mi working set over 40 idle hours, 0m CPU, so 512Mi is an estimate;
+  # an OOM restarts it and device claims wait). No CPU limit: it is idle.
   - path: daemonset-patch.json
     target:
       kind: DaemonSet
