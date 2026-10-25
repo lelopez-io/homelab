@@ -24,11 +24,20 @@ spec:
     # L2-only here (no BGPPeers), so the frr-k8s BGP backend stays off.
     frrk8s:
       enabled: false
+    # Limits are 3 to 4 times the idle working sets (31Mi, 77Mi), an
+    # estimate; no CPU limit, as throttling delays an announcement. A killed
+    # speaker stops answering for its node's addresses until it returns.
     controller:
+      resources:
+        requests: {cpu: 10m, memory: 32Mi}
+        limits: {memory: 128Mi}
       securityContext:
         # The speaker shares this namespace and needs host networking, so the
         # namespace label stays privileged and constrains nothing here.
         seccompProfile:
           type: RuntimeDefault
     speaker:
+      resources:
+        requests: {cpu: 10m, memory: 64Mi}
+        limits: {memory: 256Mi}
       ignoreExcludeLB: true
