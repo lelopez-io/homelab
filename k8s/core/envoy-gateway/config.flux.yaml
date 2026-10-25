@@ -26,10 +26,12 @@ spec:
       name: envoy-gateway
       namespace: envoy-gateway-system
   postBuild:
-    # Injects the tier domains and the forge's hostname from sops, so
-    # neither appears in plain manifests.
+    # Injects the tier domains and the tailnet lanes' hostnames from sops,
+    # so none appears in plain manifests.
     substituteFrom:
       - kind: Secret
         name: cert-manager-vars
       - kind: Secret
         name: forgejo-vars
+      - kind: Secret
+        name: plane-vars
