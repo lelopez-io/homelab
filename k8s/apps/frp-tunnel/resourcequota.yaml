@@ -1,0 +1,15 @@
+---
+# 1 pod, 25m and 32Mi requested, 100m and 128Mi limited; a rolling update
+# surges a second pod, so twice.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: frp-tunnel
+spec:
+  hard:
+    requests.cpu: "100m"
+    requests.memory: 128Mi
+    limits.cpu: "300m"
+    limits.memory: 384Mi
+    pods: "3"

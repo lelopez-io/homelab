@@ -1,0 +1,13 @@
+---
+# 1 pod, 60m and 96Mi requested after defaults; the media server sets neither
+# requests nor limits, so only a floor is set.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: plex
+spec:
+  hard:
+    requests.cpu: "250m"
+    requests.memory: 512Mi
+    pods: "4"

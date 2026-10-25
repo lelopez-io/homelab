@@ -1,0 +1,13 @@
+---
+# 1 pod, 250m and 512Mi requested; Recreate, so no overlap, a quarter more
+# covers a resize. Its init containers set no limit.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: forgejo
+spec:
+  hard:
+    requests.cpu: "500m"
+    requests.memory: 1Gi
+    pods: "3"

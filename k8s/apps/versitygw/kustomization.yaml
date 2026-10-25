@@ -8,3 +8,4 @@ resources:
   - helmrelease.yaml
   - networkpolicy.yaml
   - limitrange.yaml
+  - resourcequota.yaml

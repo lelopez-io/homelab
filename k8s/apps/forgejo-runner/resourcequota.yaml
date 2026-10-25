@@ -1,0 +1,15 @@
+---
+# 1 pod, 350m and 640Mi requested, 2500m and 4608Mi limited; a rolling update
+# surges a second pod, so twice.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: forgejo-runner
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1536Mi
+    limits.cpu: "6"
+    limits.memory: 10Gi
+    pods: "3"

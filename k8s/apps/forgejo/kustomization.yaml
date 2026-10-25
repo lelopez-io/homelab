@@ -10,3 +10,4 @@ resources:
   - networkpolicy.yaml
   - ingress.flux.yaml
   - limitrange.yaml
+  - resourcequota.yaml

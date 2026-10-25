@@ -9,3 +9,4 @@ resources:
   - networkpolicy.yaml
   - udproute.yaml
   - limitrange.yaml
+  - resourcequota.yaml

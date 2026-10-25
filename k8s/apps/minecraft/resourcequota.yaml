@@ -1,0 +1,15 @@
+---
+# 1 server, 2 CPU and 4Gi requested, 4 and 6Gi limited; Recreate, so no
+# overlap, a quarter more covers a resize.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: minecraft
+spec:
+  hard:
+    requests.cpu: "2500m"
+    requests.memory: 5Gi
+    limits.cpu: "5"
+    limits.memory: 8Gi
+    pods: "3"
