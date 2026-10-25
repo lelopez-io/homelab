@@ -1,15 +1,21 @@
 # A namespace starts closed and bounded: no traffic in or out, a default
-# size for every container, and a ceiling for the namespace. The rule
-# fires on Namespace CREATE only, so an existing namespace is never
-# touched, whatever later updates it receives. Synchronize puts back a
-# generated object that is deleted or edited, so a workload in the
-# namespace cannot loosen it. A policy added beside it is additive and
-# is how a namespace opens what it needs.
+# size for every container, and a ceiling for the namespace. The rules
+# fire on Namespace CREATE only, so a later update, a changed label
+# included, adds or removes nothing. Synchronize puts back a generated
+# object that is deleted or edited. A policy added beside one is
+# additive and is how a namespace opens what it needs.
+#
+# A namespace labelled as a forge run's belongs to the second policy and
+# also gets the openings a site needs: DNS, its own pods, the gateway
+# and, unless it opts out, the internet.
 apiVersion: policies.kyverno.io/v1
 kind: GeneratingPolicy
 metadata:
   name: namespace-defaults
 spec:
+  matchConditions:
+    - name: not-forge
+      expression: "!('forge/repository' in object.metadata.?labels.orValue({}))"
   matchConstraints:
     resourceRules:
       - apiGroups: [""]
@@ -62,3 +68,106 @@ spec:
     - expression: >-
         generator.Apply(variables.namespace,
           [variables.denyAll, variables.limitRange, variables.quota])
+---
+apiVersion: policies.kyverno.io/v1
+kind: GeneratingPolicy
+metadata:
+  name: forge-namespace-defaults
+spec:
+  matchConditions:
+    - name: forge
+      expression: "'forge/repository' in object.metadata.?labels.orValue({})"
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["namespaces"]
+  evaluation:
+    synchronize:
+      enabled: true
+    generateExisting:
+      enabled: false
+  variables:
+    - name: namespace
+      expression: "object.metadata.name"
+    # A dev site asks for 10m and 16Mi, so the default holds a few dozen.
+    # A namespace needing more is named in `budgets`, its entry replacing
+    # the default whole; its own labels never set it, a run controls them.
+    - name: defaultBudget
+      expression: >-
+        {"requests.cpu": "1", "requests.memory": "1Gi",
+         "limits.cpu": "2", "limits.memory": "2Gi", "pods": "20"}
+    - name: budgets
+      expression: "{}"
+    - name: budget
+      expression: >-
+        variables.budgets[?variables.namespace].orValue(variables.defaultBudget)
+    - name: denyAll
+      expression: >-
+        {"apiVersion": "networking.k8s.io/v1", "kind": "NetworkPolicy",
+         "metadata": {"name": "default-deny"},
+         "spec": {"podSelector": {},
+                  "policyTypes": ["Ingress", "Egress"]}}
+    # A container that names no size gets this one, and none may exceed
+    # the max, which keeps one container from taking the namespace's
+    # whole quota.
+    - name: limitRange
+      expression: >-
+        {"apiVersion": "v1", "kind": "LimitRange",
+         "metadata": {"name": "defaults"},
+         "spec": {"limits": [{"type": "Container",
+           "defaultRequest": {"cpu": "10m", "memory": "32Mi"},
+           "default": {"cpu": "100m", "memory": "128Mi"},
+           "max": {"cpu": "1", "memory": "1Gi"}}]}}
+    - name: quota
+      expression: >-
+        {"apiVersion": "v1", "kind": "ResourceQuota",
+         "metadata": {"name": "budget"},
+         "spec": {"hard": variables.budget}}
+    # forge/egress=none withholds the internet allow. It is read when the
+    # objects are generated, so it must be set before this policy first
+    # runs for a namespace that has a tighter policy of its own.
+    - name: withInternet
+      expression: >-
+        object.metadata.?labels['forge/egress'].orValue('') != 'none'
+    # Rules name container ports and selected pods, never Service
+    # addresses, since kube-router filters after kube-proxy rewrites them.
+    # The gateway's proxies are admitted on any port: they dial only what
+    # a run's HTTPRoute names, the route admission policy pins its hosts,
+    # and a port the run declared itself would bound nothing.
+    - name: forgeBaseline
+      expression: >-
+        {"apiVersion": "networking.k8s.io/v1", "kind": "NetworkPolicy",
+         "metadata": {"name": "forge-baseline"},
+         "spec": {"podSelector": {},
+           "policyTypes": ["Ingress", "Egress"],
+           "ingress": [
+             {"from": [{"podSelector": {}}]},
+             {"from": [{"namespaceSelector": {"matchLabels":
+                {"kubernetes.io/metadata.name": "envoy-gateway-system"}},
+               "podSelector": {"matchLabels":
+                {"gateway.envoyproxy.io/owning-gateway-name": "home"}}}]}],
+           "egress": [
+             {"to": [{"namespaceSelector": {"matchLabels":
+                {"kubernetes.io/metadata.name": "kube-system"}}}],
+              "ports": [{"protocol": "UDP", "port": 53},
+                        {"protocol": "TCP", "port": 53}]},
+             {"to": [{"podSelector": {}}]}]}}
+    # Its own object, so a namespace with a tighter policy of its own can
+    # leave it out and the allows do not add up.
+    - name: forgeInternet
+      expression: >-
+        {"apiVersion": "networking.k8s.io/v1", "kind": "NetworkPolicy",
+         "metadata": {"name": "forge-internet"},
+         "spec": {"podSelector": {}, "policyTypes": ["Egress"],
+           "egress": [{"to": [{"ipBlock": {"cidr": "0.0.0.0/0",
+             "except": ["10.0.0.0/8", "172.16.0.0/12",
+                        "192.168.0.0/16"]}}]}]}}
+    - name: resources
+      expression: >-
+        [variables.denyAll, variables.limitRange, variables.quota,
+         variables.forgeBaseline] +
+        (variables.withInternet ? [variables.forgeInternet] : [])
+  generate:
+    - expression: "generator.Apply(variables.namespace, variables.resources)"
