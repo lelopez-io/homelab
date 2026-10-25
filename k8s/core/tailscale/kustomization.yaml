@@ -10,3 +10,4 @@ resources:
   - proxygroup.flux.yaml
   - networkpolicy.yaml
   - limitrange.yaml
+  - resourcequota.yaml

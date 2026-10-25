@@ -1,0 +1,13 @@
+---
+# 2 proxies and a controller, 1120m and 2368Mi requested; a rollout surges one
+# proxy (510m, 1056Mi) and the controller. The shutdown sidecar sets no limit.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: envoy-gateway-system
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    pods: "8"

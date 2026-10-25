@@ -1,0 +1,13 @@
+---
+# 3 plugin pods, 30m and 96Mi after defaults; a daemonset replaces one node at
+# a time, so the room is for new nodes.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: intel-gpu-resource-driver
+spec:
+  hard:
+    requests.cpu: "100m"
+    requests.memory: 256Mi
+    pods: "6"

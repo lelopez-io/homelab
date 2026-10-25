@@ -1,0 +1,15 @@
+---
+# 3 deployments, 75m and 160Mi requested, 600m and 640Mi limited; a chart bump
+# rolls all three at once, one surge pod each, so twice.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: cert-manager
+spec:
+  hard:
+    requests.cpu: "250m"
+    requests.memory: 512Mi
+    limits.cpu: "1500m"
+    limits.memory: 1536Mi
+    pods: "8"

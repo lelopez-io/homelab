@@ -1,0 +1,13 @@
+---
+# 6 pods, 60m and 192Mi after defaults; the operator adds a proxy pod per
+# exposed service, so room for six more.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: tailscale
+spec:
+  hard:
+    requests.cpu: "250m"
+    requests.memory: 512Mi
+    pods: "14"
