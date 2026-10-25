@@ -83,6 +83,13 @@ controlPlane:
                         claims.ref == 'refs/heads/dev' &&
                         claims.event_name == 'push')
                       message: forge runs authenticate from a tag or the dev branch of the second owner
+    # KSPP pins this to 0, so no user namespace can be created, by the kubelet
+    # or by a rootless runtime. 11255 is the Talos guide's value. Privileged
+    # containers skip seccomp and can unshare once it is raised.
+    - |-
+      machine:
+        sysctls:
+          user.max_user_namespaces: "11255"
 
 
 nodes:
