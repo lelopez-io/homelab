@@ -5,3 +5,5 @@ resources:
   - namespace.yaml
   - daemonset.yaml
   - networkpolicy.yaml
+  - limitrange.yaml
+  - resourcequota.yaml

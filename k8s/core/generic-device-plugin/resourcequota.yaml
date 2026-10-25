@@ -1,0 +1,16 @@
+---
+# Limits are capped because the container sets both. A node that joins needs
+# a plugin pod too, and a refused one leaves that node without the tun device,
+# so the room is for pods beyond the running ones.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: generic-device-plugin
+spec:
+  hard:
+    requests.cpu: 300m
+    requests.memory: 64Mi
+    limits.cpu: 300m
+    limits.memory: 128Mi
+    pods: "6"
