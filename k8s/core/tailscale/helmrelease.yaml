@@ -21,6 +21,9 @@ spec:
     remediation:
       retries: 3
   values:
+    # Digests of v1.104.2; with a digest the chart drops the tag. The proxy
+    # digest reaches every pod the operator starts. Bump: the chart version
+    # and both digests, steps in k8s/core/pinned-images.md.
     operatorConfig:
       logging: "info"
       # Idle working set 28Mi, so 256Mi is an estimate; a kill leaves
@@ -28,6 +31,11 @@ spec:
       resources:
         requests: {cpu: 10m, memory: 64Mi}
         limits: {memory: 256Mi}
+      image:
+        digest: sha256:9cddfcbe75a7eab2b46d610966d519a28699a5e38235a2cb3aec960487c4aa48
+    proxyConfig:
+      image:
+        digest: sha256:b11583ad2e93e4671128538c88cf11f460444a5d7e449311dd1933a400ab849d
   valuesFrom:
     - kind: Secret
       name: tailscale-oauth
