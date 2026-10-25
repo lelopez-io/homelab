@@ -168,8 +168,8 @@ digests on every bump.
 ## Checking
 
 `k8s/core/admission/tests/rendered.sh` renders `k8s`, `flux/config/flux-system`
-and every HelmRelease with its own values, then runs the digest policy over
-the result. It reads no namespace list, so it fails on any unpinned image in
-the tree. Run it after every bump. It does not see pods that controllers
-create at run time or the static pods; those take their images from the
-settings above.
+and every HelmRelease with its own values and post-renderers, then runs the
+digest policy over the result. It reads no namespace list, so it fails on any
+unpinned image in the tree. Run it after every bump. It does not see pods that
+controllers create at run time or the static pods; those take their images from
+the settings above.

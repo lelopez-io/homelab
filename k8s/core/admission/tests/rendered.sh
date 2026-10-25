@@ -11,13 +11,13 @@ r="$out/render.yaml"
 kubectl kustomize "$root/k8s" > "$r"
 kubectl kustomize "$root/flux/config/flux-system" >> "$r"
 
-for f in "$root"/k8s/core/*/helmrelease.yaml; do
+for f in $(find "$root/k8s" -name helmrelease.yaml | sort); do
   yq -o=json -I0 'select(.kind == "HelmRelease")' "$f" | while read -r hr; do
-    chart=$(echo "$hr" | jq -r .spec.chart.spec.chart)
-    repo=$(echo "$hr" | jq -r .spec.chart.spec.sourceRef.name)
+    chart=$(printf '%s\n' "$hr" | jq -r .spec.chart.spec.chart)
+    repo=$(printf '%s\n' "$hr" | jq -r .spec.chart.spec.sourceRef.name)
     url=$(yq -r 'select(.kind == "HelmRepository" and .metadata.name == "'"$repo"'") | .spec.url' \
-      "$root"/k8s/core/*/helmrepository.yaml "$f" | grep -v '^$' | head -1)
-    echo "$hr" | jq '.spec.values // {}' > "$out/values.json"
+      $(find "$root/k8s" -name helmrepository.yaml) "$f" | grep -v '^$' | head -1)
+    printf '%s\n' "$hr" | jq '.spec.values // {}' > "$out/values.json"
     # The operator's credentials come from a Secret through valuesFrom.
     set --
     [ "$chart" = tailscale-operator ] && set -- --set oauth.clientId=x --set oauth.clientSecret=x
@@ -26,9 +26,17 @@ for f in "$root"/k8s/core/*/helmrelease.yaml; do
       *) src="$chart --repo $url" ;;
     esac
     # shellcheck disable=SC2086
-    helm template "$(echo "$hr" | jq -r .metadata.name)" $src \
-      --version "$(echo "$hr" | jq -r .spec.chart.spec.version)" \
-      -n "$(echo "$hr" | jq -r .metadata.namespace)" -f "$out/values.json" "$@" >> "$r"
+    helm template "$(printf '%s\n' "$hr" | jq -r .metadata.name)" $src --skip-tests \
+      --version "$(printf '%s\n' "$hr" | jq -r .spec.chart.spec.version)" \
+      -n "$(printf '%s\n' "$hr" | jq -r .metadata.namespace)" -f "$out/values.json" "$@" \
+      > "$out/chart.yaml"
+    # The cluster gets the render after the release's post-renderers, which
+    # attach digests and delete objects.
+    rm -rf "$out/k" && mkdir "$out/k" && cp "$out/chart.yaml" "$out/k/chart.yaml"
+    printf '%s\n' "$hr" | jq '{resources: ["chart.yaml"],
+      patches: [.spec.postRenderers[]?.kustomize.patches[]?],
+      images: [.spec.postRenderers[]?.kustomize.images[]?]}' > "$out/k/kustomization.yaml"
+    kubectl kustomize "$out/k" >> "$r"
     echo --- >> "$r"
   done
 done
