@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Pod
+metadata: {name: metallb-signed, namespace: metallb-system}
+spec:
+  containers:
+    - name: c
+      image: quay.io/metallb/controller:v0.16.1
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: metallb-older-signed, namespace: metallb-system}
+spec:
+  containers:
+    - name: c
+      image: quay.io/metallb/controller:v0.15.2
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: kube-router-signed, namespace: kube-router}
+spec:
+  containers:
+    - name: c
+      image: docker.io/cloudnativelabs/kube-router:v2.11.1@sha256:64da9a538d29e13780e256ce3897a52932a68657793bef009063bbeb2762146a
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: silo-signed, namespace: plane}
+spec:
+  containers:
+    - name: c
+      image: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: metallb-tag-missing, namespace: metallb-system}
+spec:
+  containers:
+    - name: c
+      image: quay.io/metallb/controller:v0.0.1-nonexistent
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: unrelated-unsigned, namespace: demo}
+spec:
+  containers:
+    - name: c
+      image: docker.io/library/busybox:1.38

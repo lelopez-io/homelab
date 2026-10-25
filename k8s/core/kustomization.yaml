@@ -14,3 +14,4 @@ resources:
   - kube-router
   - default
   - admission
+  - image-verification.flux.yaml

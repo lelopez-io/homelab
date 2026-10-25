@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: image-verification
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./k8s/core/image-verification
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    # The policy CRDs and the kyverno namespace come with the release.
+    - name: kyverno
+  postBuild:
+    # Injects the forge registry's hostname from sops.
+    substituteFrom:
+      - kind: Secret
+        name: forgejo-vars
