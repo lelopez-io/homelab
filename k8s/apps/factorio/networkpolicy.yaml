@@ -7,7 +7,44 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  ingress:
+    # Players reach the game port two ways: LAN through the gateway's
+    # UDPRoute, WAN through the tunnel's frpc dialing the Service. The
+    # port is the container's post-DNAT: 31497, not the Service's 34197.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: home
+              gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: frp-tunnel
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: frp-tunnel
+              app.kubernetes.io/component: frpc
+      ports:
+        - protocol: UDP
+          port: 31497
+    # The rcon console sits on its own LAN load-balanced address; the
+    # tailnet's subnet route masquerades through the Connector's pods.
+    - from:
+        - ipBlock:
+            cidr: 192.168.0.0/16
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+          podSelector:
+            matchLabels:
+              tailscale.com/parent-resource-type: connector
+      ports:
+        - protocol: TCP
+          port: 27015
   egress:
     - to:
         - namespaceSelector:
