@@ -61,7 +61,10 @@ Pinned in `tailscale/helmrelease.yaml` as `operatorConfig.image.digest` and
 ingress group and the subnet connector pods from it, so a ProxyClass needs no
 image of its own. With a digest the chart drops the tag. To bump: set the new
 chart version, then the digests of `tailscale/k8s-operator` and
-`tailscale/tailscale` at that version.
+`tailscale/tailscale` at that version, and of `tailscale/k8s-proxy` in
+`operatorConfig.extraEnv`. The chart has no value for that last one, so it
+rides `K8S_PROXY_IMAGE`; no pod uses it until a kube-apiserver proxy group
+exists.
 
 ## Flux
 

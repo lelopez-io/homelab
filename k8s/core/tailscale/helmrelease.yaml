@@ -33,6 +33,11 @@ spec:
         limits: {memory: 256Mi}
       image:
         digest: sha256:9cddfcbe75a7eab2b46d610966d519a28699a5e38235a2cb3aec960487c4aa48
+      # The chart has no value for the kube-apiserver proxy image, which the
+      # operator defaults to :latest. Same version as the other images.
+      extraEnv:
+        - name: K8S_PROXY_IMAGE
+          value: tailscale/k8s-proxy@sha256:49047df3e9c2fe110a62d02b77d4bc209ca726fb6dab5896604e1cb32c68ebcc
     proxyConfig:
       image:
         digest: sha256:b11583ad2e93e4671128538c88cf11f460444a5d7e449311dd1933a400ab849d
