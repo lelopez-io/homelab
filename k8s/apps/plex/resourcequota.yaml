@@ -1,6 +1,6 @@
 ---
-# 1 pod, 60m and 96Mi requested after defaults; the media server sets neither
-# requests nor limits, so only a floor is set.
+# 1 pod, 300m and 576Mi requested: the media server 250m and 512Mi, copyparty
+# 50m and 64Mi. An init container peaks lower. Requests and pods only.
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -8,6 +8,6 @@ metadata:
   namespace: plex
 spec:
   hard:
-    requests.cpu: "250m"
-    requests.memory: 512Mi
+    requests.cpu: "500m"
+    requests.memory: 1Gi
     pods: "4"
