@@ -6,4 +6,5 @@ resources:
   - rbac.yaml
   - deployment.yaml
   - networkpolicy.yaml
+  - limitrange.yaml
   - resourcequota.yaml
