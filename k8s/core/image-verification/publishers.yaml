@@ -1,0 +1,90 @@
+---
+# Each rule pins the signing workflow, so a different workflow in the same
+# organisation, or a fork, does not pass. These images run by tag, and
+# Audit forbids mutateDigest, so verifyDigest is off and the tag is resolved
+# at verification. Enforce adds mutateDigest: true to pin the pod to the
+# verified digest. Autogen is off: rewriting a controller's pod template
+# would fight Flux.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-publisher-signatures
+  annotations:
+    pod-policies.kyverno.io/autogen-controllers: none
+spec:
+  background: false
+  webhookConfiguration:
+    failurePolicy: Fail
+    timeoutSeconds: 30
+    matchConditions:
+      - name: skip-platform-namespaces
+        expression: "!(request.namespace in ['kube-system', 'kyverno', 'flux-system'])"
+  rules:
+    - name: metallb
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, flux-system]
+      verifyImages:
+        - imageReferences: ["quay.io/metallb/*"]
+          failureAction: Audit
+          mutateDigest: false
+          verifyDigest: false
+          required: true
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subjectRegExp: '^https://github\.com/metallb/metallb/\.github/workflows/publish\.yaml@refs/tags/v[0-9.]+$'
+                    rekor:
+                      url: https://rekor.sigstore.dev
+    - name: kube-router
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, flux-system]
+      verifyImages:
+        - type: SigstoreBundle
+          imageReferences: ["docker.io/cloudnativelabs/kube-router*"]
+          failureAction: Audit
+          mutateDigest: false
+          verifyDigest: false
+          required: true
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subjectRegExp: '^https://github\.com/cloudnativelabs/kube-router/\.github/workflows/ci-container\.yml@refs/tags/v[0-9.]+$'
+                    rekor:
+                      url: https://rekor.sigstore.dev
+    - name: silo
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kyverno, flux-system]
+      verifyImages:
+        - type: SigstoreBundle
+          imageReferences: ["docker.io/pgsty/silo*"]
+          failureAction: Audit
+          mutateDigest: false
+          verifyDigest: false
+          required: true
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subjectRegExp: '^https://github\.com/pgsty/silo/\.github/workflows/docker-release\.yml@refs/tags/RELEASE\.[0-9TZ.-]+$'
+                    rekor:
+                      url: https://rekor.sigstore.dev
