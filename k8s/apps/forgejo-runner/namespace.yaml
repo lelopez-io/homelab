@@ -4,7 +4,9 @@ kind: Namespace
 metadata:
   name: forgejo-runner
   labels:
-    # dind sidecar requires a privileged container to run job workloads
+    # The rootless job daemon needs unconfined seccomp and an unmasked
+    # /proc, both outside the baseline standard, so this namespace keeps the
+    # privileged standard. See deployment.yaml for the daemon itself.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged

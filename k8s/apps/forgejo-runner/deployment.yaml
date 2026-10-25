@@ -20,6 +20,10 @@ spec:
       labels:
         app.kubernetes.io/name: forgejo-runner
     spec:
+      # Every container runs in a user namespace on the node: container root
+      # maps to an unprivileged host uid. The daemon's unmasked /proc is
+      # admissible only with this set.
+      hostUsers: false
       containers:
         # No registration step: the daemon presents the identity from its
         # config and announces its labels on every start, so there is nothing
@@ -65,6 +69,7 @@ spec:
               memory: "512Mi"
               cpu: "500m"
           securityContext:
+            runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
               drop:
@@ -72,20 +77,37 @@ spec:
         # Workflow steps execute against this daemon, so nothing a workflow
         # builds or runs touches the node's container runtime.
         - name: dind
-          image: docker.io/library/docker:29.9.2-dind@sha256:9e79b879b177fbd72c34376a3dd3d91747da5db49e1f560f76aea59561471977
-          # The pod's interface is 1450 and the bridge would default to
-          # 1500, so job containers emit packets the overlay cannot carry
-          # and TLS handshakes to some hosts time out instead of failing.
+          image: docker.io/library/docker:29.9.2-dind-rootless@sha256:ae083cc7de51e7a8e5a597f8fb774ca7914c408a95fc0f1477826a913479518a
+          # Rootless: the daemon runs as uid 1000 in its own user namespace.
+          # A job given it, even with --privileged, holds capabilities only
+          # inside that namespace; node devices and paths never map in.
           args:
-            - --mtu=1450
+            # The emptyDir is world-writable, so uid 1000 creates the
+            # directory itself and nothing needs to chown it.
+            - --data-root=/dind/data
+            - --mtu=65520
           env:
             - name: DOCKER_TLS_CERTDIR
               value: /certs
+            # Userspace networking terminates TCP in the daemon's stack, so
+            # the overlay's MTU never reaches job containers; 65520 cuts
+            # per-segment overhead on image pushes through it.
+            - name: DOCKERD_ROOTLESS_ROOTLESSKIT_MTU
+              value: "65520"
           volumeMounts:
             - name: docker-certs
               mountPath: /certs
             - name: dind-storage
-              mountPath: /var/lib/docker
+              mountPath: /dind
+            # The image's ranges start at 100000, past the pod's mapping.
+            - name: dind-subid
+              mountPath: /etc/subuid
+              subPath: subuid
+              readOnly: true
+            - name: dind-subid
+              mountPath: /etc/subgid
+              subPath: subgid
+              readOnly: true
           resources:
             requests:
               memory: "512Mi"
@@ -93,6 +115,9 @@ spec:
             limits:
               memory: "4Gi"
               cpu: "2000m"
+              # The userspace network's tun device comes as a grant from the
+              # node device plugin, so no capability here may create one.
+              devic.es/tun: 1
           # Ready only once the daemon answers over TLS, so a daemon that
           # fails to start stalls the rollout instead of failing every job.
           readinessProbe:
@@ -107,8 +132,22 @@ spec:
                 - version
             periodSeconds: 10
             timeoutSeconds: 5
+          # Seccomp and /proc settings: see namespace.yaml. newuidmap's file
+          # capabilities need SETUID and SETGID bounded in and no_new_privs
+          # unset, so allowPrivilegeEscalation is not false.
           securityContext:
-            privileged: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            procMount: Unmasked
+            seccompProfile:
+              type: Unconfined
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - SETUID
+                - SETGID
       volumes:
         - name: data
           emptyDir: {}
@@ -122,6 +161,9 @@ spec:
           emptyDir: {}
         - name: dind-storage
           emptyDir: {}
+        - name: dind-subid
+          configMap:
+            name: dind-subid
         - name: ca-bundle
           configMap:
             name: ca-bundle
