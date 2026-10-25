@@ -9,3 +9,4 @@ resources:
   - networkpolicy.yaml
   - canary.flux.yaml
   - limitrange.yaml
+  - resourcequota.yaml

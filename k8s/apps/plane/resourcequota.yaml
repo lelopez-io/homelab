@@ -1,0 +1,14 @@
+---
+# 11 pods, 550m and 862Mi requested; the 7 deployments surge one pod each
+# (50m, 50Mi) in a chart bump, and migrations run as jobs. Four containers set
+# no limit.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: plane
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1536Mi
+    pods: "24"

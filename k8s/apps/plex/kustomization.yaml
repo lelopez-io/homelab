@@ -14,3 +14,4 @@ resources:
   - secret-copyparty.sops.yaml
   - filebrowser-ingress.flux.yaml
   - limitrange.yaml
+  - resourcequota.yaml

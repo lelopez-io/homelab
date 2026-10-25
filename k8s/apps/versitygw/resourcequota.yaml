@@ -1,0 +1,15 @@
+---
+# 1 pod, 50m and 128Mi requested, 1 CPU and 1Gi limited; Recreate, so no
+# overlap, a quarter more covers a resize.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: versitygw
+spec:
+  hard:
+    requests.cpu: "100m"
+    requests.memory: 256Mi
+    limits.cpu: "1500m"
+    limits.memory: 1536Mi
+    pods: "3"

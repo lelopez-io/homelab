@@ -9,4 +9,5 @@ resources:
   - tcproute.yaml
   - udproute.yaml
   - limitrange.yaml
+  - resourcequota.yaml
 
