@@ -7,3 +7,4 @@ resources:
   - secret-root.sops.yaml
   - helmrelease.yaml
   - networkpolicy.yaml
+  - limitrange.yaml

@@ -9,3 +9,4 @@ resources:
   - connector.flux.yaml
   - proxygroup.flux.yaml
   - networkpolicy.yaml
+  - limitrange.yaml

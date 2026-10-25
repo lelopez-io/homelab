@@ -8,3 +8,4 @@ resources:
   - deployment.yaml
   - networkpolicy.yaml
   - canary.flux.yaml
+  - limitrange.yaml

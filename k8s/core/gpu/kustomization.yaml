@@ -6,6 +6,7 @@ resources:
   - https://github.com/intel/intel-resource-drivers-for-kubernetes//deployments/gpu/base?ref=826b331a873dd302ce8fe314513d5b8affc039f2
   - resourceclaimtemplate.yaml
   - networkpolicy.yaml
+  - limitrange.yaml
 patches:
   # Talos Compatibility
   - path: namespace-patch.yaml

@@ -8,3 +8,4 @@ resources:
   - helmrelease.yaml
   - config.flux.yaml
   - networkpolicy.yaml
+  - limitrange.yaml

@@ -1,0 +1,13 @@
+---
+# A container that names no size gets a small request.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: defaults
+  namespace: plane
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 10m
+        memory: 32Mi

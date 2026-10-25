@@ -1,0 +1,17 @@
+---
+# A container that names no size gets a small request, and a limit, so the
+# quota on limits admits it.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: defaults
+  namespace: kyverno
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 10m
+        memory: 32Mi
+      default:
+        cpu: 500m
+        memory: 512Mi

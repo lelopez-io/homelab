@@ -8,4 +8,5 @@ resources:
   - networkpolicy.yaml
   - tcproute.yaml
   - udproute.yaml
+  - limitrange.yaml
 
