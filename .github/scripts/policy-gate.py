@@ -366,14 +366,30 @@ def generate(gen_policies, docs):
     return generated
 
 
-def check_namespace_policy(docs, generated):
+EXEMPT = "platform.example/netpol-exempt"
+
+
+def check_namespace_policy(docs, generated, pods):
     """A namespace has policy when a NetworkPolicy that selects every pod
-    exists in it, written in the tree or generated for it by the cluster."""
+    exists in it, written in the tree or generated for it by the cluster.
+    Host-network pods are never filtered, so a namespace running only those
+    may instead say why on its Namespace object."""
     covered = {meta(d).get("namespace") for d in docs + generated
                if is_kind(d, "NetworkPolicy", "networking.k8s.io") and not d.get("spec", {}).get("podSelector")}
-    for ns in sorted(meta(d)["name"] for d in docs if d.get("kind") == "Namespace"):
-        if ns not in covered:
-            fail(f"namespace {ns} has no namespace-wide NetworkPolicy, rendered or generated")
+    for d in (d for d in docs if d.get("kind") == "Namespace"):
+        ns = meta(d)["name"]
+        reason = (meta(d).get("annotations") or {}).get(EXEMPT)
+        if reason is None:
+            if ns not in covered:
+                fail(f"namespace {ns} has no namespace-wide NetworkPolicy, rendered or generated")
+            continue
+        mine = [p for p in pods if meta(p)["namespace"] == ns]
+        if not reason.strip():
+            fail(f"namespace {ns} carries {EXEMPT} without a reason")
+        elif not mine:
+            fail(f"namespace {ns} is exempt from NetworkPolicy but runs no pod to exempt")
+        elif any(not p["spec"].get("hostNetwork") for p in mine):
+            fail(f"namespace {ns} is exempt from NetworkPolicy but runs a pod off the host network")
     print("done  namespace policy")
 
 
@@ -431,7 +447,7 @@ def main():
     candidates = docs + made + generated
     check_vaps(docs, candidates, table)
     check_pod_security(pods, table)
-    check_namespace_policy(docs, generated)
+    check_namespace_policy(docs, generated, pods)
     if os.environ.get("GATE_OUT"):
         os.makedirs(os.environ["GATE_OUT"], exist_ok=True)
         dump(candidates, "all.yaml")
