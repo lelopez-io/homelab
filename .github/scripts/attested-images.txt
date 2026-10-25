@@ -1,0 +1,2 @@
+# image | building repository | signing workflow
+ghcr.io/denoland/celld | denoland/celld | denoland/celld/.github/workflows/release.yml
