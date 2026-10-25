@@ -10,3 +10,4 @@ resources:
   - gateway.yaml
   - httproute-redirect.yaml
   - service-forge.yaml
+  - service-plane.yaml

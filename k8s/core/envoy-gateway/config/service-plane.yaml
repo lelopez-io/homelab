@@ -1,0 +1,22 @@
+---
+# svc:plane on the ingress ProxyGroup, the same shape as svc:forge: its
+# 443 lands on the gateway's plane-only listener on 8444.
+apiVersion: v1
+kind: Service
+metadata:
+  name: plane
+  namespace: envoy-gateway-system
+  annotations:
+    tailscale.com/proxy-group: ingress
+    tailscale.com/hostname: plane
+spec:
+  type: LoadBalancer
+  # The tailscale class keeps MetalLB from allocating a LAN address.
+  loadBalancerClass: tailscale
+  selector:
+    gateway.envoyproxy.io/owning-gateway-name: home
+    gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8444
