@@ -31,6 +31,29 @@ spec:
   # The chart reads a join password from a Secret only alongside public
   # listing, and this server stays unlisted, so the password comes in as
   # a value instead.
+  postRenderers:
+    # The chart has no container-level security value. The game ports sit
+    # far above 1024, so no capability is needed back.
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: palworld-server
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: palworld-server
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: server
+                        securityContext:
+                          allowPrivilegeEscalation: false
+                          capabilities:
+                            drop:
+                              - ALL
   valuesFrom:
     - kind: Secret
       name: palworld-secrets
@@ -38,6 +61,16 @@ spec:
       targetPath: server.config.env.SERVER_PASSWORD
   values:
     server:
+      # 1000 is the image's steam user, which already owns the save volume.
+      # runAsGroup is required: the entrypoint refuses a root group, and
+      # fsGroup alone would leave it at 0.
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       image:
         tag: "v2.7.3@sha256:aee17c5ea7b52c0fdbc2f86c446c02bfdab8788eed3867ea7c34261874ab2ec9"
         imagePullPolicy: IfNotPresent
