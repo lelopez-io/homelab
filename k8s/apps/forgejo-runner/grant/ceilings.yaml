@@ -1,8 +1,17 @@
 ---
 # policy.yaml decides which namespaces a run may touch; this decides what it
-# may put in them. Every image comes from the forge registry by digest and
-# every container carries cpu and memory limits, so a branch cannot run an
-# unknown image or starve the nodes.
+# may put in them. A run writes its own NetworkPolicies and workloads, and
+# policies only add up, so the platform's limits hold only if admission
+# refuses what would lift them.
+#
+# Egress: a rule needs explicit peers. A peer is a pod of the run's own
+# namespace, an IPv4 ipBlock that touches no private range or excepts the
+# ranges it contains, or a platform service named in egressPorts, reached
+# on its port only. Ingress: a peer is a pod of the run's own namespace or the
+# gateway's proxies; an ipBlock is never one. A selector names a namespace by
+# its metadata.name label alone, which a run cannot set. Workloads: every
+# image comes from the forge registry by digest and every container carries
+# cpu and memory limits.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -11,6 +20,10 @@ spec:
   failurePolicy: Fail
   matchConstraints:
     resourceRules:
+      - apiGroups: ["networking.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["networkpolicies"]
       - apiGroups: [""]
         apiVersions: ["*"]
         operations: ["CREATE", "UPDATE"]
@@ -27,6 +40,21 @@ spec:
     - name: forge-run
       expression: "request.userInfo.username.startsWith('forge:repo:')"
   variables:
+    - name: isPolicy
+      expression: "request.resource.resource == 'networkpolicies'"
+    # Platform services a run's egress may reach beyond its own namespace,
+    # by namespace: the one port a rule may name, and the app label of the
+    # destination pods where the namespace holds more than that service.
+    - name: egressPorts
+      expression: "{'kube-system': 53, 'versitygw': 7070}"
+    - name: egressApps
+      expression: "{'kube-system': '', 'versitygw': 'versitygw'}"
+    # Carrier-grade NAT is the tailnet; link-local holds the metadata
+    # address. An ipBlock covering a range must except all of it.
+    - name: privateRanges
+      expression: >-
+        ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10',
+         '169.254.0.0/16']
     - name: podSpec
       expression: >-
         request.resource.resource == 'pods' ? object.spec :
@@ -34,6 +62,7 @@ spec:
         object.spec.template.spec
     - name: containers
       expression: >-
+        variables.isPolicy ? [] :
         variables.podSpec.?containers.orValue([]) + variables.podSpec.?initContainers.orValue([])
   validations:
     # The dot after the registry keeps a longer hostname from matching, and
@@ -51,6 +80,44 @@ spec:
           c.?resources.?limits[?r].hasValue() &&
           quantity(c.resources.limits[r]).isGreaterThan(quantity('0'))))
       message: "a forge app's containers must set a cpu and a memory limit"
+    - expression: >-
+        !variables.isPolicy || object.spec.?egress.orValue([]).all(r,
+          r.?to.orValue([]).size() > 0 &&
+          r.to.all(t,
+            has(t.ipBlock) ?
+              (isCIDR(t.ipBlock.cidr) && cidr(t.ipBlock.cidr).ip().family() == 4 &&
+                t.ipBlock.?except.orValue([]).all(e,
+                  isCIDR(e) && cidr(e).ip().family() == 4 &&
+                  cidr(t.ipBlock.cidr).masked().containsCIDR(cidr(e).masked())) &&
+                variables.privateRanges.all(p,
+                  !cidr(p).containsCIDR(cidr(t.ipBlock.cidr).masked()) &&
+                  (!cidr(t.ipBlock.cidr).masked().containsCIDR(p) ||
+                    t.ipBlock.?except.orValue([]).exists(e, cidr(e).masked().containsCIDR(p))))) :
+            has(t.namespaceSelector) ?
+              (t.namespaceSelector.?matchLabels.orValue({}).size() == 1 &&
+                t.namespaceSelector.?matchExpressions.orValue([]).size() == 0 &&
+                t.namespaceSelector.matchLabels[?'kubernetes.io/metadata.name'].orValue('') in variables.egressPorts &&
+                (variables.egressApps[t.namespaceSelector.matchLabels['kubernetes.io/metadata.name']] == '' ||
+                  t.?podSelector.?matchLabels[?'app.kubernetes.io/name'].orValue('') ==
+                    variables.egressApps[t.namespaceSelector.matchLabels['kubernetes.io/metadata.name']]) &&
+                r.?ports.orValue([]).size() > 0 &&
+                r.ports.all(p, p.?port.orValue(0) ==
+                  variables.egressPorts[t.namespaceSelector.matchLabels['kubernetes.io/metadata.name']] &&
+                  !has(p.endPort))) :
+            true))
+      message: "a forge app's network policy may not admit egress to private ranges, other than DNS and the platform services it is allowed"
+    - expression: >-
+        !variables.isPolicy || object.spec.?ingress.orValue([]).all(r,
+          r.?from.orValue([]).size() > 0 &&
+          r.from.all(f,
+            has(f.ipBlock) ? false :
+            has(f.namespaceSelector) ?
+              (f.namespaceSelector.?matchLabels.orValue({}).size() == 1 &&
+                f.namespaceSelector.?matchExpressions.orValue([]).size() == 0 &&
+                f.namespaceSelector.matchLabels[?'kubernetes.io/metadata.name'].orValue('') == 'envoy-gateway-system' &&
+                f.?podSelector.?matchLabels[?'gateway.envoyproxy.io/owning-gateway-name'].orValue('') == 'home') :
+            true))
+      message: "a forge app's network policy may admit ingress only from its own namespace and the gateway's proxies"
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
