@@ -13,6 +13,19 @@ configMapGenerator:
   files:
   - ca-certificates.crt=ca-bundle.pem
 patches:
+  # Every controller runs non-root with the default seccomp profile and
+  # no capabilities, so the namespace enforces what its pods already
+  # meet. The bootstrap owns the object, so the labels land as a patch.
+  - target:
+      kind: Namespace
+      name: flux-system
+    patch: |
+      - op: add
+        path: /metadata/labels/pod-security.kubernetes.io~1enforce
+        value: restricted
+      - op: add
+        path: /metadata/labels/pod-security.kubernetes.io~1audit
+        value: restricted
   # Deploy from signed release tags, not branch HEAD: commits (agent or
   # human) flow freely to main and never deploy; only a deliberate,
   # presence-gated `git tag -s` changes the cluster. A compromised GitHub
