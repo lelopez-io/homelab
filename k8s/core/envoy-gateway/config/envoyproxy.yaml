@@ -25,5 +25,21 @@ spec:
               memory: 1Gi
             limits:
               memory: 2Gi
+        # The drain sidecar has no field of its own. Working set 90Mi idle,
+        # so 256Mi is an estimate; a kill cuts a drain short. No cpu limit.
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              template:
+                spec:
+                  containers:
+                    - name: shutdown-manager
+                      resources:
+                        requests:
+                          cpu: 10m
+                          memory: 32Mi
+                        limits:
+                          memory: 256Mi
       envoyPDB:
         minAvailable: 1
