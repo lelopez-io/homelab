@@ -8,7 +8,9 @@
 # not set a gateway.lan/ label either: the gateway's listeners admit routes
 # from namespaces by that label, so setting it would open them to the run.
 # Its HTTPRoutes may name only the gateway's dev tier listener, and only
-# hosts under its own repository's name.
+# hosts under its own repository's name. Its Services are ClusterIP only, so
+# the gateway stays the one way in: no load balancer address, node port or
+# external IP.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -34,6 +36,8 @@ spec:
         variables.isNamespace
           ? (request.operation == 'DELETE' ? oldObject : object).metadata.?labels.orValue({})
           : namespaceObject.metadata.?labels.orValue({})
+    - name: isService
+      expression: "request.resource.group == '' && request.resource.resource == 'services'"
     - name: isRoute
       expression: "request.resource.group == 'gateway.networking.k8s.io' && request.resource.resource == 'httproutes'"
   validations:
@@ -73,6 +77,12 @@ spec:
         (object.spec.?hostnames.orValue([]).size() > 0 &&
           object.spec.hostnames.all(h, h.startsWith(variables.repository + '.')))
       messageExpression: "'a forge route must name hosts starting with ' + variables.repository + '.'"
+    # An unset type defaults to ClusterIP.
+    - expression: >-
+        !variables.isService || request.operation == 'DELETE' ||
+        (object.spec.?type.orValue('ClusterIP') == 'ClusterIP' &&
+          object.spec.?externalIPs.orValue([]).size() == 0)
+      message: "a forge app's service must be ClusterIP with no externalIPs"
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
