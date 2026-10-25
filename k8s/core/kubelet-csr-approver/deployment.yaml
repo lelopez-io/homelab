@@ -1,0 +1,80 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubelet-csr-approver
+  namespace: kubelet-csr-approver
+  labels:
+    app.kubernetes.io/name: kubelet-csr-approver
+spec:
+  # One replica, so no leader election and no lease rights. While it is down
+  # a request waits unapproved and is approved when the pod returns.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubelet-csr-approver
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubelet-csr-approver
+    spec:
+      serviceAccountName: kubelet-csr-approver
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: kubelet-csr-approver
+          image: ghcr.io/postfinance/kubelet-csr-approver:v1.2.15@sha256:6469ef517d2b6d3cb108fce8a913483533a48b1cd78b5d4af307fa09e04a7818
+          imagePullPolicy: IfNotPresent
+          args:
+            - -metrics-bind-address
+            - ":8080"
+            - -health-probe-bind-address
+            - ":8081"
+          env:
+            # The three nodes' names. A request whose username names another
+            # node, or whose DNS name does not start with that username, is
+            # denied.
+            - name: PROVIDER_REGEX
+              value: ^talos-node-[1-3]$
+            # The nodes' own addresses. A request for any other IP, such as a
+            # pod, service or LAN address, is denied.
+            - name: PROVIDER_IP_PREFIXES
+              value: 192.168.10.30/32,192.168.10.31/32,192.168.10.32/32
+            # The node names are not in cluster DNS, and the policy gives the
+            # pod no DNS egress.
+            - name: BYPASS_DNS_RESOLUTION
+              value: "true"
+          ports:
+            - name: metrics
+              containerPort: 8080
+            - name: health
+              containerPort: 8081
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+          # Estimates: the chart's defaults, which the maintainers size for a
+          # controller that watches one resource kind. Re-size from metrics.
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
