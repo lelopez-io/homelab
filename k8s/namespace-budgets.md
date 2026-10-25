@@ -121,3 +121,17 @@ kube-router is the cluster's network. A pod refused there leaves a node
 with no pod network, and restoring it needs that network, so the namespace
 carries no quota. Its three pods are a fixed daemonset. Its container has a
 256Mi memory limit and no CPU limit: throttling it stalls pod networking.
+
+## Measuring usage
+
+`kubectl top pods -A` shows current use. For history, port-forward
+Prometheus with `kubectl port-forward -n usage-metrics svc/prometheus 9090`
+and ask, per container:
+
+- `max_over_time(container_memory_working_set_bytes{namespace="plex"}[7d])`
+  for the peak working set, the figure a memory limit is sized above;
+- `rate(container_cpu_usage_seconds_total{namespace="plex"}[5m])` for CPU;
+- `container_oom_events_total` for a kill by memory.
+
+Thirty days are kept. A memory limit moves only after a week that includes
+a Plex transcode and a Longhorn backup.
