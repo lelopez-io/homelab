@@ -2,7 +2,9 @@
 # RBAC cannot say "your own namespaces", so this does. A namespace belongs
 # to a forge run when it carries the run's repository as a label, and a
 # run may create one only labelled that way and under the restricted pod
-# security standard, so it cannot relax what the platform enforces. It may
+# security standard, so it cannot relax what the platform enforces. An
+# update must find the label already on the stored namespace and leave it
+# unchanged, so a run cannot claim a namespace by labelling it. It may
 # not set a gateway.lan/ label either: the gateway's listeners admit routes
 # from namespaces by that label, so setting it would open them to the run.
 # Its HTTPRoutes may name only the gateway's dev tier listener, and only
@@ -41,6 +43,13 @@ spec:
         !variables.isNamespace || request.operation == 'DELETE' ||
         variables.labels[?'pod-security.kubernetes.io/enforce'].orValue('') == 'restricted'
       message: "a forge app's namespace must enforce the restricted pod security standard"
+    # labels reads the new object, so an update that adds the label would
+    # pass the first rule; the stored object is what shows who owns it.
+    - expression: >-
+        !variables.isNamespace || request.operation != 'UPDATE' ||
+        (oldObject.metadata.?labels.orValue({})[?'forge/repository'].orValue('') == variables.repository &&
+          variables.labels[?'forge/repository'] == oldObject.metadata.?labels.orValue({})[?'forge/repository'])
+      message: "a forge run may only update a namespace that already carries its forge/repository label, unchanged"
     - expression: >-
         !variables.isNamespace || request.operation == 'DELETE' ||
         !variables.labels.exists(k, k.startsWith('gateway.lan/'))
