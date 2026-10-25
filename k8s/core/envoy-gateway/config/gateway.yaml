@@ -95,6 +95,23 @@ spec:
           selector:
             matchLabels:
               gateway.lan/routes: "true"
+    - name: plane-tailnet-https
+      # The tracker's tailnet lane, the forge's pattern on its own port:
+      # svc:plane maps its 443 here, and the hostname pin keeps the lane
+      # serving Plane alone.
+      port: 8444
+      protocol: HTTPS
+      hostname: "${PLANE_HOST}"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: sub-wildcard-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.lan/routes: "true"
     - name: minecraft-bedrock
       # LAN game lane, moved off the nginx udp stream map.
       port: 19132
