@@ -54,6 +54,26 @@ controlPlane:
                 kind: PodSecurityConfiguration
                 defaults:
                   enforce: restricted
+    # Requests are estimates from one idle reading of the kubelet's working
+    # sets (apiserver 448-941Mi, controller manager 159Mi, scheduler 69Mi),
+    # rounded up. Re-size them from a week of usage metrics.
+    - |-
+      cluster:
+        apiServer:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+        controllerManager:
+          resources:
+            requests:
+              cpu: 20m
+              memory: 256Mi
+        scheduler:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
     # Talos writes machine files in the boot sequence only, so a change here
     # reaches the node on a reboot, never on a live apply.
     - |-
