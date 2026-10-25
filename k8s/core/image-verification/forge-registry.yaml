@@ -1,0 +1,54 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kyverno-forge-registry
+  namespace: kyverno
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: admission-controller
+      app.kubernetes.io/part-of: kyverno
+  policyTypes:
+    - Egress
+  egress:
+    # The public hostname resolves to the gateway, and policy sees the
+    # connection after kube-proxy chose a proxy pod: name the proxies and
+    # the container port (Envoy shifts 443 by 10000), not the address.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: home
+      ports:
+        - protocol: TCP
+          port: 10443
+---
+# The other half of the same connection: the proxies admit the admission
+# controller on the https listener. The gateway's own policy lists its
+# other callers.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kyverno-forge-registry
+  namespace: envoy-gateway-system
+spec:
+  podSelector:
+    matchLabels:
+      gateway.envoyproxy.io/owning-gateway-name: home
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kyverno
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: admission-controller
+              app.kubernetes.io/part-of: kyverno
+      ports:
+        - protocol: TCP
+          port: 10443
