@@ -1,0 +1,56 @@
+name: policy gate
+
+# pull_request runs the proposed tree with a read-only token and no secrets,
+# so a fork cannot reach anything by opening one.
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: policy-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: render and check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      # Bump by commit; the tag is v7.0.1.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned tools
+        run: |
+          .github/scripts/install-tools.sh "$RUNNER_TEMP/tools" kyverno kubeconform helm kubectl yq
+          echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
+      - name: Gate fixtures
+        run: .github/scripts/test.sh
+      - name: Gate the tree
+        run: python3 -I .github/scripts/policy-gate.py .
+
+  # Its own job: the only step that holds a token, and it holds the
+  # read-only one the runner mints, with nothing else running beside it.
+  attestation:
+    name: build attestation of changed pins
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pinned gh
+        run: |
+          .github/scripts/install-tools.sh "$RUNNER_TEMP/tools" gh
+          echo "$RUNNER_TEMP/tools" >> "$GITHUB_PATH"
+      - name: Verify attestations of changed digests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/attestation.sh "origin/${{ github.base_ref }}"
