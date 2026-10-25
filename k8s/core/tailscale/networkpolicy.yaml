@@ -7,7 +7,12 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  # Nothing arrives over the pod network: every magicsock contact in the
+  # proxies' logs rides an outbound DERP relay, and the operator only
+  # dials the API.
+  ingress: []
   egress:
     - to:
         - ipBlock:
