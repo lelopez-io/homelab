@@ -1,0 +1,96 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: kyverno
+  namespace: kyverno
+spec:
+  type: oci
+  interval: 24h
+  url: oci://ghcr.io/kyverno/charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kyverno
+  namespace: kyverno
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: kyverno
+      version: "3.9.2"
+      sourceRef:
+        kind: HelmRepository
+        name: kyverno
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Only the admission and background controllers run: generate rules
+    # need both, and each other controller is a pod, a ServiceAccount and
+    # a set of cluster grants this cluster has no use for.
+    cleanupController:
+      enabled: false
+    reportsController:
+      enabled: false
+    # Each of these is a hook job or test pod with an image of its own.
+    # The migration job only rewrites stored CRD versions on an upgrade;
+    # turn it on for a chart bump that changes a storage version.
+    webhooksCleanup:
+      enabled: false
+    test:
+      enabled: false
+    crds:
+      migration:
+        enabled: false
+    features:
+      admissionReports:
+        enabled: false
+      aggregateReports:
+        enabled: false
+      policyReports:
+        enabled: false
+      validatingAdmissionPolicyReports:
+        enabled: false
+      backgroundScan:
+        enabled: false
+
+    # Images are pinned by digest; the tag stays for the reader.
+    admissionController:
+      # Two replicas, so a node drain does not block namespace creation
+      # while the webhook fails closed.
+      replicas: 2
+      initContainer:
+        image:
+          tag: v1.19.2@sha256:27f3cc52e628559b56d08363b85316819802086c9808606914f7805a244148f4
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+      container:
+        image:
+          tag: v1.19.2@sha256:c8c4dd09e720d2cd7fd24ca73ac28e46651001372f988e0cba3f2f612f04b955
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 384Mi
+    backgroundController:
+      image:
+        tag: v1.19.2@sha256:c46e124f21ef8a6bb4b48de57106808b1007edcd5ddd4ff7df5d23b9efa60ce2
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 250m
+          memory: 256Mi
