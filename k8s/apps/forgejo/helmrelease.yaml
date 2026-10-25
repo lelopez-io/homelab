@@ -131,3 +131,14 @@ spec:
       limits:
         memory: 2Gi
         cpu: 2000m
+
+    # Estimated, not measured: two shell steps and the configure command,
+    # which migrates the database. A kill reruns them at the next start.
+    # No CPU limit: they sit on the startup path.
+    initContainers:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 512Mi
