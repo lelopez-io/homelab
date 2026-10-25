@@ -126,6 +126,9 @@ spec:
     networkPolicies:
       restrictInternalTraffic: false
     defaultSettings:
+      # The manager moves each volume to a new default engine image itself, one
+      # per node at a time: live while attached, at once while detached.
+      concurrentAutomaticEngineUpgradePerNodeLimit: 1
       # Start with 2 replicas (we have 2 nodes, will add 3rd)
       defaultReplicaCount: 2
       # Sidecars hold a Kubernetes informer; the largest working set seen

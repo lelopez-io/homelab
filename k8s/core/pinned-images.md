@@ -42,9 +42,22 @@ chart version, then copy the tags from the new chart's `values.yaml` with a
 digest each.
 
 Longhorn names an engine image from a hash of its string, so a new string is
-a new engine image. Volumes keep running on the old one until each is
-upgraded to the new one in the Longhorn UI or API. The old engine image and
-its instance managers stay up until the last volume has moved.
+a new engine image. `defaultSettings.concurrentAutomaticEngineUpgradePerNodeLimit`
+is 1, so after the manager restarts it upgrades volumes to the new default
+engine image itself, one per node at a time. An attached, healthy volume
+upgrades live; a detached one upgrades at once; strict-local, DR, expanding
+and migrating volumes are skipped and need a manual upgrade. The chart's
+default settings reach an existing setting whenever the manager starts with a
+changed ConfigMap.
+
+The old engine image is not deleted for you. When no volume uses it, delete it
+in the Longhorn UI so its DaemonSet goes; its instance managers go once no
+instance runs in them. Check that every volume runs the pinned image:
+
+    kubectl -n longhorn-system get volumes.longhorn.io \
+      -o custom-columns=VOLUME:.metadata.name,SPEC:.spec.image,CURRENT:.status.currentImage
+
+Each SPEC and CURRENT must end in `@sha256:<digest>`.
 
 ## MetalLB
 
