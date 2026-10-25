@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: plane
+  labels:
+    # The chart sets no security context, so the release's post-render
+    # patches are what let its pods in.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+    # The gateway's private listener admits routes only from namespaces
+    # carrying this, so without it the HTTPRoute is rejected as not allowed
+    # by any listener while still resolving its backend.
+    gateway.lan/routes: "true"

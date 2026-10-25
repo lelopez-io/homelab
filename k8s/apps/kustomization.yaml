@@ -10,3 +10,4 @@ resources:
   - forgejo-runner
   - versitygw
   - celld
+  - plane
