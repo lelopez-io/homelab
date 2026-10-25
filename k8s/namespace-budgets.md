@@ -33,18 +33,19 @@ and the pod count are the cap.
 | forgejo | 1 | 250m, 512Mi | 3 | 500m, 1Gi | none |
 | forgejo-runner | 1 | 350m, 640Mi | 3 | 1, 1536Mi | 6, 10Gi |
 | frp-tunnel | 1 | 25m, 32Mi | 3 | 100m, 128Mi | 300m, 384Mi |
-| intel-gpu-resource-driver | 3 | 30m, 96Mi | 6 | 100m, 256Mi | none |
+| intel-gpu-resource-driver | 3 | 30m, 384Mi | 6 | 100m, 1Gi | none |
 | kyverno | 4 | 300m, 448Mi | 10 | 1, 1Gi | 3, 3Gi |
-| longhorn-system | 27 | 6072m, 1152Mi | 64 | 13, 4Gi | none |
-| metallb-system | 4 | 40m, 128Mi | 10 | 250m, 512Mi | none |
+| longhorn-system | 27 | 6145m, 2360Mi | 64 | 13, 4Gi | none |
+| metallb-system | 4 | 50m, 256Mi | 10 | 250m, 512Mi | none |
 | minecraft | 1 | 2, 4Gi | 3 | 2500m, 5Gi | 5, 8Gi |
 | palworld | 1 | 2, 8Gi | 3 | 2500m, 10Gi | 5, 15Gi |
-| plane | 11 | 550m, 862Mi | 24 | 1, 1536Mi | none |
-| plex | 1 | 60m, 96Mi | 4 | 250m, 512Mi | none |
-| tailscale | 6 | 60m, 192Mi | 14 | 250m, 512Mi | none |
+| plane | 11 | 625m, 1182Mi | 24 | 1500m, 2Gi | none |
+| plex | 1 | 300m, 576Mi | 4 | 500m, 1Gi | none |
+| tailscale | 6 | 60m, 384Mi | 14 | 250m, 1Gi | none |
 | versitygw | 1 | 50m, 128Mi | 3 | 100m, 256Mi | 1500m, 1536Mi |
 
-Kyverno is not running yet; its row is the chart's values.
+Requests are those after the container sizes below were set. Kyverno is
+not running yet; its row is the chart's values.
 
 A namespace that needs another budget changes its `budget` here. A forge
 run's namespace gets the generated one, and a larger one is a change to the
@@ -66,6 +67,44 @@ run's namespace gets the generated one, and a larger one is a change to the
   before the new one exists and the peak is one pod: Minecraft 2 CPU and
   4Gi of 2500m and 5Gi, Palworld 2 CPU and 8Gi of 2500m and 10Gi, Factorio
   1 CPU and 2Gi of 1500m and 3Gi.
+
+## Container sizes
+
+The cluster has no metrics server, so there is no busy-hour measurement.
+The source is the kubelet's summary, read over about 40 idle hours: a
+working set and an average CPU for each container. Requests follow the
+working set. Memory limits are 2 to 4 times it where the idle size is
+stable and a kill is local; every one is an estimate of a busy hour. The
+busy components, marked none yet, get theirs in a later change sized from a
+week of measurement, since a wrong limit would restart a database or the
+volume engine in the busy hour. No container here has a CPU limit, because
+throttling a storage engine, database, transcode or edge proxy turns a
+burst into latency.
+
+| Component | Working set seen | Request | Memory limit | An OOM kill |
+|---|---|---|---|---|
+| Longhorn manager | 142 to 719Mi | 50m, 256Mi | none yet | restarts; attach and detach wait, I/O continues |
+| Longhorn CSI sidecars | 11 to 59Mi | 10m, 64Mi | 256Mi | provisioning or attach waits |
+| Longhorn CSI plugin | 18 to 66Mi | 10m, 96Mi | none yet | node attach waits |
+| Longhorn registrar, probe | 22 to 28Mi | 5m, 32Mi | 128Mi | plugin registration waits |
+| Longhorn UI, driver deployer | 10 to 13Mi | 10m, 32Mi | none yet | UI or deploy waits |
+| MetalLB speaker | 77Mi | 10m, 64Mi | 256Mi | its node stops answering for addresses |
+| MetalLB controller | 31Mi | 10m, 32Mi | 128Mi | no new address assigned |
+| Tailscale operator | 28Mi | 10m, 64Mi | 256Mi | no new proxies |
+| Tailscale proxy | 22 to 37Mi | 10m, 64Mi | 256Mi | sessions drop until it rejoins |
+| GPU plugin | 149Mi | 10m, 128Mi | 512Mi | device claims wait |
+| Gateway drain sidecar | 90Mi | 10m, 32Mi | 256Mi | a drain is cut short |
+| Plex media server | 173Mi idle | 250m, 512Mi | none yet | every stream and transcode ends |
+| Plane postgres | 43Mi | 100m, 256Mi | none yet | connections drop, log replays |
+| Plane object store | 85Mi | 50m, 256Mi | none yet | uploads fail |
+| Plane rabbitmq | 154Mi | 100m, 256Mi | none yet | in-flight work drops |
+| Plane valkey | 4Mi | 25m, 64Mi | 256Mi | in-memory cache lost |
+| Plane migrator | not measured | 100m, 256Mi | none yet | the job retries |
+
+Longhorn's instance managers, engine images, share managers and recurring
+job pods are made by the manager, which offers a CPU reservation for the
+first (12% of a node, already set) and no memory request or limit. They
+stay unset.
 
 ## Without a quota
 
