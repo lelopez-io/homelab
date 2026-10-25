@@ -45,7 +45,8 @@ spec:
             - name: PROVIDER_IP_PREFIXES
               value: 192.168.10.30/32,192.168.10.31/32,192.168.10.32/32
             # The node names are not in cluster DNS, and the policy gives the
-            # pod no DNS egress.
+            # pod no DNS egress. So a name is held to the three addresses,
+            # not to its own: that needs an approver that reads the Node.
             - name: BYPASS_DNS_RESOLUTION
               value: "true"
           ports:
