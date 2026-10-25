@@ -174,6 +174,21 @@ The same image is in `talos/talconfig.yaml` (`cluster.coreDNS.image`), which a
 Kubernetes upgrade reads, so set both digests on every bump or the upgrade
 writes one over the other.
 
+## kube-proxy
+
+`kube-proxy/` follows the same recipe: the service account, cluster role
+binding and DaemonSet Talos created, copied from the running cluster, with
+only the digest of v1.34.1 and the prune-off annotation added. It replaces one
+node at a time. Service rules are in the kernel and outlast the pod, so
+Service traffic on a node keeps flowing while its pod restarts; the new pod
+re-syncs the rules at start. This is read, not run here. Roll out with
+`kubectl -n kube-system rollout status ds/kube-proxy` and reach a Service from
+a pod on that node before the next node moves. To roll back, revert the
+commit.
+
+The image is also in `talos/talconfig.yaml` (`cluster.proxy.image`); set both
+digests on every bump.
+
 ## Checking
 
 `k8s/core/admission/tests/rendered.sh` renders `k8s`, `flux/config/flux-system`
