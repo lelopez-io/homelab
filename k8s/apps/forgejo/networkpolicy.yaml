@@ -7,7 +7,33 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  ingress:
+    # Web and git over SSH arrive only through the home gateway's routes,
+    # so the proxies are the sole clients either lane sees. Ports are the
+    # container's post-DNAT: the ssh route's 22 lands here as 2222.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: home
+              gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 2222
+    # The runner polls tasks and clones over the in-cluster Service.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: forgejo-runner
+      ports:
+        - protocol: TCP
+          port: 80
   egress:
     # DNS resolution
     - to:
