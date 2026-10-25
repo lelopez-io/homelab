@@ -8,10 +8,13 @@ metadata:
     app.kubernetes.io/name: forgejo-runner
 spec:
   replicas: 1
-  # The pod being replaced stops before its successor starts, so two job
-  # daemons never run together.
+  # The new pod must be Ready before the old one stops, so a daemon that
+  # fails to start leaves the previous runner serving.
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app.kubernetes.io/name: forgejo-runner
