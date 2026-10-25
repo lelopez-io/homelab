@@ -9,3 +9,4 @@ resources:
   - config.flux.yaml
   - networkpolicy.yaml
   - limitrange.yaml
+  - resourcequota.yaml

@@ -1,0 +1,14 @@
+---
+# 27 pods, 6072m requested of which 3 instance managers hold 1914m each (12%
+# of a node). An engine upgrade adds 3 more, engine images, CSI surge and
+# share managers.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: longhorn-system
+spec:
+  hard:
+    requests.cpu: "13"
+    requests.memory: 4Gi
+    pods: "64"

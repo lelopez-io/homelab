@@ -7,6 +7,7 @@ resources:
   - resourceclaimtemplate.yaml
   - networkpolicy.yaml
   - limitrange.yaml
+  - resourcequota.yaml
 patches:
   # Talos Compatibility
   - path: namespace-patch.yaml

@@ -6,3 +6,4 @@ resources:
   - networkpolicy.yaml
   - helmrelease.yaml
   - limitrange.yaml
+  - resourcequota.yaml
