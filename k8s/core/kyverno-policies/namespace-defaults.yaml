@@ -86,8 +86,9 @@ spec:
   evaluation:
     synchronize:
       enabled: true
+    # Runs created these namespaces before the policy existed.
     generateExisting:
-      enabled: false
+      enabled: true
   variables:
     - name: namespace
       expression: "object.metadata.name"
@@ -131,11 +132,8 @@ spec:
     - name: withInternet
       expression: >-
         object.metadata.?labels['forge/egress'].orValue('') != 'none'
-    # Rules name container ports and selected pods, never Service
-    # addresses, since kube-router filters after kube-proxy rewrites them.
-    # The gateway's proxies are admitted on any port: they dial only what
-    # a run's HTTPRoute names, the route admission policy pins its hosts,
-    # and a port the run declared itself would bound nothing.
+    # The proxies are admitted on any port: they dial only what a run's
+    # HTTPRoute names, and a port the run declared would bound nothing.
     - name: forgeBaseline
       expression: >-
         {"apiVersion": "networking.k8s.io/v1", "kind": "NetworkPolicy",
