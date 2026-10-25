@@ -13,4 +13,10 @@ patches:
     target:
       kind: DaemonSet
       name: intel-gpu-resource-driver-kubelet-plugin
+images:
+  # The base ships :latest; the digest keeps a new upstream push off the
+  # next restart. Releases past v0.11.0 publish under the shorter name
+  # ghcr.io/intel/intel-gpu-resource-driver.
+  - name: ghcr.io/intel/intel-resource-drivers-for-kubernetes/intel-gpu-resource-driver
+    newTag: v0.9.1@sha256:f5829fc10de4118aa0705b1310a7dc0364154f73c7db8506263d4dca3dd65581
 
