@@ -1,0 +1,73 @@
+---
+# The chart's own Ingress paths, carried over. The longest matching
+# prefix wins, so the web app's / only answers what no other rule claims.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: plane
+  namespace: plane
+spec:
+  parentRefs:
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: https-sub
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: plane-tailnet-https
+  hostnames:
+    - "${PLANE_HOST}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+        - path:
+            type: PathPrefix
+            value: /auth
+        - path:
+            type: PathPrefix
+            value: /static
+      backendRefs:
+        - name: plane-api
+          port: 8000
+    # The collaborative editor holds a websocket open here, which Envoy's
+    # default request timeout would cut after 15 seconds.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /live
+      timeouts:
+        request: 0s
+      backendRefs:
+        - name: plane-live
+          port: 3000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /spaces
+      backendRefs:
+        - name: plane-space
+          port: 3000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /god-mode
+      backendRefs:
+        - name: plane-admin
+          port: 3000
+    # Browsers upload and download attachments through presigned URLs on
+    # this host, so the bucket's path goes straight to the object store.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /uploads
+      backendRefs:
+        - name: plane-minio
+          port: 9000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: plane-web
+          port: 3000

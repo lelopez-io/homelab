@@ -7,3 +7,4 @@ resources:
   - secret-vars.sops.yaml
   - helmrelease.yaml
   - networkpolicy.yaml
+  - ingress.flux.yaml
