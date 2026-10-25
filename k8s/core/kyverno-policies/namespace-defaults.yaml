@@ -1,13 +1,6 @@
-# A namespace starts closed and bounded: no traffic in or out, a default
-# size for every container, and a ceiling for the namespace. The rules
-# fire on Namespace CREATE only, so a later update, a changed label
-# included, adds or removes nothing. Synchronize puts back a generated
-# object that is deleted or edited. A policy added beside one is
-# additive and is how a namespace opens what it needs.
-#
-# A namespace labelled as a forge run's belongs to the second policy and
-# also gets the openings a site needs: DNS, its own pods, the gateway
-# and, unless it opts out, the internet.
+# A namespace starts closed and bounded: no traffic, a default container size
+# and a namespace ceiling. Rules fire on CREATE only, so a later label change
+# adds or removes nothing. Synchronize restores a deleted or edited object.
 apiVersion: policies.kyverno.io/v1
 kind: GeneratingPolicy
 metadata:
@@ -69,6 +62,8 @@ spec:
         generator.Apply(variables.namespace,
           [variables.denyAll, variables.limitRange, variables.quota])
 ---
+# A forge run's namespace also gets what a site needs: DNS, its own pods, the
+# gateway and, unless labelled forge/egress=none, the internet.
 apiVersion: policies.kyverno.io/v1
 kind: GeneratingPolicy
 metadata:

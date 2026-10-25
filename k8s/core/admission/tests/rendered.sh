@@ -1,10 +1,7 @@
 #!/bin/sh
-# Renders the whole tree and runs the pinned-images policy over every pod
-# bearing object in it, with no namespace exemption: the bindings' namespace
-# lists are not evaluated here. HelmRelease pods are not in the kustomize
-# render, so each release goes through helm template with its own values.
-# Needs kubectl, helm, yq, jq and docker. Run from anywhere:
-#   k8s/core/admission/tests/rendered.sh
+# Renders the tree and runs the pinned-images policy over every pod-bearing
+# object, ignoring the bindings' namespace lists. HelmRelease pods go through
+# helm template. Needs kubectl, helm, yq, jq and docker.
 set -eu
 root=$(cd "$(dirname "$0")/../../../.." && pwd)
 out=$(mktemp -d)

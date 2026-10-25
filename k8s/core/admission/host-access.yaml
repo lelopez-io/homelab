@@ -1,9 +1,7 @@
 ---
-# Host network, host ports and host paths hand a pod the node's own network
-# or filesystem. Outside the platform namespaces that run the node's
-# plumbing, a pod does without them. The media server is the one exception
-# below: it may mount /dev/dri for hardware transcoding and nothing else on
-# the host. Delete that clause when Plex moves to a resource claim.
+# Host network, ports and paths hand a pod the node's own network or files,
+# so only the platform namespaces that run the node's plumbing get them.
+# Plex may mount /dev/dri alone, for hardware transcoding.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:

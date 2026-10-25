@@ -1,10 +1,6 @@
-# A pod in a forge run's namespace mounts no API token unless it asks.
-# The field is set only where the pod leaves it unset: a pod that names
-# true is left alone, so the admission policy that refuses a mounted
-# token on a run's pod sees the request as written instead of a silent
-# edit. The webhook is scoped to the forge namespaces by label and
-# ignores its own failure; with Kyverno down the pod arrives unmutated
-# and that same policy refuses it, so an outage never lifts the rule.
+# Sets the field only where a pod leaves it unset; an explicit true stays, so
+# the admission policy sees the request as written. With Kyverno down the pod
+# arrives unmutated and that policy refuses it: an outage never lifts the rule.
 apiVersion: policies.kyverno.io/v1
 kind: MutatingPolicy
 metadata:

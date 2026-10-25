@@ -1,8 +1,7 @@
 ---
-# A tag moves, a digest does not, so a pod runs only the bytes that were
-# reviewed. The check reads the pod template of each workload kind as well as
-# the pod, so a chart that drops a digest fails at the apply and not later at
-# the ReplicaSet.
+# A tag moves, a digest does not. Workload templates are checked as well as
+# pods, so a chart that drops a digest fails at the apply, not at the
+# ReplicaSet.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:

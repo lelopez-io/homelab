@@ -1,10 +1,7 @@
 ---
-# Each rule pins the signing workflow, so a different workflow in the same
-# organisation, or a fork, does not pass. These images run by tag, and
-# Audit forbids mutateDigest, so verifyDigest is off and the tag is resolved
-# at verification. Enforce adds mutateDigest: true to pin the pod to the
-# verified digest. Autogen is off: rewriting a controller's pod template
-# would fight Flux.
+# Each rule pins the signing workflow, so a fork or another workflow in the
+# organisation fails. These images run by tag, so verifyDigest is off. Autogen
+# is off: rewriting a controller's pod template would fight Flux.
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:

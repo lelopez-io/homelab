@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# Run the gate over each fixture tree. A pass- tree must exit 0. A fail- tree
-# must exit non-zero and say what its expect file names. The shared policies
-# are small stand-ins that exercise the gate's own logic (bindings, namespace
-# exemptions, generation); the platform's rules are tested where they live.
+# Runs the gate over each fixture tree: a pass- tree exits 0, a fail- tree
+# exits non-zero and says what its expect file names. The shared policies
+# are stand-ins; the platform's own rules are tested where they live.
 set -uo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)

@@ -1,11 +1,7 @@
 ---
 # A forge app calls no cluster API, so its pods mount no service account
-# token. The platform sets automountServiceAccountToken to false on its pods;
-# this is the backstop, judging the pod after that mutation. Unset and true
-# are both refused, so an outage of the mutation does not lift the rule, and
-# so is a token projected into a volume. A controller creates the pod, so
-# the namespace picks the pods, not the caller. The binding warns until the
-# mutation is live and the pods have rolled; set ["Deny"] to enforce.
+# token. The platform's mutation sets the field false; this judges the pod
+# after it, so an outage of the mutation cannot lift the rule.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -40,4 +36,5 @@ metadata:
   name: forge-run-no-token
 spec:
   policyName: forge-run-no-token
+  # Warn and Audit, since pods created before the mutation still mount one.
   validationActions: ["Warn", "Audit"]

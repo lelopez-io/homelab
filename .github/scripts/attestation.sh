@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
-# Verify the GitHub build attestation of every listed image whose digest a
-# pull request adds. usage: attestation.sh <base-ref>   (ALL=1 checks every
-# digest pinned now). Needs gh and GH_TOKEN; talks to GitHub, not the cluster.
-# These attestations sit in GitHub's store and not in the registry, so
-# admission cannot fetch them. cert-manager is unlisted because its signing
-# key has no source here that can be authenticated.
+# Verifies the GitHub attestation of each listed image digest a pull request
+# adds; ALL=1 checks every pinned digest. usage: attestation.sh <base-ref>
+# GitHub holds these attestations, not the registry, so admission cannot.
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)

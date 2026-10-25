@@ -1,7 +1,6 @@
-// Runs pod-security-labels.yaml through the API server's own CEL environment
-// (kyverno-cli cannot supply oldObject or the caller). From this directory:
-//
-//	go test -v ./...
+// Runs pod-security-labels.yaml through the API server's own CEL environment,
+// since kyverno-cli cannot supply oldObject or the caller.
+// From this directory: go test -v ./...
 package celtest
 
 import (

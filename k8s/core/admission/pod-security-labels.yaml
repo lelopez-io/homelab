@@ -1,14 +1,7 @@
 ---
-# A namespace's pod security labels are the platform's baseline for what
-# runs in it. Only Flux may lower one, by setting a lower value, removing
-# the label (which drops the namespace to the cluster default) or creating
-# the namespace below restricted, which a delete and recreate would do.
-# Any other creator sets no level below restricted, and an unlabelled
-# create counts as the cluster default. The forge-runs policy holds a
-# forge run to the same, and the two never disagree.
-#
-# The defaults variable mirrors the API server's pod security admission
-# defaults, set in talos/talconfig.yaml. Change the two together.
+# Only Flux may lower a namespace's pod security level: by a lower value, by
+# removing the label, or by creating the namespace below restricted, which a
+# delete and recreate would do. defaults mirrors talos/talconfig.yaml.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
