@@ -94,6 +94,12 @@ spec:
       max_players: 0
       auto_pause: true
       only_admins_can_pause_the_game: true
+    # Password comes from sops Secret factorio-rcon, never values; empty
+    # password keeps the placeholder unmounted. A new value reaches the
+    # server only after a pod restart: the init container copies it at start.
+    rcon:
+      password: ""
+      passwordSecret: factorio-rcon
     map_gen_settings:
       seed: 1853500214
     admin_list:
