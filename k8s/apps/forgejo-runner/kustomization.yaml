@@ -17,3 +17,11 @@ configMapGenerator:
     namespace: forgejo-runner
     files:
       - ca-certificates.crt=ca-bundle.pem
+  # Ids 1..65535 of the pod's mapping; newuidmap refuses any range outside
+  # it. rootlesskit removes the daemon's own 1000 from the range, so the map
+  # inside covers 0..65534.
+  - name: dind-subid
+    namespace: forgejo-runner
+    literals:
+      - subuid=rootless:1:65535
+      - subgid=rootless:1:65535
