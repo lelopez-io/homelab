@@ -152,6 +152,12 @@ spec:
               "ports": [{"protocol": "UDP", "port": 53},
                         {"protocol": "TCP", "port": 53}]},
              {"to": [{"podSelector": {}}]}]}}
+    # Everything inside the cluster and the LAN, the tailnet and the cloud
+    # metadata address: a site reaches the internet and nothing a node can.
+    - name: nonPublic
+      expression: >-
+        ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+         "100.64.0.0/10", "169.254.0.0/16"]
     # Its own object, so a namespace with a tighter policy of its own can
     # leave it out and the allows do not add up.
     - name: forgeInternet
@@ -160,8 +166,7 @@ spec:
          "metadata": {"name": "forge-internet"},
          "spec": {"podSelector": {}, "policyTypes": ["Egress"],
            "egress": [{"to": [{"ipBlock": {"cidr": "0.0.0.0/0",
-             "except": ["10.0.0.0/8", "172.16.0.0/12",
-                        "192.168.0.0/16"]}}]}]}}
+             "except": variables.nonPublic}}]}]}}
     - name: resources
       expression: >-
         [variables.denyAll, variables.limitRange, variables.quota,
