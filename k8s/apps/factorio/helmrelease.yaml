@@ -65,6 +65,30 @@ spec:
                           - |
                             exec 9>/dev/null
                             BASH_XTRACEFD=9 exec /docker-entrypoint.sh
+    # The chart sizes no init container. Both only copy files, estimated
+    # from their scripts, not measured: a kill reruns them at the next start.
+    - kustomize:
+        patches:
+          - target:
+              kind: Deployment
+              name: factorio-factorio-server-charts
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: factorio-factorio-server-charts
+              spec:
+                template:
+                  spec:
+                    initContainers:
+                      - name: volume-permissions-serversettingsconfig
+                        resources:
+                          requests: {cpu: 10m, memory: 32Mi}
+                          limits: {memory: 128Mi}
+                      - name: import-factorio-save
+                        resources:
+                          requests: {cpu: 10m, memory: 32Mi}
+                          limits: {memory: 256Mi}
   values:
     image:
       tag: "2.0.77@sha256:35237d3cb047107cecbf7a8ef6c4fab41acc65548b65526a1b15a5dd0cb670be"
