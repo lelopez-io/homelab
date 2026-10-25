@@ -3,6 +3,11 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: kube-router
+  annotations:
+    # The policy check reads this: it passes a namespace without a
+    # NetworkPolicy only when it names the reason and every pod in it uses
+    # the host network.
+    platform.example/netpol-exempt: the daemonset runs on the host network, which policy never filters
   labels:
     # The CNI needs host namespaces, host paths and a privileged container.
     pod-security.kubernetes.io/enforce: privileged
