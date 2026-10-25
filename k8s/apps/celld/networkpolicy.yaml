@@ -7,7 +7,19 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  # The app port (8080) stays closed until the first bundle lands; the
+  # route that serves it then names its caller here.
+  ingress:
+    # Peer transport between the fleet's own processes.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: celld
+      ports:
+        - protocol: TCP
+          port: 8081
   egress:
     # DNS resolution
     - to:
