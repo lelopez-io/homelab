@@ -62,3 +62,13 @@ ingress group and the subnet connector pods from it, so a ProxyClass needs no
 image of its own. With a digest the chart drops the tag. To bump: set the new
 chart version, then the digests of `tailscale/k8s-operator` and
 `tailscale/tailscale` at that version.
+
+## Flux
+
+Pinned in `flux/config/flux-system/kustomization.yaml` under `images`, one
+entry per controller, each `<tag>@<digest>`. The controllers come from
+`gotk-components.yaml`, which `flux bootstrap` or `flux install --export`
+generates, and an `images` entry replaces whatever tag that file carries. So a
+Flux upgrade is two steps in one commit: regenerate `gotk-components.yaml`,
+then set every entry to the new tag and its digest. Skipping the second step
+leaves the new manifests running the old digests.
