@@ -8,5 +8,6 @@ resources:
   - cert-manager
   - longhorn
   - gpu
+  - generic-device-plugin
   - kube-router
   - default

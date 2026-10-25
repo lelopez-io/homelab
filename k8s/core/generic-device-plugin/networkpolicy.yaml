@@ -1,0 +1,17 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: generic-device-plugin
+  namespace: generic-device-plugin
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  # Kubelet reaches the plugin over its hostPath socket, and the health
+  # and metrics listener is loopback-only: nothing calls in.
+  ingress: []
+  # The plugin dials only unix sockets and has no Kubernetes client, so it
+  # never needs the pod network.
+  egress: []
