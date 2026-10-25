@@ -51,6 +51,9 @@ spec:
               port: 20244
             initialDelaySeconds: 10
             periodSeconds: 3
+          # No CPU limit: this is the pod network on the host network, and
+          # throttling it stalls every pod's traffic on the node. The memory
+          # limit is over 3 times its 77Mi working set.
           resources:
             requests:
               cpu: 25m
