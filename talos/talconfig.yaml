@@ -64,16 +64,22 @@ controlPlane:
             requests:
               cpu: 100m
               memory: 1Gi
+            limits:
+              memory: 4Gi
         controllerManager:
           resources:
             requests:
               cpu: 20m
               memory: 256Mi
+            limits:
+              memory: 1Gi
         scheduler:
           resources:
             requests:
               cpu: 10m
               memory: 128Mi
+            limits:
+              memory: 512Mi
     # Talos writes machine files in the boot sequence only, so a change here
     # reaches the node on a reboot, never on a live apply.
     - |-
