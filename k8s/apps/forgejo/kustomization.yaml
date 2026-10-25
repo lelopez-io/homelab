@@ -9,3 +9,4 @@ resources:
   - helmrelease.yaml
   - networkpolicy.yaml
   - ingress.flux.yaml
+  - limitrange.yaml

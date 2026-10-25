@@ -14,3 +14,4 @@ resources:
   - storageclass-encrypted.yaml
   - networkpolicy.yaml
   - ui.flux.yaml
+  - limitrange.yaml

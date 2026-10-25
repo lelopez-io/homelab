@@ -8,3 +8,4 @@ resources:
   - helmrelease.yaml
   - networkpolicy.yaml
   - udproute.yaml
+  - limitrange.yaml
