@@ -41,6 +41,7 @@ spec:
                       - name: longhorn-ui
                         resources:
                           requests: {cpu: 10m, memory: 32Mi}
+                          limits: {memory: 128Mi}
           - target:
               kind: Deployment
               name: longhorn-driver-deployer
@@ -61,6 +62,7 @@ spec:
                       - name: longhorn-driver-deployer
                         resources:
                           requests: {cpu: 10m, memory: 32Mi}
+                          limits: {memory: 128Mi}
           - target:
               kind: DaemonSet
               name: longhorn-manager
@@ -76,7 +78,9 @@ spec:
                       - name: pre-pull-share-manager-image
                         resources:
                           requests: {cpu: 1m, memory: 8Mi}
-          # Not measured: they run once per chart bump, and no limit yet.
+                          limits: {memory: 32Mi}
+          # Not measured: they run once per chart bump and only call the
+          # API server.
           - target:
               kind: Job
               name: longhorn-(pre|post)-upgrade
@@ -85,6 +89,7 @@ spec:
                 path: /spec/template/spec/containers/0/resources
                 value:
                   requests: {cpu: 50m, memory: 64Mi}
+                  limits: {memory: 256Mi}
   values:
     # The chart joins repository and tag, so each tag carries its digest. A new
     # engine image string is a new engine image to Longhorn, which volumes move
@@ -138,7 +143,7 @@ spec:
          "csi-provisioner": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
          "csi-resizer": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
          "csi-snapshotter": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
-         "longhorn-csi-plugin": {"requests": {"cpu": "10m", "memory": "96Mi"}},
+         "longhorn-csi-plugin": {"requests": {"cpu": "10m", "memory": "96Mi"}, "limits": {"memory": "384Mi"}},
          "node-driver-registrar": {"requests": {"cpu": "5m", "memory": "32Mi"}, "limits": {"memory": "128Mi"}},
          "longhorn-liveness-probe": {"requests": {"cpu": "5m", "memory": "32Mi"}, "limits": {"memory": "128Mi"}}}
     persistence:
@@ -147,9 +152,10 @@ spec:
       defaultClassReplicaCount: 2
     # Make Longhorn the default StorageClass
     defaultClass: true
-    # Requests only: the manager's working set was 142 to 719Mi over 40 idle
-    # hours, too wide to cap from an idle sample. No CPU limit: throttling
-    # delays an attach. See the budgets doc.
+    # No CPU limit: throttling delays an attach, memory stops a leak. The
+    # manager peaked at 719Mi over 40 idle hours, so 1536Mi; a kill leaves
+    # I/O running in the instance managers. See the budgets doc.
     longhornManager:
       resources:
         requests: {cpu: 50m, memory: 256Mi}
+        limits: {memory: 1536Mi}
