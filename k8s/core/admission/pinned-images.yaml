@@ -1,8 +1,8 @@
 ---
-# A tag moves, a digest does not, so a pod outside the platform namespaces
-# runs only the bytes that were reviewed. The check reads the pod template
-# of each workload kind as well as the pod, so a chart that drops a digest
-# fails at the apply and not later at the ReplicaSet.
+# A tag moves, a digest does not, so a pod runs only the bytes that were
+# reviewed. The check reads the pod template of each workload kind as well as
+# the pod, so a chart that drops a digest fails at the apply and not later at
+# the ReplicaSet.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -46,7 +46,7 @@ spec:
       messageExpression: >-
         'images must be pinned by digest: ' +
         variables.unpinned.map(c, c.image).join(', ')
-# A tagged image is refused in every namespace but kube-system.
+# A tagged image is refused in every namespace.
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
@@ -55,28 +55,3 @@ metadata:
 spec:
   policyName: pinned-images
   validationActions: ["Deny"]
-  matchResources:
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: NotIn
-          values:
-            - kube-system
-# kube-system stays on audit until the CNI manifest is owned in this repo by
-# digest. Tagged images there show in events and warnings. Delete this binding
-# and the list above then.
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionPolicyBinding
-metadata:
-  name: pinned-images-platform
-spec:
-  policyName: pinned-images
-  validationActions: ["Audit", "Warn"]
-  matchResources:
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: In
-          values:
-            - kube-system
