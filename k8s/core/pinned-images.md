@@ -45,3 +45,10 @@ Longhorn names an engine image from a hash of its string, so a new string is
 a new engine image. Volumes keep running on the old one until each is
 upgraded to the new one in the Longhorn UI or API. The old engine image and
 its instance managers stay up until the last volume has moved.
+
+## MetalLB
+
+Pinned in `metallb/helmrelease.yaml` as `controller.image.tag` and
+`speaker.image.tag`, each `<version>@<digest>`, because the chart joins
+repository and tag. The speaker image also covers its init containers. To
+bump: set the new chart version, then the version and digest of both images.
