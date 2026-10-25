@@ -236,6 +236,24 @@ spec:
                     mountPath: /var/cache/nginx
                   - name: nginx-run
                     mountPath: /run
+          # nginx builds redirects as absolute http URLs on its own port,
+          # which sends a browser off https. Relative ones keep the scheme.
+          # The image's config is root-owned, so nginx runs an edited copy.
+          - target:
+              kind: Deployment
+              name: plane-(web|admin)-wl
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/command
+                value:
+                  - sh
+                  - -c
+                  - >-
+                    sed -e 's|^http {|http {\n  absolute_redirect off;|'
+                    -e 's|include mime.types;|include /etc/nginx/mime.types;|'
+                    /etc/nginx/nginx.conf > /tmp/nginx.conf
+                    && exec /docker-entrypoint.sh
+                    nginx -c /tmp/nginx.conf -g 'daemon off;'
           # The chart's bucket job opens the bucket to anonymous listing
           # and reads, and the route serves its path. The api creates the
           # bucket private on every start, so the job goes.
