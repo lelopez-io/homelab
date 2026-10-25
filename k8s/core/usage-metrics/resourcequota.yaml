@@ -1,7 +1,6 @@
 ---
-# 2 pods, 150m and 328Mi requested: the metrics server 100m and 200Mi,
-# Prometheus 50m and 128Mi. Each updates without a surge pod, so a quarter
-# more covers a resize. Memory limits are capped too: both set one.
+# Each updates without a surge pod, so a quarter more covers a resize. Limits
+# are capped too: both set one.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

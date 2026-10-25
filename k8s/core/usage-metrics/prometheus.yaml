@@ -74,8 +74,8 @@ spec:
           args:
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.path=/data
-            # A week of busy hours with room; the size cap stops a runaway
-            # series count from filling the volume.
+            # Thirty days covers the week a limit is sized from, with room; the
+            # size cap stops a runaway series count from filling the volume.
             - --storage.tsdb.retention.time=30d
             - --storage.tsdb.retention.size=4GB
           ports:
@@ -90,8 +90,8 @@ spec:
               path: /-/healthy
               port: http
             initialDelaySeconds: 30
-          # Not measured: a few hundred series at 30 seconds. A kill loses
-          # no stored data and leaves a gap in the history until it returns.
+          # A kill loses no stored data and leaves a gap in the history until it
+          # returns.
           resources:
             requests:
               cpu: 50m

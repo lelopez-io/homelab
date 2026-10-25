@@ -1,6 +1,6 @@
 ---
-# 3 deployments, 75m and 160Mi requested, 600m and 640Mi limited; a chart bump
-# rolls all three at once, one surge pod each, so twice.
+# Limits are capped because every container sets one. A chart bump rolls the
+# deployments at once, one surge pod each, so the quota is twice the total.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

@@ -14,6 +14,7 @@ spec:
         apiVersions: ["*"]
         operations: ["CREATE", "UPDATE"]
         resources: ["namespaces"]
+      # DELETE is not matched: the generated baseline is restored if removed.
       - apiGroups: ["networking.k8s.io"]
         apiVersions: ["*"]
         operations: ["CREATE", "UPDATE"]
@@ -22,6 +23,7 @@ spec:
         apiVersions: ["*"]
         operations: ["CREATE", "UPDATE"]
         resources: ["pods"]
+      # The namespace quota caps replicas, so no rule here does.
       - apiGroups: ["apps"]
         apiVersions: ["*"]
         operations: ["CREATE", "UPDATE"]
@@ -48,9 +50,9 @@ spec:
       expression: "{'kube-system': 53, 'versitygw': 7070}"
     - name: egressApps
       expression: "{'kube-system': '', 'versitygw': 'versitygw'}"
-    # The RFC1918 blocks, plus 100.64.0.0/10, which the tailnet uses, and
-    # 169.254.0.0/16, which holds the metadata address. An ipBlock covering
-    # a range must except all of it.
+    # The RFC1918 blocks, the tailnet's 100.64.0.0/10 and the metadata block
+    # 169.254.0.0/16. An ipBlock covering a range must except all of it, as the
+    # internet allow the namespace defaults generate does.
     - name: privateRanges
       expression: >-
         ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10',
@@ -65,9 +67,9 @@ spec:
         variables.isPolicy || variables.isNamespace ? [] :
         variables.podSpec.?containers.orValue([]) + variables.podSpec.?initContainers.orValue([])
   validations:
-    # forge/egress: none withholds the generated internet allow; any other
-    # value would read as unset, so none is the only one. A version label
-    # pins an older, looser restricted standard; only latest is kept.
+    # forge/egress=none only narrows: it withholds the generated internet allow,
+    # and any other value would read as unset. A version label other than latest
+    # pins an older, looser restricted standard, so it is refused.
     - expression: >-
         !variables.isNamespace ||
         object.metadata.?labels[?'forge/egress'].orValue('none') == 'none'
@@ -101,7 +103,8 @@ spec:
           !quantity(c.resources.limits['memory']).isGreaterThan(quantity('1Gi')))
       message: "a forge app's containers may limit at most 1 cpu and 1Gi of memory"
     # An egress peer is the run's own pods, a platform service on its one port,
-    # or an IPv4 ipBlock that excepts every private range it contains.
+    # or an IPv4 ipBlock that excepts every private range it contains. A rule
+    # with no peers allows everything, so it is refused.
     - expression: >-
         !variables.isPolicy || object.spec.?egress.orValue([]).all(r,
           r.?to.orValue([]).size() > 0 &&
@@ -128,8 +131,9 @@ spec:
                   !has(p.endPort))) :
             true))
       message: "a forge app's network policy may not admit egress to private ranges, other than DNS and the platform services it is allowed"
-    # An ingress peer is the run's own pods or the gateway's proxies. A
-    # selector names a namespace by metadata.name alone, which a run cannot set.
+    # An ingress peer is the run's own pods or the gateway's proxies; a rule
+    # with no peers allows everything. A selector names a namespace by
+    # metadata.name alone, which a run cannot set.
     - expression: >-
         !variables.isPolicy || object.spec.?ingress.orValue([]).all(r,
           r.?from.orValue([]).size() > 0 &&

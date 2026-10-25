@@ -1,6 +1,6 @@
 ---
-# 1 pod, 25m and 32Mi requested, 100m and 128Mi limited; a rolling update
-# surges a second pod, so twice.
+# Limits are capped because every container sets one. A rolling update surges
+# a second pod, so the quota is twice the running total.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

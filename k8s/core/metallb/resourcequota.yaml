@@ -1,6 +1,6 @@
 ---
-# 3 speakers and a controller, 40m and 128Mi requested after defaults; the
-# controller surges one pod. The speakers are on the host network.
+# The controller surges one pod on a rollout. The speakers are on the host
+# network.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

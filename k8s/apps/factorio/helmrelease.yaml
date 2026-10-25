@@ -65,8 +65,8 @@ spec:
                           - |
                             exec 9>/dev/null
                             BASH_XTRACEFD=9 exec /docker-entrypoint.sh
-    # The chart sizes no init container. Both only copy files, estimated
-    # from their scripts, not measured: a kill reruns them at the next start.
+    # The chart sizes no init container. Both only copy files, and a kill reruns
+    # them at the next start.
     - kustomize:
         patches:
           - target:

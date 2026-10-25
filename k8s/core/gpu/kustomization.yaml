@@ -11,16 +11,16 @@ resources:
 patches:
   # Talos Compatibility
   - path: namespace-patch.yaml
-  # The JSON carries no comments: its resources add a size to the plugin
-  # (149Mi working set over 40 idle hours, 0m CPU, so 512Mi is an estimate;
-  # an OOM restarts it and device claims wait). No CPU limit: it is idle.
+  # The JSON carries no comments: its resources add a size to the plugin. An
+  # OOM restarts it and device claims wait. No CPU limit: it only answers the
+  # kubelet's calls.
   - path: daemonset-patch.json
     target:
       kind: DaemonSet
       name: intel-gpu-resource-driver-kubelet-plugin
 images:
   # The base ships :latest; the digest keeps a new upstream push off the
-  # next restart. Releases past v0.11.0 publish under the shorter name
+  # next restart. A bump past v0.11.0 also renames the image to
   # ghcr.io/intel/intel-gpu-resource-driver.
   - name: ghcr.io/intel/intel-resource-drivers-for-kubernetes/intel-gpu-resource-driver
     newTag: v0.9.1@sha256:f5829fc10de4118aa0705b1310a7dc0364154f73c7db8506263d4dca3dd65581

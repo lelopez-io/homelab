@@ -4,9 +4,9 @@ resources:
 - gotk-components.yaml
 - gotk-sync.yaml
 - gpg-public-keys.yaml
-# Mozilla's 2026-10-20 roots, without the two the compromised eMudhra
-# intermediates chain to. source-controller's Go predates the x509 fix;
-# remove once Flux ships on Go 1.26.10 or later.
+# Mozilla's roots, without the two the compromised eMudhra intermediates chain
+# to. source-controller's Go predates the x509 fix for them, so the bundle is
+# what keeps those intermediates untrusted.
 configMapGenerator:
 - name: ca-bundle
   namespace: flux-system
@@ -38,14 +38,9 @@ patches:
       - op: add
         path: /metadata/labels/pod-security.kubernetes.io~1audit
         value: restricted
-  # Deploy from signed release tags, not branch HEAD: commits (agent or
-  # human) flow freely to main and never deploy; only a deliberate,
-  # presence-gated `git tag -s` changes the cluster. A compromised GitHub
-  # account can push code but cannot cut a signed release.
-  # New tags sort above the old unsigned article tags, so those are never
-  # candidates once the first release exists (cut it before this config
-  # reconciles). The JSON patch replaces ref wholesale (branch and semver
-  # are mutually exclusive); gotk-sync.yaml stays bootstrap-owned.
+  # Deploy from signed release tags: only a presence-gated `git tag -s` changes
+  # the cluster, so a compromised GitHub account can push code but cannot
+  # release it. The patch replaces ref wholesale; gotk-sync.yaml is bootstrap's.
   - target:
       kind: GitRepository
       name: flux-system
@@ -60,9 +55,9 @@ patches:
           mode: Tag
           secretRef:
             name: gpg-public-keys
-  # No scraper and no Receiver exists, so neither policy has a caller
-  # outside flux-system and allow-egress already covers same-namespace
-  # traffic. A future scraper or Receiver adds its caller rule with it.
+  # Neither policy admits a caller outside flux-system, which allow-egress
+  # already covers for same-namespace traffic; a scraper or Receiver adds its
+  # own caller rule.
   - target:
       kind: NetworkPolicy
       name: allow-scraping

@@ -24,16 +24,14 @@ spec:
     # L2-only here (no BGPPeers), so the frr-k8s BGP backend stays off.
     frrk8s:
       enabled: false
-    # Limits are 3 to 4 times the idle working sets (31Mi, 77Mi), an
-    # estimate; no CPU limit, as throttling delays an announcement. A killed
-    # speaker stops answering for its node's addresses until it returns.
+    # No CPU limit: throttling delays an announcement.
     controller:
       resources:
         requests: {cpu: 10m, memory: 32Mi}
         limits: {memory: 128Mi}
       # The chart joins repository and tag, so each tag carries its digest.
-      # Bump: the chart version and these two tags with their digests, steps
-      # in k8s/core/pinned-images.md.
+      # Bump: the chart version and each image tag with its digest, steps in
+      # k8s/core/pinned-images.md.
       image:
         tag: v0.16.1@sha256:f51ab515de9ccd20dc3dccb093e48df8adddac019326c456f449e55ba91b6420
       securityContext:
@@ -42,6 +40,8 @@ spec:
         seccompProfile:
           type: RuntimeDefault
     speaker:
+      # A killed speaker stops answering for its node's addresses until it
+      # returns.
       resources:
         requests: {cpu: 10m, memory: 64Mi}
         limits: {memory: 256Mi}

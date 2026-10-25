@@ -9,9 +9,8 @@ spec:
   policyTypes:
     - Ingress
     - Egress
-  # Nothing arrives over the pod network: every magicsock contact in the
-  # proxies' logs rides an outbound DERP relay, and the operator only
-  # dials the API.
+  # Nothing arrives over the pod network: the proxies reach peers through
+  # outbound DERP relays, and the operator only dials the API.
   ingress: []
   egress:
     - to:

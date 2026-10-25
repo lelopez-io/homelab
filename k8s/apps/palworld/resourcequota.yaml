@@ -1,6 +1,6 @@
 ---
-# 1 server, 2 CPU and 8Gi requested, 4 and 12Gi limited; Recreate, so no
-# overlap, a quarter more covers a resize.
+# Limits are capped because every container sets one. Recreate never holds two
+# pods, so a quarter more covers a resize.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

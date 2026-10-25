@@ -120,10 +120,9 @@ spec:
       ports:
         - protocol: TCP
           port: 6443
-    # The whole pod network: the proxies' xDS channel to the controller
-    # now, route backends once tiers move. A Service or MetalLB IP never
-    # matches an egress rule because kube-proxy rewrites to the backend
-    # pod before kube-router evaluates the packet.
+    # The whole pod network: the xDS channel to the controller and the route
+    # backends. A Service or MetalLB IP never matches, since kube-proxy rewrites
+    # to the backend pod before kube-router evaluates the packet.
     - to:
         - ipBlock:
             cidr: 10.244.0.0/16

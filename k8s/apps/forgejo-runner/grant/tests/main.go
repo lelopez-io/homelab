@@ -1,4 +1,4 @@
-// Runs the forge-run-ceilings policy through the API server's own CEL
+// Runs one ValidatingAdmissionPolicy through the API server's own CEL
 // compiler and validator, so a fixture proves what admission would do.
 // Usage: go run . <policy.yaml> <cases.yaml> <registry-host>
 package main

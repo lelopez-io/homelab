@@ -45,8 +45,8 @@ spec:
       messageExpression: >-
         'images must be pinned by digest: ' +
         variables.unpinned.map(c, c.image).join(', ')
-# A tagged image is refused in every namespace.
 ---
+# A tagged image is refused in every namespace.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
 metadata:

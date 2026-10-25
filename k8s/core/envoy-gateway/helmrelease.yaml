@@ -25,8 +25,8 @@ spec:
     global:
       images:
         # The controller image also runs the certgen job and the proxies'
-        # shutdown manager. Bump: the chart version and these three, steps in
-        # k8s/core/pinned-images.md.
+        # shutdown manager. Bump: the chart version and every digest below,
+        # steps in k8s/core/pinned-images.md.
         envoyGateway:
           image: docker.io/envoyproxy/gateway:v1.9.1@sha256:0049bcb384c591c6a6dd043fe5c9929ef6e74f230e12dd678d2d3701df9b301e
         envoyProxy:

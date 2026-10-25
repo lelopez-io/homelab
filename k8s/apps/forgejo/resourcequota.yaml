@@ -1,6 +1,6 @@
 ---
-# 1 pod, 250m and 512Mi requested; Recreate, so no overlap, a quarter more
-# covers a resize. Its init containers set no limit.
+# Recreate never holds two pods, so a quarter more covers a resize. Its init
+# containers set no limit, so limits are not capped.
 apiVersion: v1
 kind: ResourceQuota
 metadata:

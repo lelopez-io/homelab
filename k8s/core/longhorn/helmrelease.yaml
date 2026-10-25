@@ -21,8 +21,8 @@ spec:
     remediation:
       retries: 3
   # The chart has no resources value for the UI, the driver deployer, the
-  # manager's pre-pull container or the upgrade hook jobs. Sizes come from
-  # the kubelet's working set and average CPU over about 40 idle hours.
+  # manager's pre-pull container or the upgrade hook jobs, so they are sized
+  # here.
   postRenderers:
     - kustomize:
         patches:
@@ -79,8 +79,7 @@ spec:
                         resources:
                           requests: {cpu: 1m, memory: 8Mi}
                           limits: {memory: 32Mi}
-          # Not measured: they run once per chart bump and only call the
-          # API server.
+          # They run once per chart bump and only call the API server.
           - target:
               kind: Job
               name: longhorn-(pre|post)-upgrade
@@ -123,21 +122,18 @@ spec:
           tag: v8.6.0@sha256:2bca9ac55170efa61dc50e5cc8d9550373db2e3e5161d82d3fdaac5c25150360
         livenessProbe:
           tag: v2.19.0@sha256:d0cb76b565ba9d36da0dc2b38e2b6a49a0ae4fe067b03086110682f32c600318
-    # 1.12 turns six ingress policies on by default, and a confirmed
-    # priority-zero defect in them blocks volume attach: the engine logs
-    # into its own target from the host namespace, which they do not admit.
-    # Off until the patch that fixes it ships, which leaves this exactly
-    # where the previous version stood rather than opting into a known break.
+    # 1.12 turns six ingress policies on by default, and they block volume
+    # attach: the engine logs into its own target from the host namespace,
+    # which they do not admit. Off, so ingress stays as it was.
     networkPolicies:
       restrictInternalTraffic: false
     defaultSettings:
       # The manager moves each volume to a new default engine image itself, one
       # per node at a time: live while attached, at once while detached.
       concurrentAutomaticEngineUpgradePerNodeLimit: 1
-      # Start with 2 replicas (we have 2 nodes, will add 3rd)
       defaultReplicaCount: 2
-      # Sidecars hold a Kubernetes informer; the largest working set seen
-      # was 59Mi, and a kill delays provisioning or attach until it returns.
+      # Sidecars hold a Kubernetes informer; a kill delays provisioning or
+      # attach until it returns.
       systemManagedCSIComponentsResourceLimits: >-
         {"csi-attacher": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
          "csi-provisioner": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
@@ -152,9 +148,8 @@ spec:
       defaultClassReplicaCount: 2
     # Make Longhorn the default StorageClass
     defaultClass: true
-    # No CPU limit: throttling delays an attach, memory stops a leak. The
-    # manager peaked at 719Mi over 40 idle hours, so 1536Mi; a kill leaves
-    # I/O running in the instance managers. See the budgets doc.
+    # No CPU limit: throttling delays an attach, memory stops a leak. A kill
+    # leaves I/O running in the instance managers.
     longhornManager:
       resources:
         requests: {cpu: 50m, memory: 256Mi}

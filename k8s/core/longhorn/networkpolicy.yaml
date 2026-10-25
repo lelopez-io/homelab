@@ -33,7 +33,7 @@ spec:
         - protocol: TCP
           port: 9502
         # Port 2049 is not admitted: an RWX mount from another node would need
-        # it added beside the flannel /32s above. Nothing uses RWX today.
+        # it added beside the flannel /32s above.
   egress:
     - to:
         - namespaceSelector:

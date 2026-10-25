@@ -33,9 +33,9 @@ spec:
     crds:
       enabled: true
 
-    # Digests of the v1.21.3 images. The acme solver and the startup check run
-    # on demand, so they are pinned before they first run. Bump: the chart
-    # version and these five, steps in k8s/core/pinned-images.md.
+    # The acme solver and the startup check run on demand, so they are pinned
+    # before they first run. Bump: the chart version and every digest below,
+    # steps in k8s/core/pinned-images.md.
     image:
       digest: sha256:9f4f96a33c7774cef24466fcd85031997531a03a8d117f151126baa8d1290dcc
     acmesolver:
