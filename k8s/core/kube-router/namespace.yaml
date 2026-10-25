@@ -10,3 +10,4 @@ metadata:
     pod-security.kubernetes.io/warn: privileged
   # No NetworkPolicy: the daemonset runs on the host network, which policy
   # never filters, so a rule here would claim an isolation it cannot give.
+  # No quota either: a refused pod leaves a node with no pod network.
