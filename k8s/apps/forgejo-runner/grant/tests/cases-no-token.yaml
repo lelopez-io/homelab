@@ -1,0 +1,39 @@
+# Judged by no-token.yaml. The binding warns today, so these are the
+# decisions Deny would make.
+- name: "template sets automount false"
+  want: admit
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"automountServiceAccountToken":false,"containers":[]}}}}
+- name: "template leaves automount unset, as the sites do today"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[]}}}}
+- name: "template sets automount true"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"automountServiceAccountToken":true,"containers":[]}}}}
+- name: "cronjob unset, as torn-scan is today"
+  want: deny
+  resource: cronjobs
+  object: {"spec":{"jobTemplate":{"spec":{"template":{"spec":{"containers":[]}}}}}}
+- name: "cronjob sets automount false"
+  want: admit
+  resource: cronjobs
+  object: {"spec":{"jobTemplate":{"spec":{"template":{"spec":{"automountServiceAccountToken":false,"containers":[]}}}}}}
+- name: "pod unset"
+  want: deny
+  resource: pods
+  object: {"spec":{"containers":[]}}
+- name: "automount false but a projected token volume"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"t","projected":{"sources":[{"serviceAccountToken":{"path":"t","audience":"x"}}]}}]}}}}
+- name: "automount false with a projected configMap"
+  want: admit
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"c","projected":{"sources":[{"configMap":{"name":"x"}}]}}]}}}}
+- name: "non-forge caller is not judged"
+  want: admit
+  resource: deployments
+  as: "system:serviceaccount:kube-system:deployment-controller"
+  object: {"spec":{"template":{"spec":{"containers":[]}}}}
