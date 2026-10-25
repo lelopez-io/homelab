@@ -124,10 +124,8 @@ carries no quota. Its three pods are a fixed daemonset. Its container has a
 
 ## Measuring usage
 
-Both components skip verifying the kubelets' self-signed serving
-certificates, which is temporary: a later change moves the kubelets to
-cluster-signed certificates and removes `--kubelet-insecure-tls` and the
-scrape's `insecure_skip_verify`. The kubelet checks the token with webhook
+Both components verify the kubelets' serving certificates, which the cluster
+CA signs, against the service account's CA bundle. The kubelet checks the token with webhook
 authentication, anonymous access is off, and each caller needs one grant:
 `get` on `nodes/metrics`. metrics-server reads `/metrics/resource` and
 Prometheus reads `/metrics/cadvisor`, and both paths map to that
