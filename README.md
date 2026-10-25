@@ -210,6 +210,12 @@ flowchart TB
     mc_sidecar & fact_sidecar --> playit["playit.gg Tunnels"]
 ```
 
+### Network policy
+
+Every namespace carries a NetworkPolicy naming both directions: `egress` lists what the app may reach and `ingress` lists who may connect. A new app declares its callers there from the start; an app nothing calls sets `ingress: []`, so each later caller earns its own line.
+
+The rules select pods and name container ports, never a Service address or Service port; the rules themselves carry the reason. An app the gateway serves admits the gateway's proxies, labelled `gateway.envoyproxy.io/owning-gateway-name: home` in `envoy-gateway-system`. Kubelet probes and kubectl port-forward need no rule: kube-router accepts a pod's own node. A host-network caller that can land on another node, such as a webhook call or an image pull, admits the node addresses pinned in `talos/talconfig.yaml` beside each node's flannel address (10.244.0.0, .1.0 and .2.0), which is what a cross-node packet carries.
+
 ## Documentation
 
 This repository accompanies tutorial series documenting the complete build process: [Building with Talos](https://lelopez.io/blog/homelab-v2-00-talos-kubernetes-homelab-series) (V2) and [Security Hardening](https://lelopez.io/blog/homelab-v3-00-security-hardening-series) (V3).
