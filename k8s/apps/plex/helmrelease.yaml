@@ -54,13 +54,15 @@ spec:
 
     pms:
       configExistingClaim: plex-config-encrypted
-      # Idle working set 173Mi; a scan or transcode was not measured, so no
-      # memory limit yet. No CPU limit: it would stall playback. See the
-      # budgets doc.
+      # Idle working set 173Mi; a scan or transcode was not measured, so 4Gi
+      # is a wide estimate (an OOM ends every stream). No CPU limit: it would
+      # stall playback. See the budgets doc.
       resources:
         requests:
           cpu: 250m
           memory: 512Mi
+        limits:
+          memory: 4Gi
       podSecurityContext:
         # Volumes here are group-owned rather than user-owned, so several
         # unprivileged processes can share them. Kubernetes applies the
