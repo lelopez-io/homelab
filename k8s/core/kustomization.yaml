@@ -13,3 +13,4 @@ resources:
   - generic-device-plugin
   - kube-router
   - default
+  - admission
