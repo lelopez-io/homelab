@@ -14,3 +14,4 @@ check() { # policy fixture expected-fail expected-pass
 check pinned-images pods 4 2
 check host-access host 6 2
 check lan-services services 3 1
+(cd tests/cel && GOTOOLCHAIN=local go test ./...)

@@ -4,3 +4,4 @@ resources:
   - pinned-images.yaml
   - lan-services.yaml
   - host-access.yaml
+  - pod-security-labels.yaml
