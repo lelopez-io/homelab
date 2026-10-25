@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: usage-metrics
+  labels:
+    # The metrics server and Prometheus run non-root with a read-only root
+    # filesystem and no capabilities.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

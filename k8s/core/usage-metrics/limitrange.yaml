@@ -1,0 +1,16 @@
+---
+# A container that names no size gets a small request and a memory limit, so
+# the quota on limits admits it. No CPU limit: throttling skews a measurement.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: defaults
+  namespace: usage-metrics
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 10m
+        memory: 32Mi
+      default:
+        memory: 512Mi
