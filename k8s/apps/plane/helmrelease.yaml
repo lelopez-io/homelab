@@ -266,17 +266,40 @@ spec:
               kind: Job
               metadata:
                 name: plane-minio-bucket
-          # The chart gives the datastores no requests, which would make
-          # them the first pods evicted when a node runs short of memory.
+          # The chart sizes no datastore. Idle working sets: postgres 43Mi,
+          # object store 85Mi, rabbitmq 154Mi, valkey 4Mi. Only valkey gets a
+          # memory limit yet; a database gets no CPU limit. See the budgets doc.
           - target:
               kind: StatefulSet
+              name: plane-pgdb-wl
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/resources
+                value:
+                  requests:
+                    cpu: 100m
+                    memory: 256Mi
+          - target:
+              kind: StatefulSet
+              name: plane-minio-wl
             patch: |
               - op: add
                 path: /spec/template/spec/containers/0/resources
                 value:
                   requests:
                     cpu: 50m
-                    memory: 128Mi
+                    memory: 256Mi
+          # Rabbitmq blocks publishers at 40% of its limit, so at 400Mi here.
+          - target:
+              kind: StatefulSet
+              name: plane-rabbitmq-wl
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/resources
+                value:
+                  requests:
+                    cpu: 100m
+                    memory: 256Mi
           # The chart has no cache password value, so valkey writes one from
           # the plane-cache secret into a config file, not its arguments.
           # Pods read it at start: restart them all after a rotation.
@@ -302,6 +325,14 @@ spec:
                     && printf 'requirepass %s\n' "$REDIS_PASSWORD"
                     > /tmp/valkey.conf
                     && exec valkey-server /tmp/valkey.conf
+              - op: add
+                path: /spec/template/spec/containers/0/resources
+                value:
+                  requests:
+                    cpu: 25m
+                    memory: 64Mi
+                  limits:
+                    memory: 256Mi
           # An env entry wins over the chart's passwordless REDIS_URL in
           # envFrom, and $(REDIS_PASSWORD) expands from the entry above it.
           # Before the worker patch, whose env merges onto this list.
@@ -319,6 +350,17 @@ spec:
                         key: password
                   - name: REDIS_URL
                     value: redis://:$(REDIS_PASSWORD)@plane-redis.plane.svc.cluster.local:6379/
+          # The migrator runs once per revision and was not measured.
+          - target:
+              kind: Job
+              name: plane-api-migrate-.*
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/resources
+                value:
+                  requests:
+                    cpu: 100m
+                    memory: 256Mi
           # Each upgrade adds a migrator job named for its revision, and
           # finished ones would otherwise stay in the namespace for good.
           - target:

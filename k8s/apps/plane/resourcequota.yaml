@@ -1,7 +1,7 @@
 ---
-# 11 pods, 550m and 862Mi requested; the 7 deployments surge one pod each
-# (50m, 50Mi) in a chart bump, and migrations run as jobs. Four containers set
-# no limit.
+# 11 pods, 625m and 1182Mi requested with the datastores sized; the 7
+# deployments surge one pod each (350m, 350Mi) and a migrator job adds 100m
+# and 256Mi: 1075m and 1788Mi at the peak. Requests and pods only.
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -9,6 +9,6 @@ metadata:
   namespace: plane
 spec:
   hard:
-    requests.cpu: "1"
-    requests.memory: 1536Mi
+    requests.cpu: "1500m"
+    requests.memory: 2Gi
     pods: "24"
