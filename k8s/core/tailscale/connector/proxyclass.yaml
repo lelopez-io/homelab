@@ -6,6 +6,16 @@ metadata:
 spec:
   statefulSet:
     pod:
+      # Idle working set 22 to 37Mi, so 256Mi is an estimate; a kill drops
+      # its sessions until it rejoins. No CPU limit: it would slow traffic.
+      tailscaleContainer:
+        resources:
+          requests: {cpu: 10m, memory: 64Mi}
+          limits: {memory: 256Mi}
+      tailscaleInitContainer:
+        resources:
+          requests: {cpu: 1m, memory: 8Mi}
+          limits: {memory: 32Mi}
       nodeSelector:
         node-role.kubernetes.io/control-plane: ""
       affinity:

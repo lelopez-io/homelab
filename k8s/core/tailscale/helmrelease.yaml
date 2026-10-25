@@ -23,6 +23,11 @@ spec:
   values:
     operatorConfig:
       logging: "info"
+      # Idle working set 28Mi, so 256Mi is an estimate; a kill leaves
+      # proxies running and stops new ones. No CPU limit: reconciles burst.
+      resources:
+        requests: {cpu: 10m, memory: 64Mi}
+        limits: {memory: 256Mi}
   valuesFrom:
     - kind: Secret
       name: tailscale-oauth

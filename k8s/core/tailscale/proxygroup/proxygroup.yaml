@@ -7,7 +7,8 @@ spec:
   type: ingress
   replicas: 2
   hostnamePrefix: ingress
-  # No proxyClass: the control-plane class's anti-affinity against the
-  # connector's pods would exclude every node, and the proxies fit anywhere.
+  # Not the control-plane class: its anti-affinity against the connector's
+  # pods would exclude every node, and the proxies fit anywhere.
+  proxyClass: proxies
   # No tags: devices run as the default tag:k8s, which the operator's OAuth
   # client already owns, so the tailnet policy approves services for tag:k8s.

@@ -1,6 +1,6 @@
 ---
-# 6 pods, 60m and 192Mi after defaults; the operator adds a proxy pod per
-# exposed service, so room for six more.
+# 6 pods, 60m and 384Mi requested; the operator adds a proxy pod per exposed
+# service, so room for six more at 64Mi each, and one operator surge.
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -9,5 +9,5 @@ metadata:
 spec:
   hard:
     requests.cpu: "250m"
-    requests.memory: 512Mi
+    requests.memory: 1Gi
     pods: "14"
