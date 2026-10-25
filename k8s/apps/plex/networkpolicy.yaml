@@ -7,7 +7,28 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  ingress:
+    # Plex reads the peer address to tell local viewers from remote, so
+    # the load-balanced address publishes 32400 directly and the rule
+    # names the port rather than callers; the gateway's routes use it too.
+    - ports:
+        - protocol: TCP
+          port: 32400
+    # The files route ends at the copyparty sidecar; kubelet's probe of
+    # that port passes by the own-node accept and needs no rule.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: home
+              gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+      ports:
+        - protocol: TCP
+          port: 3923
   egress:
     - to:
         - namespaceSelector:
