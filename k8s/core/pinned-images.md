@@ -72,3 +72,23 @@ generates, and an `images` entry replaces whatever tag that file carries. So a
 Flux upgrade is two steps in one commit: regenerate `gotk-components.yaml`,
 then set every entry to the new tag and its digest. Skipping the second step
 leaves the new manifests running the old digests.
+
+## Kubernetes components
+
+The API server, controller manager, scheduler, kube-proxy and CoreDNS images
+are set in `talos/talconfig.yaml` in one `controlPlane` patch, each
+`<tag>@<digest>`. They reach the nodes by a manual apply, not a Flux tag:
+`talhelper genconfig`, then `talosctl apply-config --dry-run`, then
+`--mode=no-reboot` on one node at a time with a health check between nodes.
+
+The three control plane images are static pods the OS renders from the
+config, so the apply restarts them with the digest. kube-proxy and CoreDNS
+are different: Talos creates their DaemonSet and Deployment once at
+bootstrap and never updates them, so the patch sets the image for a new
+cluster and for `talosctl upgrade-k8s`, and the running objects stay on their
+tag until something else changes them.
+
+To bump: set `kubernetesVersion`, then the digest of each of the four
+Kubernetes images at that version, and the CoreDNS tag and digest. A
+`talosctl upgrade-k8s` writes plain tags into the machine config, so put the
+digests back afterwards.
