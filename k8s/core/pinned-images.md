@@ -21,3 +21,12 @@ Pinned in `cert-manager/helmrelease.yaml` as `digest` under `image`,
 `webhook.image`, `cainjector.image`, `acmesolver.image` and
 `startupapicheck.image`. To bump: set the new chart version, then the digest
 of each of the five images at the new tag.
+
+## Envoy Gateway
+
+Pinned in `envoy-gateway/helmrelease.yaml` under `global.images`. The
+`envoyGateway` image is read by the controller, the certgen job and the
+shutdown manager the controller adds to each proxy pod. The `envoyProxy` and
+`ratelimit` images are the ones the controller starts. To bump: set the new
+chart version, then take the three images and their tags from the new chart's
+`values.yaml`, each with its digest.
