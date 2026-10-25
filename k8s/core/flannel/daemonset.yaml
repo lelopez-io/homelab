@@ -1,0 +1,135 @@
+---
+# The node network. Talos creates these objects once at bootstrap with a tag and
+# never updates them, so the repo owns them from here: Flux applies the
+# digest of the tag that runs today. Pruning is off so removing this
+# directory can never delete the CNI. Steps in k8s/core/pinned-images.md.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+  labels:
+    k8s-app: flannel
+    tier: node
+  name: kube-flannel
+  namespace: kube-system
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: flannel
+      tier: node
+  template:
+    metadata:
+      labels:
+        k8s-app: flannel
+        tier: node
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+      containers:
+        - args:
+            - --ip-masq
+            - --kube-subnet-mgr
+          command:
+            - /opt/bin/flanneld
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: EVENT_QUEUE_DEPTH
+              value: "5000"
+            - name: CONT_WHEN_CACHE_NOT_READY
+              value: "false"
+            - name: KUBERNETES_SERVICE_HOST
+              value: 127.0.0.1
+            - name: KUBERNETES_SERVICE_PORT
+              value: "7445"
+          image: ghcr.io/siderolabs/flannel:v0.27.4@sha256:0490e475f3e2f66cce10ff77bc2ce6efb20b61ea3ce0bee638556ddfdaf7be82
+          imagePullPolicy: IfNotPresent
+          name: kube-flannel
+          resources:
+            requests:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+            privileged: false
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /run/flannel
+              name: run
+            - mountPath: /etc/kube-flannel/
+              name: flannel-cfg
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      initContainers:
+        - args:
+            - -f
+            - /etc/kube-flannel/cni-conf.json
+            - /etc/cni/net.d/10-flannel.conflist
+          command:
+            - cp
+          image: ghcr.io/siderolabs/flannel:v0.27.4@sha256:0490e475f3e2f66cce10ff77bc2ce6efb20b61ea3ce0bee638556ddfdaf7be82
+          imagePullPolicy: IfNotPresent
+          name: install-config
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /etc/cni/net.d
+              name: cni
+            - mountPath: /etc/kube-flannel/
+              name: flannel-cfg
+      priorityClassName: system-node-critical
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: flannel
+      serviceAccountName: flannel
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
+      volumes:
+        - hostPath:
+            path: /run/flannel
+            type: ""
+          name: run
+        - hostPath:
+            path: /opt/cni/bin
+            type: ""
+          name: cni-plugin
+        - hostPath:
+            path: /etc/cni/net.d
+            type: ""
+          name: cni
+        - configMap:
+            defaultMode: 420
+            name: kube-flannel-cfg
+          name: flannel-cfg
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate

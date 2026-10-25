@@ -12,6 +12,7 @@ resources:
   - gpu
   - generic-device-plugin
   - kube-router
+  - flannel
   - default
   - admission
   - image-verification.flux.yaml

@@ -108,3 +108,63 @@ To bump: set `kubernetesVersion`, then the digest of each of the four
 Kubernetes images at that version, and the CoreDNS tag and digest. A
 `talosctl upgrade-k8s` writes plain tags into the machine config, so put the
 digests back afterwards.
+
+## Flannel
+
+The node network is created by Talos at bootstrap with a tag from the OS
+release, and the machine config has no field for its image. Talos also never
+updates an object it has created, so changing the machine config, or adding
+the manifest as an inline manifest, would not reach the running DaemonSet.
+The repo therefore owns the objects: `flannel/` holds the five Talos created,
+copied from the running cluster with only the image and a prune-off
+annotation changed, and Flux applies them. Pruning is off so deleting this
+directory can never delete the CNI.
+
+To roll it out, merge and let Flux reconcile. The DaemonSet replaces one node
+at a time (`maxUnavailable: 1`, `maxSurge: 0`), so check each node before the
+next moves:
+
+    kubectl -n kube-system rollout status ds/kube-flannel
+    kubectl -n kube-system get pods -l k8s-app=flannel -o wide
+    kubectl get nodes
+
+Each pod must be Ready on the digest before the next is replaced, and a pod
+on one node must still reach a pod on another. If the first replacement does
+not become Ready, suspend the Flux Kustomization and set the DaemonSet's two
+images back to the plain tag by hand.
+
+To roll back, revert the commit: the manifest returns to exactly the tag the
+cluster ran before, and the objects stay because pruning is off.
+
+While a node's pod is down its traffic keeps flowing. flanneld removes no
+device, route or rule when it stops, and the manifest has no stop hook, so the
+vxlan device, the routes, the neighbour entries and the masquerade rules stay
+in the kernel; the CNI plugin reads the subnet file in `/run/flannel`, so new
+pods on that node still start. The pod re-creates its rules at start. This is
+read from flannel's source and has not been run here, so release it with
+someone watching, one node at a time.
+
+`talosctl upgrade-k8s` syncs every bootstrap manifest by server-side apply
+with the OS field manager, from the images in the machine config, and prunes
+objects the OS no longer generates. For kube-proxy and CoreDNS those images
+are the digests in `talos/talconfig.yaml`, so the write matches the manifests
+here as long as both are bumped together. Flannel has no config field, so the
+sync writes the OS release's default tag over the DaemonSet. Run it with
+`--dry-run` first, which prints the diff, and bump `flannel/daemonset.yaml` to
+that release's tag and digest beforehand. Outside an upgrade the OS creates
+these objects only when they are missing, so it never contends with Flux.
+
+To bump, set the new tag and its digest on both containers of
+`flannel/daemonset.yaml`. A `talosctl upgrade-k8s` writes the Talos default
+tag back into the DaemonSet; Flux restores the digest at its next reconcile,
+and once the digest rule refuses tags in `kube-system` the upgrade's write is
+refused, so bump the manifest first.
+
+## Checking
+
+`k8s/core/admission/tests/rendered.sh` renders `k8s`, `flux/config/flux-system`
+and every HelmRelease with its own values, then runs the digest policy over
+the result. It reads no namespace list, so it fails on any unpinned image in
+the tree. Run it after every bump. It does not see pods that controllers
+create at run time or the static pods; those take their images from the
+settings above.
