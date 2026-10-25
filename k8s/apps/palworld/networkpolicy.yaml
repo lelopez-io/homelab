@@ -7,7 +7,32 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  # The query and rcon ports stay closed: their Service is cluster-local
+  # and nothing calls them.
+  ingress:
+    # LAN players arrive through the gateway's UDPRoute, WAN players
+    # through the tunnel's frpc dialing the Service; the packet lands on
+    # the container port after kube-proxy's rewrite.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              gateway.envoyproxy.io/owning-gateway-name: home
+              gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: frp-tunnel
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: frp-tunnel
+              app.kubernetes.io/component: frpc
+      ports:
+        - protocol: UDP
+          port: 8211
   egress:
     - to:
         - namespaceSelector:
