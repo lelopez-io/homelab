@@ -7,7 +7,28 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
+    - Ingress
     - Egress
+  ingress:
+    # The API server calls the webhook (9443); the Service picks a pod on
+    # any node, so cross-node calls arrive from flannel addresses. The
+    # speakers are host-network, which policy never filters.
+    - from:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+        - ipBlock:
+            cidr: 10.244.0.0/32
+        - ipBlock:
+            cidr: 10.244.1.0/32
+        - ipBlock:
+            cidr: 10.244.2.0/32
+      ports:
+        - protocol: TCP
+          port: 9443
   egress:
     - to:
         - namespaceSelector:
