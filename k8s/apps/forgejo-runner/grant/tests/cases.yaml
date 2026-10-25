@@ -1,0 +1,448 @@
+# Each case is judged by the forge-run-ceilings policy as the API server
+# would; run.sh evaluates them. The registry host is a stand-in.
+- name: "site deploy as shipped today"
+  want: admit
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "a forge app's cronjob without a token setting"
+  want: admit
+  resource: cronjobs
+  object: {"spec":{"jobTemplate":{"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"500m","memory":"128Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}]}}}}}}
+- name: "tag and digest together"
+  want: admit
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site:1.2@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "image by tag only"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site:1.2","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "image without tag or digest"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "image from another registry by digest"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"docker.io/library/nginx@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "image from a hostname extending the registry"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test.evil.example/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "registry as a path prefix of another host"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"evil.example/registry.test/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "short digest"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "digest with a non-hex tail"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "uppercase digest"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "two digests"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "registry with no repository"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "second container from another registry"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}},{"name":"d","image":"evil.example/x@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "init container from another registry"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}],"initContainers":[{"name":"i","image":"busybox@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "init container without limits"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}],"initContainers":[{"name":"i","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}}}}
+- name: "no resources at all"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}}}}
+- name: "requests without limits"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"requests":{"cpu":"10m","memory":"16Mi"}}}]}}}}
+- name: "cpu limit only"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"1"}}}]}}}}
+- name: "memory limit only"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"memory":"64Mi"}}}]}}}}
+- name: "zero cpu limit"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"0","memory":"64Mi"}}}]}}}}
+- name: "zero memory limit"
+  want: deny
+  resource: deployments
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"1","memory":"0"}}}]}}}}
+- name: "statefulset without limits"
+  want: deny
+  resource: statefulsets
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}}}}
+- name: "daemonset from another registry"
+  want: deny
+  resource: daemonsets
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"evil.example/x@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}
+- name: "job without limits"
+  want: deny
+  resource: jobs
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}}}}
+- name: "cronjob from another registry"
+  want: deny
+  resource: cronjobs
+  object: {"spec":{"jobTemplate":{"spec":{"template":{"spec":{"containers":[{"name":"c","image":"evil.example/x@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}}}}}
+- name: "pod as shipped"
+  want: admit
+  resource: pods
+  object: {"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","resources":{"limits":{"cpu":"200m","memory":"64Mi"}}}]}}
+- name: "pod without limits"
+  want: deny
+  resource: pods
+  object: {"spec":{"containers":[{"name":"c","image":"registry.test/owner/site@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}}
+- name: "non-forge caller is not judged"
+  want: admit
+  resource: deployments
+  as: system:serviceaccount:kube-system:deployment-controller
+  object: {"spec":{"template":{"spec":{"containers":[{"name":"c","image":"nginx:latest"}]}}}}
+- name: "baseline deny-all, no rules"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"]}}
+- name: "ALLOW-ALL beside the baseline: ingress [{}] and egress [{}], empty podSelector"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{}],"egress":[{}]}}
+- name: "allow-all ingress alone"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{}]}}
+- name: "allow-all egress alone"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{}]}}
+- name: "allow-all with empty from and to lists"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[]}],"egress":[{"to":[]}]}}
+- name: "allow-all by ports only, egress"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"ports":[{"port":443}]}]}}
+- name: "allow-all by ports only, ingress"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"ports":[{"port":80}]}]}}
+- name: "allow-all ingress by 0.0.0.0/0"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}]}}
+- name: "allow-all ingress by empty namespaceSelector"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{}}]}]}}
+- name: "allow-all egress by empty namespaceSelector"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{}}]}]}}
+- name: "allow-all egress by 0.0.0.0/0"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}]}}
+- name: "allow-all egress by ::/0"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"::/0"}}]}]}}
+- name: "own-namespace pods both ways, podSelector {}"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"podSelector":{}}]}],"egress":[{"to":[{"podSelector":{}}]}]}}
+- name: "gateway proxies inbound"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"envoy-gateway-system"}},"podSelector":{"matchLabels":{"gateway.envoyproxy.io/owning-gateway-name":"home"}}}],"ports":[{"port":8080}]}]}}
+- name: "gateway namespace without the proxy label"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"envoy-gateway-system"}}}]}]}}
+- name: "gateway namespace with another pod label"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"envoy-gateway-system"}},"podSelector":{"matchLabels":{"app":"x"}}}]}]}}
+- name: "another gateway's proxies"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"envoy-gateway-system"}},"podSelector":{"matchLabels":{"gateway.envoyproxy.io/owning-gateway-name":"other"}}}]}]}}
+- name: "ingress from another namespace by name"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"flux-system"}}}]}]}}
+- name: "ingress from own namespace by selector"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"site-dev"}}}]}]}}
+- name: "ingress by namespace expression"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"In","values":["envoy-gateway-system"]}]}}]}]}}
+- name: "ingress gateway label plus an expression"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"envoy-gateway-system"},"matchExpressions":[{"key":"x","operator":"Exists"}]},"podSelector":{"matchLabels":{"gateway.envoyproxy.io/owning-gateway-name":"home"}}}]}]}}
+- name: "ingress from a LAN ipBlock"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"ipBlock":{"cidr":"192.168.10.0/24"}}]}]}}
+- name: "ingress where one peer of two is bad"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{"from":[{"podSelector":{}},{"ipBlock":{"cidr":"0.0.0.0/0"}}]}]}}
+- name: "egress DNS to kube-system, udp and tcp"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"kube-system"}}}],"ports":[{"protocol":"UDP","port":53},{"protocol":"TCP","port":53}]}]}}
+- name: "egress to kube-system on another port"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"kube-system"}}}],"ports":[{"port":9153}]}]}}
+- name: "egress to kube-system on a port range around 53"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"kube-system"}}}],"ports":[{"port":53,"endPort":9999}]}]}}
+- name: "egress to kube-system with no ports"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"kube-system"}}}]}]}}
+- name: "egress to kube-system on a named port"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"kube-system"}}}],"ports":[{"port":"dns"}]}]}}
+- name: "a forge app's egress to the bucket store"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"versitygw"}}}],"ports":[{"protocol":"TCP","port":7070}]}]}}
+- name: "bucket store without the pod pin"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw"}}}],"ports":[{"port":7070}]}]}}
+- name: "bucket store pinned to another pod label"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"other"}}}],"ports":[{"port":7070}]}]}}
+- name: "bucket store on another port"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"versitygw"}}}],"ports":[{"port":22}]}]}}
+- name: "bucket store with no ports"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"versitygw"}}}]}]}}
+- name: "bucket store on a port range"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"versitygw"}}}],"ports":[{"port":7070,"endPort":7080}]}]}}
+- name: "egress to the bucket store on DNS port"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"versitygw"}}}],"ports":[{"protocol":"UDP","port":53},{"protocol":"TCP","port":53}]}]}}
+- name: "egress to an unlisted namespace"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"forgejo"}}}],"ports":[{"port":3000}]}]}}
+- name: "egress to flux-system"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"flux-system"}}}]}]}}
+- name: "egress to own namespace by selector"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"site-dev"}}}]}]}}
+- name: "egress namespaceSelector with two labels"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw","x":"y"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"versitygw"}}}],"ports":[{"port":7070}]}]}}
+- name: "egress namespaceSelector by expression"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"In","values":["versitygw"]}]},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"versitygw"}}}],"ports":[{"port":7070}]}]}}
+- name: "egress name label plus an expression"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"versitygw"},"matchExpressions":[{"key":"x","operator":"Exists"}]},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"versitygw"}}}],"ports":[{"port":7070}]}]}}
+- name: "egress to a namespace by a label a run could set"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"team":"platform"}}}]}]}}
+- name: "internet except every private range"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","100.64.0.0/10","169.254.0.0/16"]}}]}]}}
+- name: "internet except only the three RFC1918 ranges"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16"]}}]}]}}
+- name: "internet except all but 10.0.0.0/8"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["172.16.0.0/12","192.168.0.0/16","100.64.0.0/10","169.254.0.0/16"]}}]}]}}
+- name: "internet except all but 172.16.0.0/12"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","192.168.0.0/16","100.64.0.0/10","169.254.0.0/16"]}}]}]}}
+- name: "internet except all but 192.168.0.0/16"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","100.64.0.0/10","169.254.0.0/16"]}}]}]}}
+- name: "internet except all but 100.64.0.0/10"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","169.254.0.0/16"]}}]}]}}
+- name: "internet except all but 169.254.0.0/16"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","100.64.0.0/10"]}}]}]}}
+- name: "one public range"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"8.8.8.0/24"}}]}]}}
+- name: "public range with a harmless except"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"8.0.0.0/8","except":["8.8.8.0/24"]}}]}]}}
+- name: "a /1 covering private space, excepted by a /8 each way"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/1","except":["10.0.0.0/8"]}}]}]}}
+- name: "public cidr just above RFC1918 10/8"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"11.0.0.0/8"}}]}]}}
+- name: "172.32.0.0/16 is outside 172.16.0.0/12"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"172.32.0.0/16"}}]}]}}
+- name: "ipBlock inside or equal to 10.0.0.0/8"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"10.0.0.0/8"}}]}]}}
+- name: "ipBlock inside or equal to 10.1.0.0/16"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"10.1.0.0/16"}}]}]}}
+- name: "ipBlock inside or equal to 10.244.1.5/32"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"10.244.1.5/32"}}]}]}}
+- name: "ipBlock inside or equal to 172.16.0.0/12"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"172.16.0.0/12"}}]}]}}
+- name: "ipBlock inside or equal to 172.31.255.0/24"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"172.31.255.0/24"}}]}]}}
+- name: "ipBlock inside or equal to 192.168.0.0/16"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"192.168.0.0/16"}}]}]}}
+- name: "ipBlock inside or equal to 192.168.10.30/32"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"192.168.10.30/32"}}]}]}}
+- name: "ipBlock inside or equal to 100.64.0.0/10"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"100.64.0.0/10"}}]}]}}
+- name: "ipBlock inside or equal to 100.100.0.0/16"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"100.100.0.0/16"}}]}]}}
+- name: "ipBlock inside or equal to 169.254.169.254/32"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"169.254.169.254/32"}}]}]}}
+- name: "ipBlock inside or equal to 169.254.0.0/16"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"169.254.0.0/16"}}]}]}}
+- name: "private cidr with host bits set"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"10.1.2.3/8"}}]}]}}
+- name: "public cidr with host bits set, full except"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.5/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","100.64.0.0/10","169.254.0.0/16"]}}]}]}}
+- name: "covering cidr with host bits, no except"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.5/0"}}]}]}}
+- name: "except entry with host bits still covers"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.1.2.3/8","172.16.5.5/12","192.168.9.9/16","100.64.1.1/10","169.254.7.7/16"]}}]}]}}
+- name: "except entry outside the cidr"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"8.0.0.0/8","except":["10.0.0.0/8"]}}]}]}}
+- name: "except entry outside the cidr beside a full cover"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","100.64.0.0/10","169.254.0.0/16","::/0"]}}]}]}}
+- name: "except entry is not a cidr"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","100.64.0.0/10","169.254.0.0/16","nonsense"]}}]}]}}
+- name: "cidr is not a cidr"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"nonsense"}}]}]}}
+- name: "IPv6 public range"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"2001:db8::/32"}}]}]}}
+- name: "IPv6 unique-local range"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"fd00::/8"}}]}]}}
+- name: "IPv4 cidr, IPv6 except"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","100.64.0.0/10","169.254.0.0/16","fc00::/7"]}}]}]}}
+- name: "IPv4-mapped IPv6 private address"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"::ffff:10.0.0.0/104"}}]}]}}
+- name: "second rule is the bad one"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"8.8.8.0/24"}}]},{"to":[{"ipBlock":{"cidr":"10.0.0.0/8"}}]}]}}
+- name: "second peer is the bad one"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"8.8.8.0/24"}},{"ipBlock":{"cidr":"10.0.0.0/8"}}]}]}}
+- name: "good internet rule beside an empty rule"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"0.0.0.0/0","except":["10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","100.64.0.0/10","169.254.0.0/16"]}}]},{}]}}
+- name: "DNS rule beside a private ipBlock on port 53"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"ipBlock":{"cidr":"10.0.0.0/8"}}],"ports":[{"protocol":"UDP","port":53},{"protocol":"TCP","port":53}]}]}}
+- name: "non-forge caller may admit everything"
+  want: admit
+  resource: networkpolicies
+  as: system:serviceaccount:kube-system:generator
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{}],"egress":[{}]}}
