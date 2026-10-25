@@ -1,0 +1,13 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: intel-gpu-resource-driver
+  namespace: intel-gpu-resource-driver
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  # Kubelet reaches the plugin over its hostPath socket; nothing listens
+  # on the pod network.
+  ingress: []
