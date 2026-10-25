@@ -30,3 +30,18 @@ shutdown manager the controller adds to each proxy pod. The `envoyProxy` and
 `ratelimit` images are the ones the controller starts. To bump: set the new
 chart version, then take the three images and their tags from the new chart's
 `values.yaml`, each with its digest.
+
+## Longhorn
+
+Pinned in `longhorn/helmrelease.yaml` under `image.longhorn` and `image.csi`.
+The chart joins `repository` and `tag` into the image string, so each `tag`
+holds `<version>@<digest>`. The manager, instance manager, share manager,
+engine and CSI sidecar images all come from these values, because the
+manager starts the rest from the strings it is given. To bump: set the new
+chart version, then copy the tags from the new chart's `values.yaml` with a
+digest each.
+
+Longhorn names an engine image from a hash of its string, so a new string is
+a new engine image. Volumes keep running on the old one until each is
+upgraded to the new one in the Longhorn UI or API. The old engine image and
+its instance managers stay up until the last volume has moved.
