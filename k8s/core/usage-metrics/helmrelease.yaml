@@ -33,8 +33,9 @@ spec:
       type: cert-manager
     apiService:
       insecureSkipTLSVerify: false
-    # The kubelets serve self-signed certificates, so this component cannot
-    # verify them; it holds a token that only reads their metrics.
+    # Temporary: the kubelets serve self-signed certificates, so this cannot
+    # verify them. A later change moves them to cluster-signed certificates
+    # and removes this flag. The token it holds only reads node metrics.
     args:
       - --kubelet-insecure-tls
     # The system classes are for kube-system only; a pod naming one here
