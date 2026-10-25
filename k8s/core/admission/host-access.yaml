@@ -1,0 +1,71 @@
+---
+# Host network, host ports and host paths hand a pod the node's own network
+# or filesystem. Outside the platform namespaces that run the node's
+# plumbing, a pod does without them. The media server is the one exception
+# below: it may mount /dev/dri for hardware transcoding and nothing else on
+# the host. Delete that clause when Plex moves to a resource claim.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: host-access
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs", "cronjobs"]
+  variables:
+    - name: podSpec
+      expression: >-
+        request.kind.kind == 'Pod' ? object.spec :
+        request.kind.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.spec :
+        object.spec.template.spec
+  validations:
+    - expression: "!variables.podSpec.?hostNetwork.orValue(false)"
+      message: "hostNetwork is only for the platform namespaces"
+    - expression: >-
+        (variables.podSpec.containers + variables.podSpec.?initContainers.orValue([])).all(c,
+          c.?ports.orValue([]).all(p, p.?hostPort.orValue(0) == 0))
+      message: "hostPort is only for the platform namespaces"
+    - expression: >-
+        variables.podSpec.?volumes.orValue([]).all(v, !has(v.hostPath) ||
+          (object.metadata.namespace == 'plex' && v.hostPath.path == '/dev/dri'))
+      message: "hostPath volumes are only for the platform namespaces"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: host-access
+spec:
+  policyName: host-access
+  validationActions: ["Deny"]
+  matchResources:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            # The device plugin serves the kubelet's socket dir and /dev/net.
+            - generic-device-plugin
+            # The GPU driver registers with the kubelet over its socket
+            # directories.
+            - intel-gpu-resource-driver
+            # The control plane, flannel and kube-proxy are the node's
+            # network, and the kubelet mirrors the static pods here.
+            - kube-system
+            # The router programs the host's iptables and reads its modules.
+            - kube-router
+            # Longhorn mounts volumes on the host and talks to its devices.
+            - longhorn-system
+            # The speakers answer ARP for the LAN addresses from the host.
+            - metallb-system
