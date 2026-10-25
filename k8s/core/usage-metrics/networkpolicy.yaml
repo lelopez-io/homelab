@@ -1,0 +1,23 @@
+---
+# Nothing in this namespace is reached from a pod. The API server calls the
+# metrics server, and the metrics server policy below admits that; Prometheus
+# is read through a port-forward, which never crosses policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: usage-metrics
+  namespace: usage-metrics
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    # DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
