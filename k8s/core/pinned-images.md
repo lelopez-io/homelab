@@ -52,3 +52,13 @@ Pinned in `metallb/helmrelease.yaml` as `controller.image.tag` and
 `speaker.image.tag`, each `<version>@<digest>`, because the chart joins
 repository and tag. The speaker image also covers its init containers. To
 bump: set the new chart version, then the version and digest of both images.
+
+## Tailscale
+
+Pinned in `tailscale/helmrelease.yaml` as `operatorConfig.image.digest` and
+`proxyConfig.image.digest`. The operator reads the proxy image from the
+`PROXY_IMAGE` variable the chart sets from `proxyConfig`, and starts the
+ingress group and the subnet connector pods from it, so a ProxyClass needs no
+image of its own. With a digest the chart drops the tag. To bump: set the new
+chart version, then the digests of `tailscale/k8s-operator` and
+`tailscale/tailscale` at that version.
