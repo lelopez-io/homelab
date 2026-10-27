@@ -44,9 +44,12 @@ digest each.
 Longhorn names an engine image from a hash of its string, so a new string is
 a new engine image. `defaultSettings.concurrentAutomaticEngineUpgradePerNodeLimit`
 is 1, so after the manager restarts it upgrades volumes to the new default
-engine image itself, one per node at a time. An attached, healthy volume
-upgrades live; a detached one upgrades at once; strict-local, DR, expanding
-and migrating volumes are skipped and need a manual upgrade. The chart's
+engine image itself, one per node at a time. A detached volume upgrades at
+once. An attached, healthy volume upgrades live only when the new image is
+built from a different commit; a digest added to the same tag is the same
+commit, so that volume waits until its pod restarts and it detaches.
+Strict-local, DR, expanding and migrating volumes are skipped and need a
+manual upgrade. The chart's
 default settings reach an existing setting whenever the manager starts with a
 changed ConfigMap.
 
