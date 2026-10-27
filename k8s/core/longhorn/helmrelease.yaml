@@ -66,19 +66,17 @@ spec:
           - target:
               kind: DaemonSet
               name: longhorn-manager
+            # By index: a merge patch moves this container first, and the
+            # post-upgrade hook reads the manager image from the first one.
             patch: |
-              apiVersion: apps/v1
-              kind: DaemonSet
-              metadata:
-                name: longhorn-manager
-              spec:
-                template:
-                  spec:
-                    containers:
-                      - name: pre-pull-share-manager-image
-                        resources:
-                          requests: {cpu: 1m, memory: 8Mi}
-                          limits: {memory: 32Mi}
+              - op: test
+                path: /spec/template/spec/containers/1/name
+                value: pre-pull-share-manager-image
+              - op: add
+                path: /spec/template/spec/containers/1/resources
+                value:
+                  requests: {cpu: 1m, memory: 8Mi}
+                  limits: {memory: 32Mi}
           # They run once per chart bump and only call the API server.
           - target:
               kind: Job
