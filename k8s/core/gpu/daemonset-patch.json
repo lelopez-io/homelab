@@ -10,6 +10,29 @@
     }
   },
   {
+    "op": "test",
+    "path": "/spec/template/spec/volumes/1/name",
+    "value": "plugins"
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/volumes/1/hostPath",
+    "value": {
+      "path": "/var/lib/kubelet/plugins/gpu.intel.com",
+      "type": "DirectoryOrCreate"
+    }
+  },
+  {
+    "op": "test",
+    "path": "/spec/template/spec/containers/0/volumeMounts/1/name",
+    "value": "plugins"
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/volumeMounts/1/mountPath",
+    "value": "/var/lib/kubelet/plugins/gpu.intel.com"
+  },
+  {
     "op": "add",
     "path": "/spec/template/spec/containers/0/resources",
     "value": {
