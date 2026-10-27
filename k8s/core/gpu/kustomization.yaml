@@ -11,9 +11,9 @@ resources:
 patches:
   # Talos Compatibility
   - path: namespace-patch.yaml
-  # The JSON carries no comments: its resources add a size to the plugin. An
-  # OOM restarts it and device claims wait. No CPU limit: it only answers the
-  # kubelet's calls.
+  # The JSON carries no comments. Its mount narrows to the driver's own plugin
+  # dir: a private copy of the whole dir holds every staged volume open, so a
+  # pod that moves nodes cannot attach. An OOM delays claims; no CPU limit.
   - path: daemonset-patch.json
     target:
       kind: DaemonSet
