@@ -76,6 +76,9 @@ spec:
       pgdb_username: plane
       pgdb_name: plane
       docstore_bucket: uploads
+      # A ticket sync pushes or pulls a whole workspace through one API key,
+      # which passes the chart's default of 60 a minute.
+      api_key_rate_limit: 600/minute
 
     # The datastores run in the namespace from their public images. Each
     # volume is on the encrypted class, so the daily backup covers it.
