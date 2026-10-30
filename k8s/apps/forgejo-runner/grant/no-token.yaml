@@ -36,5 +36,4 @@ metadata:
   name: forge-run-no-token
 spec:
   policyName: forge-run-no-token
-  # Warn and Audit, since pods created before the mutation still mount one.
-  validationActions: ["Warn", "Audit"]
+  validationActions: ["Deny"]
