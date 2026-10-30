@@ -1,9 +1,9 @@
-# Judged by no-token.yaml: the decisions its Deny action would make.
-- name: "mutated pod: automount false, no token volume"
+# Judged by no-token.yaml.
+- name: "pod as admitted: its account mounts no token, the mutation set the field"
   want: admit
   resource: pods
   labels: {"forge/repository": "site"}
-  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"tmp","emptyDir":{}}]}}
+  object: {"spec":{"serviceAccountName":"default","automountServiceAccountToken":false,"containers":[{"name":"web","image":"registry.test/site@sha256:0000000000000000000000000000000000000000000000000000000000000000"}],"volumes":[{"name":"tmp","emptyDir":{}}]}}
 - name: "unmutated pod: token volume injected"
   want: deny
   resource: pods
@@ -19,7 +19,7 @@
   resource: pods
   labels: {"forge/repository": "site"}
   object: {"spec":{"automountServiceAccountToken":true,"containers":[],"volumes":[{"name":"kube-api-access-x","projected":{"sources":[{"serviceAccountToken":{"path":"token","expirationSeconds":3607}}]}}]}}
-- name: "automount false but a projected token volume"
+- name: "pod as admitted when its account mounts the token: field false, volume added first"
   want: deny
   resource: pods
   labels: {"forge/repository": "site"}
