@@ -26,3 +26,31 @@ spec:
       applyConfiguration:
         expression: >-
           Object{spec: Object.spec{automountServiceAccountToken: false}}
+---
+# The API server adds the token volume before any webhook runs, unless the
+# pod or its service account says no, so the account is what keeps it out.
+# An account Kyverno missed stays unset, so the pod rule still sees a token.
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
+metadata:
+  name: forge-service-account-tokens
+spec:
+  failurePolicy: Ignore
+  reinvocationPolicy: Never
+  matchConditions:
+    - name: field-unset
+      expression: "!has(object.automountServiceAccountToken)"
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: forge/repository
+          operator: Exists
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["serviceaccounts"]
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: "Object{automountServiceAccountToken: false}"
