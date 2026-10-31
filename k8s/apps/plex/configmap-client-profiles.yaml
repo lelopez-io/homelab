@@ -14,6 +14,7 @@ data:
         <VideoCodec name="hevc">
           <Limitations>
             <NotMatch name="video.DOVIPresent" value="1" />
+            <UpperBound name="video.width" value="1920" />
           </Limitations>
         </VideoCodec>
       </CodecProfiles>
