@@ -6,6 +6,7 @@ resources:
   - configmap.yaml
   - pvc.yaml
   - secret.sops.yaml
+  - resourceclaimtemplate.yaml
   - helmrelease.yaml
   - networkpolicy.yaml
   - filebrowser-service.yaml

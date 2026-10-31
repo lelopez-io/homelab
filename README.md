@@ -192,7 +192,7 @@ flowchart TB
     subgraph apps["Application Pods"]
         subgraph plex_pod["Plex"]
             plex["Media Server"]
-            plex_gpu["/dev/dri GPU"]
+            plex_gpu["GPU claim"]
         end
 
         subgraph minecraft_pod["Minecraft"]

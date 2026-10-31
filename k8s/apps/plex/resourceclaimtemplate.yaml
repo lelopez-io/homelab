@@ -1,9 +1,11 @@
 ---
+# The GPU driver grants the device and the right to open it to the claiming
+# container. A mount of /dev/dri alone shows the files but cannot open them.
 apiVersion: resource.k8s.io/v1
 kind: ResourceClaimTemplate
 metadata:
   name: intel-gpu
-  namespace: default
+  namespace: plex
 spec:
   spec:
     devices:
