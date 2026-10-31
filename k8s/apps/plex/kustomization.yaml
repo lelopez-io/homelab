@@ -12,7 +12,6 @@ resources:
   - filebrowser-service.yaml
   - secret-vars.sops.yaml
   - configmap-copyparty.yaml
-  - configmap-client-profiles.yaml
   - secret-copyparty.sops.yaml
   - filebrowser-ingress.flux.yaml
   - limitrange.yaml
