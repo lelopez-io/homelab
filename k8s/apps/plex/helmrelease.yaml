@@ -37,28 +37,6 @@ spec:
       name: plex-vars
       valuesKey: PLEX_IP
       targetPath: service.annotations.metallb\.universe\.tf/loadBalancerIPs
-  postRenderers:
-    # The chart drops resource claims from its values without a word, so the
-    # GPU claim goes on after rendering. The test stops the release if the
-    # media server is no longer the first container.
-    - kustomize:
-        patches:
-          - target:
-              kind: StatefulSet
-              name: plex-plex-media-server
-            patch: |
-              - op: test
-                path: /spec/template/spec/containers/0/name
-                value: plex-plex-media-server-pms
-              - op: add
-                path: /spec/template/spec/resourceClaims
-                value:
-                  - name: gpu
-                    resourceClaimTemplateName: intel-gpu
-              - op: add
-                path: /spec/template/spec/containers/0/resources/claims
-                value:
-                  - name: gpu
   values:
     image:
       tag: "1.43.4.10903-e5521bd8c@sha256:e0ab27395614a8e1a4fdf84c6bc60ac664915cfdde70c52d030c7728a1c48e14"
