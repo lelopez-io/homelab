@@ -131,13 +131,14 @@ spec:
       concurrentAutomaticEngineUpgradePerNodeLimit: 1
       defaultReplicaCount: 2
       # Sidecars hold a Kubernetes informer; a kill delays provisioning or
-      # attach until it returns.
+      # attach until it returns. The plugin opens encrypted volumes, and the
+      # LUKS key derivation alone can take 1Gi, so its ceiling sits above it.
       systemManagedCSIComponentsResourceLimits: >-
         {"csi-attacher": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
          "csi-provisioner": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
          "csi-resizer": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
          "csi-snapshotter": {"requests": {"cpu": "10m", "memory": "64Mi"}, "limits": {"memory": "256Mi"}},
-         "longhorn-csi-plugin": {"requests": {"cpu": "10m", "memory": "96Mi"}, "limits": {"memory": "384Mi"}},
+         "longhorn-csi-plugin": {"requests": {"cpu": "10m", "memory": "96Mi"}, "limits": {"memory": "2Gi"}},
          "node-driver-registrar": {"requests": {"cpu": "5m", "memory": "32Mi"}, "limits": {"memory": "128Mi"}},
          "longhorn-liveness-probe": {"requests": {"cpu": "5m", "memory": "32Mi"}, "limits": {"memory": "128Mi"}}}
     persistence:
