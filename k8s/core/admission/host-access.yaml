@@ -1,7 +1,6 @@
 ---
 # Host network, ports and paths hand a pod the node's own network or files,
 # so only the platform namespaces that run the node's plumbing get them.
-# Plex may mount /dev/dri alone, for hardware transcoding.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -36,8 +35,7 @@ spec:
           c.?ports.orValue([]).all(p, p.?hostPort.orValue(0) == 0))
       message: "hostPort is only for the platform namespaces"
     - expression: >-
-        variables.podSpec.?volumes.orValue([]).all(v, !has(v.hostPath) ||
-          (object.metadata.namespace == 'plex' && v.hostPath.path == '/dev/dri'))
+        variables.podSpec.?volumes.orValue([]).all(v, !has(v.hostPath))
       message: "hostPath volumes are only for the platform namespaces"
 ---
 apiVersion: admissionregistration.k8s.io/v1
