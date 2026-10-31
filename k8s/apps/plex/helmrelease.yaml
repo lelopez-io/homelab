@@ -144,10 +144,19 @@ spec:
                 name: copyparty-config
             - secret:
                 name: copyparty-accounts
+      - name: client-profiles
+        configMap:
+          name: plex-client-profiles
 
     extraVolumeMounts:
       - name: media
         mountPath: /data/media
+        readOnly: true
+      # Replaces the image's own Generic profile, the one current Plex apps
+      # declare. Plex reads profiles at start, so an edit needs a restart.
+      - name: client-profiles
+        mountPath: /usr/lib/plexmediaserver/Resources/Profiles/Generic.xml
+        subPath: Generic.xml
         readOnly: true
 
     extraContainers:
