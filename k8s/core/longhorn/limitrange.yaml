@@ -13,4 +13,4 @@ spec:
         cpu: 10m
         memory: 32Mi
       default:
-        memory: 2Gi
+        memory: 3Gi

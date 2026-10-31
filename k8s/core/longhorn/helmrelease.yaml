@@ -151,4 +151,4 @@ spec:
     longhornManager:
       resources:
         requests: {cpu: 50m, memory: 256Mi}
-        limits: {memory: 1536Mi}
+        limits: {memory: 2560Mi}
