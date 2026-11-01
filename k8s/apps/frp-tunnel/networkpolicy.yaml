@@ -32,9 +32,8 @@ spec:
     # Lane backends are selected by pod, not by Service or MetalLB IP:
     # kube-proxy rewrites those to the backend pod and its targetPort before
     # the policy is evaluated, so an ipBlock for the IP never matches.
-    # Envoy Gateway's proxy pods for Gateway home. Egress matches post-DNAT,
-    # so this is the proxy's container port: the 443 listener is remapped to
-    # 10443 (Envoy Gateway shifts privileged ports by 10000).
+    # Envoy Gateway's proxy pods for Gateway home, on the tunnel tiers' own
+    # listener port, which is unprivileged and so not remapped.
     - to:
         - namespaceSelector:
             matchLabels:
@@ -45,7 +44,7 @@ spec:
               gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
       ports:
         - protocol: TCP
-          port: 10443
+          port: 4443
     # Factorio WAN lane: the Service maps 34197/udp to the chart's pod port.
     - to:
         - namespaceSelector:

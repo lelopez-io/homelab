@@ -55,7 +55,8 @@ spec:
           port: 8444
         - protocol: TCP
           port: 2222
-    # frpc's https-tier lane dials the LAN address's 443, landing here.
+    # frpc's https-tier lane dials the tunnel tiers' own port; nothing
+    # else may, since that port trusts the client address it is handed.
     - from:
         - namespaceSelector:
             matchLabels:
@@ -66,7 +67,7 @@ spec:
               app.kubernetes.io/component: frpc
       ports:
         - protocol: TCP
-          port: 10443
+          port: 4443
     # Two host callers cross nodes to reach the proxies and arrive from the
     # caller's flannel address: node image pulls, and the API server's JWT
     # authenticator fetching the forge's OIDC discovery document and JWKS.

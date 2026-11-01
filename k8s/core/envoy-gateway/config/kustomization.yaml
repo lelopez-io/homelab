@@ -9,6 +9,7 @@ resources:
   - gatewayclass.yaml
   - envoyproxy.yaml
   - gateway.yaml
+  - clienttrafficpolicy.yaml
   - httproute-redirect.yaml
   - service-forge.yaml
   - service-plane.yaml
