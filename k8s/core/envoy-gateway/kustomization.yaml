@@ -6,7 +6,6 @@ resources:
   - networkpolicy.yaml
   - helmrepository.yaml
   - helmrelease.yaml
-  - secret-client-vars.sops.yaml
   - config.flux.yaml
   - limitrange.yaml
   - resourcequota.yaml

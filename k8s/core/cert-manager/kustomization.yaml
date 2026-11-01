@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - secret.sops.yaml
   - secret-vars.sops.yaml
+  - secret-client-vars.sops.yaml
   - helmrelease.yaml
   - config.flux.yaml
   - networkpolicy.yaml
