@@ -19,3 +19,21 @@ spec:
   retain: 7
   # Caps simultaneous transfers so one large volume cannot starve the rest.
   concurrency: 2
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: weekly-archive
+  namespace: longhorn-system
+spec:
+  # Opt-in: a volume joins by labelling its claim into this group. Naming
+  # any group drops Longhorn's implicit default, so the claim names that
+  # group too or it leaves the daily backups.
+  groups:
+    - archive
+  task: backup
+  # Sundays, an hour after the daily run.
+  cron: "0 10 * * 0"
+  # A year of weeks.
+  retain: 52
+  concurrency: 1
