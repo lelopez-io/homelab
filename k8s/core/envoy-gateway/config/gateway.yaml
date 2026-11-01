@@ -136,7 +136,9 @@ spec:
             matchLabels:
               gateway.lan/routes: "true"
     - name: https-via
-      port: 443
+      # The tunnel tiers share their own port, which only frpc reaches, so
+      # clienttrafficpolicy.yaml can trust the client address it carries.
+      port: 4443
       protocol: HTTPS
       hostname: "*.${VIA_DOMAIN}"
       tls:
@@ -154,7 +156,7 @@ spec:
       # attach their own app's route here and nowhere else, so it admits
       # namespaces by the forge/repository label rather than by
       # gateway.lan/routes, which the forge grant forbids a run to set.
-      port: 443
+      port: 4443
       protocol: HTTPS
       hostname: "*.${DEV_DOMAIN}"
       tls:
@@ -173,7 +175,7 @@ spec:
     - name: https-client
       # A client's own domain, served the way the dev tier is: forge apps
       # attach here, and the grant holds each to hosts named for its repo.
-      port: 443
+      port: 4443
       protocol: HTTPS
       hostname: "*.${CLIENT_DOMAIN}"
       tls:

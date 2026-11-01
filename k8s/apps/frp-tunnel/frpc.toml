@@ -17,7 +17,7 @@ log.level = "info"
 name = "https-tier"
 type = "tcp"
 localIP = "192.168.10.43"
-localPort = 443
+localPort = 4443
 remotePort = 8443
 
 # Factorio — WAN players ride the tunnel (LB 34197/udp → frps → here);
