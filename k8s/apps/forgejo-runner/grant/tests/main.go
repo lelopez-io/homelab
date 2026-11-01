@@ -42,14 +42,16 @@ type testCase struct {
 }
 
 var kinds = map[string][3]string{
-	"namespaces":      {"", "Namespace", "namespaces"},
-	"networkpolicies": {"networking.k8s.io", "NetworkPolicy", "networkpolicies"},
-	"pods":            {"", "Pod", "pods"},
-	"deployments":     {"apps", "Deployment", "deployments"},
-	"statefulsets":    {"apps", "StatefulSet", "statefulsets"},
-	"daemonsets":      {"apps", "DaemonSet", "daemonsets"},
-	"jobs":            {"batch", "Job", "jobs"},
-	"cronjobs":        {"batch", "CronJob", "cronjobs"},
+	"namespaces":             {"", "Namespace", "namespaces"},
+	"networkpolicies":        {"networking.k8s.io", "NetworkPolicy", "networkpolicies"},
+	"pods":                   {"", "Pod", "pods"},
+	"deployments":            {"apps", "Deployment", "deployments"},
+	"statefulsets":           {"apps", "StatefulSet", "statefulsets"},
+	"daemonsets":             {"apps", "DaemonSet", "daemonsets"},
+	"jobs":                   {"batch", "Job", "jobs"},
+	"cronjobs":               {"batch", "CronJob", "cronjobs"},
+	"persistentvolumeclaims": {"", "PersistentVolumeClaim", "persistentvolumeclaims"},
+	"httproutes":             {"gateway.networking.k8s.io", "HTTPRoute", "httproutes"},
 }
 
 func must(err error) {

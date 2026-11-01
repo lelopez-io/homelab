@@ -1,0 +1,54 @@
+# Judged by policy.yaml: volume claims and routes in a run's own namespace.
+- name: "claim on the encrypted class"
+  want: admit
+  resource: persistentvolumeclaims
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"storageClassName":"longhorn-encrypted","accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}}}}
+- name: "claim with no class, which takes the cluster default"
+  want: deny
+  resource: persistentvolumeclaims
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}}}}
+- name: "claim on another class"
+  want: deny
+  resource: persistentvolumeclaims
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"storageClassName":"longhorn","accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"1Gi"}}}}
+- name: "claim update moving off the encrypted class"
+  want: deny
+  resource: persistentvolumeclaims
+  operation: UPDATE
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"storageClassName":"longhorn","resources":{"requests":{"storage":"2Gi"}}}}
+  old: {"spec":{"storageClassName":"longhorn-encrypted","resources":{"requests":{"storage":"1Gi"}}}}
+- name: "claim in a namespace the repository does not own"
+  want: deny
+  resource: persistentvolumeclaims
+  namespace: plex
+  labels: {"pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"storageClassName":"longhorn-encrypted","resources":{"requests":{"storage":"1Gi"}}}}
+- name: "route on the dev listener"
+  want: admit
+  resource: httproutes
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"parentRefs":[{"name":"home","namespace":"envoy-gateway-system","sectionName":"https-dev"}],"hostnames":["site.dev.example"]}}
+- name: "route on the client listener"
+  want: admit
+  resource: httproutes
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"parentRefs":[{"name":"home","namespace":"envoy-gateway-system","sectionName":"https-client"}],"hostnames":["site.client.example"]}}
+- name: "route on the client listener with another repository's host"
+  want: deny
+  resource: httproutes
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"parentRefs":[{"name":"home","namespace":"envoy-gateway-system","sectionName":"https-client"}],"hostnames":["www.client.example"]}}
+- name: "route on the tier listener"
+  want: deny
+  resource: httproutes
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"parentRefs":[{"name":"home","namespace":"envoy-gateway-system","sectionName":"https-via"}],"hostnames":["site.wan.example"]}}
+- name: "route naming no listener"
+  want: deny
+  resource: httproutes
+  labels: {"forge/repository":"site","pod-security.kubernetes.io/enforce":"restricted"}
+  object: {"spec":{"parentRefs":[{"name":"home","namespace":"envoy-gateway-system"}],"hostnames":["site.client.example"]}}
