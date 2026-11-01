@@ -16,6 +16,7 @@ spec:
     - "*.${SUB_DOMAIN}"
     - "*.${VIA_DOMAIN}"
     - "*.${DEV_DOMAIN}"
+    - "*.${CLIENT_DOMAIN}"
   rules:
     - filters:
         - type: RequestRedirect
