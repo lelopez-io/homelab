@@ -22,9 +22,9 @@ spec:
       kind: Gateway
       name: home
       sectionName: https-client
-  # Optional until the edge sends the header on every connection.
+  # Required: a connection without the header did not come from the edge.
   proxyProtocol:
-    optional: true
+    optional: false
   headers:
     earlyRequestHeaders:
       remove:
