@@ -93,7 +93,8 @@ spec:
     - name: defaultBudget
       expression: >-
         {"requests.cpu": "1", "requests.memory": "1Gi",
-         "limits.cpu": "2", "limits.memory": "2Gi", "pods": "20"}
+         "limits.cpu": "2", "limits.memory": "2Gi", "pods": "20",
+         "requests.storage": "20Gi", "persistentvolumeclaims": "4"}
     - name: budgets
       expression: "{}"
     - name: budget

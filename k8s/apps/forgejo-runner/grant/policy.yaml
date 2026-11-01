@@ -31,6 +31,8 @@ spec:
       expression: "request.resource.group == '' && request.resource.resource == 'services'"
     - name: isRoute
       expression: "request.resource.group == 'gateway.networking.k8s.io' && request.resource.resource == 'httproutes'"
+    - name: isClaim
+      expression: "request.resource.group == '' && request.resource.resource == 'persistentvolumeclaims'"
   validations:
     - expression: "variables.labels[?'forge/repository'].orValue('') == variables.repository"
       messageExpression: "'a forge run may only touch namespaces labelled forge/repository=' + variables.repository"
@@ -60,9 +62,9 @@ spec:
           p.?namespace.orValue('envoy-gateway-system') == 'envoy-gateway-system' &&
           p.?group.orValue('gateway.networking.k8s.io') == 'gateway.networking.k8s.io' &&
           p.?kind.orValue('Gateway') == 'Gateway' &&
-          p.?sectionName.orValue('') == 'https-dev' &&
+          p.?sectionName.orValue('') in ['https-dev', 'https-client'] &&
           !has(p.port))
-      message: "a forge app's route may only attach to the home gateway's https-dev listener"
+      message: "a forge app's route may only attach to the home gateway's https-dev or https-client listener"
     # The listener's hostname pin bounds the suffix; the dot keeps one
     # repository's prefix from covering another whose name extends it.
     - expression: >-
@@ -70,6 +72,13 @@ spec:
         (object.spec.?hostnames.orValue([]).size() > 0 &&
           object.spec.hostnames.all(h, h.startsWith(variables.repository + '.')))
       messageExpression: "'a forge route must name hosts starting with ' + variables.repository + '.'"
+    # Signed records live on these volumes, so they are encrypted at rest
+    # and covered by the class's backups; an unset class would take the
+    # cluster default.
+    - expression: >-
+        !variables.isClaim || request.operation == 'DELETE' ||
+        object.spec.?storageClassName.orValue('') == 'longhorn-encrypted'
+      message: "a forge app's volume claim must name the longhorn-encrypted class"
     # ClusterIP only, so the gateway stays the one way in. An unset type
     # defaults to ClusterIP.
     - expression: >-

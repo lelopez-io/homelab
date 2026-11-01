@@ -19,11 +19,15 @@ rules:
   - apiGroups: ["batch"]
     resources: ["cronjobs", "jobs"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Volume claims on the encrypted class only: policy.yaml refuses others.
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: ["networking.k8s.io"]
     resources: ["networkpolicies"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  # Routes for the dev tier only: policy.yaml refuses any parentRef but
-  # the gateway's https-dev listener.
+  # Routes for the dev tier and client domains only: policy.yaml refuses
+  # any parentRef but the gateway's https-dev and https-client listeners.
   - apiGroups: ["gateway.networking.k8s.io"]
     resources: ["httproutes"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
