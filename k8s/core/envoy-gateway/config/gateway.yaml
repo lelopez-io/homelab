@@ -170,3 +170,22 @@ spec:
             matchExpressions:
               - key: forge/repository
                 operator: Exists
+    - name: https-client
+      # A client's own domain, served the way the dev tier is: forge apps
+      # attach here, and the grant holds each to hosts named for its repo.
+      port: 443
+      protocol: HTTPS
+      hostname: "*.${CLIENT_DOMAIN}"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: client-wildcard-tls
+      allowedRoutes:
+        kinds:
+          - kind: HTTPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: forge/repository
+                operator: Exists

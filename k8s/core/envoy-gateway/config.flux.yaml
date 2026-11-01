@@ -35,3 +35,5 @@ spec:
         name: forgejo-vars
       - kind: Secret
         name: plane-vars
+      - kind: Secret
+        name: client-vars
