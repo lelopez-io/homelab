@@ -57,24 +57,15 @@ kubectl get nodes
 
 ```
 homelab/
-├── talos/                    # Cluster configuration
-│   ├── talconfig.yaml        # Node definitions (talhelper)
-│   └── talsecret.sops.yaml   # Encrypted cluster secrets
-├── flux/                     # GitOps sync configuration
-│   └── config/
-│       └── sync.yaml         # Points Flux at k8s/
+├── talos/        # Node definitions and encrypted cluster secrets
+├── flux/         # Points Flux at k8s/
 └── k8s/
-    ├── core/                 # Infrastructure services
-    │   ├── tailscale/        # VPN + subnet router
-    │   ├── metallb/          # Load balancer
-    │   ├── ingress-nginx/    # Ingress controller
-    │   ├── longhorn/         # Distributed storage
-    │   └── gpu/              # Intel GPU DRA driver
-    └── apps/                 # Applications
-        ├── plex/             # Media server
-        ├── factorio/         # Game server
-        └── minecraft/        # Game server
+    ├── core/     # Platform services, one folder per component
+    └── apps/     # Applications, one folder per app
 ```
+
+The folders under `k8s/` are the list of what runs; each one's manifests say
+what it is.
 
 ---
 
@@ -98,8 +89,9 @@ homelab/
 | GitOps        | [Flux CD](https://fluxcd.io)                                                        | Continuous deployment from Git      |
 | VPN           | [Tailscale](https://tailscale.com)                                                  | Zero-trust remote access            |
 | Load Balancer | [MetalLB](https://metallb.io)                                                       | Bare-metal LoadBalancer IPs         |
-| Ingress       | [Ingress-NGINX](https://kubernetes.github.io/ingress-nginx/)                        | HTTP/HTTPS routing                  |
+| Ingress       | [Envoy Gateway](https://gateway.envoyproxy.io)                                      | HTTP/HTTPS routing                  |
 | Storage       | [Longhorn](https://longhorn.io)                                                     | Distributed block storage           |
+| Bulk storage  | [SMB CSI driver](https://github.com/kubernetes-csi/csi-driver-smb)                  | Media on the NAS over SMB3          |
 | GPU           | [Intel DRA Driver](https://github.com/intel/intel-resource-drivers-for-kubernetes)  | Kubernetes-native GPU allocation    |
 | Game Tunnels  | [playit.gg](https://playit.gg)                                                      | Public access for game servers      |
 
