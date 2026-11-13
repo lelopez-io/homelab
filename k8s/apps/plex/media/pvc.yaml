@@ -8,7 +8,7 @@ spec:
   accessModes:
     - ReadOnlyMany
   storageClassName: ""
-  volumeName: plex-media-smb-ro
+  volumeName: media-share-ro
   resources:
     requests:
       storage: 4Ti
@@ -22,7 +22,7 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: ""
-  volumeName: plex-media-smb-rw
+  volumeName: media-share-rw
   resources:
     requests:
       storage: 4Ti
