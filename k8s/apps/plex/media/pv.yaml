@@ -5,7 +5,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: plex-media-smb-ro
+  name: media-share-ro
 spec:
   capacity:
     storage: 4Ti
@@ -27,7 +27,7 @@ spec:
   csi:
     driver: smb.csi.k8s.io
     readOnly: true
-    volumeHandle: plex-media-smb-ro
+    volumeHandle: media-share-ro
     volumeAttributes:
       source: ${MEDIA_SMB_SOURCE}
     nodeStageSecretRef:
@@ -37,7 +37,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: plex-media-smb-rw
+  name: media-share-rw
 spec:
   capacity:
     storage: 4Ti
@@ -58,7 +58,7 @@ spec:
     - dir_mode=0775
   csi:
     driver: smb.csi.k8s.io
-    volumeHandle: plex-media-smb-rw
+    volumeHandle: media-share-rw
     volumeAttributes:
       source: ${MEDIA_SMB_SOURCE}
     nodeStageSecretRef:
