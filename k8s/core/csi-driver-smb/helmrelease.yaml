@@ -44,6 +44,10 @@ spec:
       # It only provisions and resizes, which static PVs never ask for.
       replicas: 0
       logLevel: 2
+    # The chart's roles serve only that controller, and one reads secrets in
+    # every namespace; the node plugin needs none.
+    rbac:
+      create: false
     node:
       logLevel: 2
     windows:
