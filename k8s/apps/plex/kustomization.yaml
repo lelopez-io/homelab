@@ -14,5 +14,9 @@ resources:
   - configmap-copyparty.yaml
   - secret-copyparty.sops.yaml
   - filebrowser-ingress.flux.yaml
+  - secret-media-vars.sops.yaml
+  - secret-media-smb-ro.sops.yaml
+  - secret-media-smb-rw.sops.yaml
+  - media.flux.yaml
   - limitrange.yaml
   - resourcequota.yaml
