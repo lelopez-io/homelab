@@ -1,0 +1,50 @@
+---
+# kube-system is a platform namespace, so its node plugin may run privileged
+# with host paths. Volumes are static PVs an admin declares; the driver
+# provisions nothing.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: csi-driver-smb
+  namespace: kube-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: csi-driver-smb
+      version: "1.20.4"
+      sourceRef:
+        kind: HelmRepository
+        name: csi-driver-smb
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    image:
+      baseRepo: registry.k8s.io/sig-storage
+      smb:
+        tag: v1.20.4@sha256:74e049de9d3203b4a968f26c8b73d4b3b15b9c4705688330cfa7281ae5f7b727
+      csiProvisioner:
+        tag: v6.3.0@sha256:a4b0b1a37605b7b04a293e136edf7006ec1786a8eb3f4e5a945f81d667dcc371
+      csiResizer:
+        tag: v2.2.1@sha256:ea1d25e23479000c7e8eeb92d827df66258df4e482ca054c5e7ce3fc0f5c41a5
+      livenessProbe:
+        tag: v2.19.0@sha256:06da0d5b8908072f2e4522692aee8dc119fba7247a9658497e1153992cd777e9
+      nodeDriverRegistrar:
+        tag: v2.17.0@sha256:f9de845b170155199f2a2a3f9531cf13d78e31235e9db6b6582a8b0db0a50dad
+    feature:
+      # Inline volumes would let a pod in any namespace mount any share by
+      # naming it in its own spec.
+      enableInlineVolume: false
+    controller:
+      # It only provisions and resizes, which static PVs never ask for.
+      replicas: 0
+      logLevel: 2
+    node:
+      logLevel: 2
+    windows:
+      enabled: false
