@@ -1,0 +1,66 @@
+---
+# Two PVs on the one media share, each logging in with its own NAS account:
+# Plex reads with a read-only one, the upload app writes with a read-write
+# one. The share's address comes from sops so the NAS stays out of this repo.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: plex-media-smb-ro
+spec:
+  capacity:
+    storage: 4Ti
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: plex
+    name: media-smb-ro
+  mountOptions:
+    - vers=3.1.1
+    # SMB3 encryption on the wire, refused by a server that cannot do it.
+    - seal
+    - uid=1000
+    - gid=2000
+    - file_mode=0444
+    - dir_mode=0555
+  csi:
+    driver: smb.csi.k8s.io
+    readOnly: true
+    volumeHandle: plex-media-smb-ro
+    volumeAttributes:
+      source: ${MEDIA_SMB_SOURCE}
+    nodeStageSecretRef:
+      name: media-smb-ro
+      namespace: plex
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: plex-media-smb-rw
+spec:
+  capacity:
+    storage: 4Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: plex
+    name: media-smb-rw
+  mountOptions:
+    - vers=3.1.1
+    - seal
+    # The upload app runs as 1000 and the pod's fsGroup is 2000.
+    - uid=1000
+    - gid=2000
+    - file_mode=0664
+    - dir_mode=0775
+  csi:
+    driver: smb.csi.k8s.io
+    volumeHandle: plex-media-smb-rw
+    volumeAttributes:
+      source: ${MEDIA_SMB_SOURCE}
+    nodeStageSecretRef:
+      name: media-smb-rw
+      namespace: plex
