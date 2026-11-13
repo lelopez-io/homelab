@@ -31,6 +31,13 @@ shutdown manager the controller adds to each proxy pod. The `envoyProxy` and
 chart version, then take the images and their tags from the new chart's
 `values.yaml`, each with its digest.
 
+## SMB CSI driver
+
+Pinned in `csi-driver-smb/helmrelease.yaml` under `image`, each `tag` as
+`<version>@<digest>`, because the chart joins `baseRepo`, the image name and
+`tag`. To bump: set the new chart version, then copy the tags from the new
+chart's `values.yaml` with a digest each.
+
 ## Longhorn
 
 Pinned in `longhorn/helmrelease.yaml` under `image.longhorn` and `image.csi`.

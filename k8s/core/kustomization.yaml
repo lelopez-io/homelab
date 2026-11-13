@@ -9,6 +9,7 @@ resources:
   - kyverno.flux.yaml
   - usage-metrics
   - longhorn
+  - csi-driver-smb
   - gpu
   - generic-device-plugin
   - kube-router
