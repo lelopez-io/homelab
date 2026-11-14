@@ -111,6 +111,12 @@ spec:
           # The same for an organization's path, for members allowed to
           # create repositories there.
           ENABLE_PUSH_CREATE_ORG: true
+        repository.pull-request:
+          # New repositories merge by rebasing onto main and fast-forwarding,
+          # which keeps a branch's commits as written. Existing repositories
+          # keep their own setting, set by homelab-internal's
+          # forge/protect-repo.sh.
+          DEFAULT_MERGE_STYLE: rebase
         service:
           DISABLE_REGISTRATION: true
           REQUIRE_SIGNIN_VIEW: true
