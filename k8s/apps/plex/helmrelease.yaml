@@ -124,9 +124,15 @@ spec:
             mountPath: /config
 
     extraVolumes:
+      # One media share, mounted twice under separate share accounts, so
+      # the media server can only read it and uploads go through copyparty.
       - name: media
         persistentVolumeClaim:
-          claimName: plex-media-encrypted
+          claimName: media-smb-ro
+          readOnly: true
+      - name: media-rw
+        persistentVolumeClaim:
+          claimName: media-smb-rw
       # Claim name predates the tool that now uses it; it holds cached
       # thumbnails rather than a database. Renaming it would mean replacing
       # the volume for no gain.
@@ -179,7 +185,7 @@ spec:
             port: 3923
           initialDelaySeconds: 30
         volumeMounts:
-          - name: media
+          - name: media-rw
             mountPath: /w
           - name: copyparty-config
             mountPath: /cfg
