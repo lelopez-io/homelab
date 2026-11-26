@@ -24,7 +24,7 @@ spec:
         - name: filebrowser
           port: 80
 ---
-# A film streams for hours, far past Envoy's 15s default route timeout.
+# A large download runs far past Envoy's 15s default route timeout.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: BackendTrafficPolicy
 metadata:

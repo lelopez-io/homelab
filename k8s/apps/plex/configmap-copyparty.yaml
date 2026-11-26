@@ -42,3 +42,12 @@ data:
         dothidden
         # Only a signed-in account may create a share.
         shr-who: auth
+
+    # Copies made for share links, named by UUID. Plex never mounts this, so
+    # nothing here reaches the library.
+    [/scratch]
+      /scratch
+      accs:
+        rwmd: admin
+      flags:
+        shr-who: auth

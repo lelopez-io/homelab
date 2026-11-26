@@ -143,6 +143,12 @@ spec:
       # accounts file is a Secret because copyparty reads the password
       # straight out of the config text; it has no way to take one from the
       # environment. Sorting puts accounts before the volume that grants to it.
+      # Short-lived copies named by UUID, which share links serve, so a link
+      # carries no file name. Node scratch space, emptied when the pod restarts;
+      # the cap keeps a forgotten copy from filling the node.
+      - name: scratch
+        emptyDir:
+          sizeLimit: 200Gi
       - name: copyparty-config
         projected:
           sources:
@@ -192,6 +198,8 @@ spec:
             readOnly: true
           - name: filebrowser-db
             mountPath: /state
+          - name: scratch
+            mountPath: /scratch
         resources:
           requests:
             cpu: 50m
