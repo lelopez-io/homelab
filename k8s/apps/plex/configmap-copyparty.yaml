@@ -24,6 +24,10 @@ data:
       # container limit. A folder of 1080p episodes ran sixteen at once and
       # the kernel killed the container at its memory limit.
       th-mt: 2
+      # Expiring share links, served under /share. The public tier routes
+      # only that prefix here; e2d keeps the small database that expires them.
+      shr: /share
+      e2d
 
     [/]
       /w
@@ -36,3 +40,5 @@ data:
         # filesystem's lost+found out of the listing. Cosmetic only: a
         # zip or tar download still includes whatever it hides.
         dothidden
+        # Only a signed-in account may create a share.
+        shr-who: auth
