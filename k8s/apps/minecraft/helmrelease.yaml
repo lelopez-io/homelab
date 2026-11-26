@@ -18,7 +18,7 @@ spec:
   chart:
     spec:
       chart: minecraft
-      version: "5.2.0"
+      version: "5.4.0"
       sourceRef:
         kind: HelmRepository
         name: minecraft
@@ -30,11 +30,11 @@ spec:
       retries: 3
   values:
     image:
-      tag: "java25@sha256:2e7c7b7641a8f30e70fa8d357bc2ad1c029cb56c93ca7f39af08713166c755ca"
+      tag: "java25@sha256:5090768ce0331ecaefaf3cf7c1d5ea5a637ba599b14efc4fd1bf28791b5bf6fd"
 
     minecraftServer:
       eula: "TRUE"
-      version: "1.21.11"
+      version: "26.3"
       type: "PAPER"
       difficulty: normal
       motd: "Experience is merely the name men gave to their mistakes."
@@ -71,12 +71,14 @@ spec:
         memory: 6Gi
         cpu: 4000m
     extraEnv:
-      JVM_XX_OPTS: "-XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1HeapWastePercent=5 -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxGCPauseMillis=200 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true"
+      # Paper's recommended flags for 26.3, from its version API.
+      JVM_XX_OPTS: "-XX:+UseCompactObjectHeaders -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+PerfDisableSharedMem -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1HeapRegionSize=8M -XX:G1MaxNewSizePercent=40 -XX:G1MixedGCCountTarget=4 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1NewSizePercent=30 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=15 -XX:MaxTenuringThreshold=1 -XX:SurvivorRatio=32"
       MODPACK: "https://download.bentobox.world/api/generate?downloads=%5B%22BSkyBlock%22%2C%22Challenges%22%2C%22Level%22%2C%22Warps%22%2C%22ControlPanel%22%2C%22DimensionalTrees%22%2C%22Biomes%22%2C%22Bank%22%5D"
       MODRINTH_PROJECTS: |
         paper:viaversion
+      # DirectionHUD has no Paper build for 26.3 yet; this is its newest.
       PLUGINS: |
         https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
         https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
-        https://hangarcdn.papermc.io/plugins/other/DirectionHUD/versions/1.8.1.2%2B1.21.7/PAPER/directionhud-paper-1.8.1.2%2B1.21.7.jar
+        https://cdn.modrinth.com/data/H8WCXRtb/versions/u876aZ5C/directionhud-paper-1.8.4.0%2B26.2.jar
       REMOVE_OLD_MODS: 'TRUE'
