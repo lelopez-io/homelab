@@ -1,0 +1,40 @@
+---
+# The public door to copyparty, for expiring share links and nothing else:
+# only /share/ reaches it, so browsing, login and uploads stay on the LAN
+# route. copyparty still checks every request, and a share key opens only
+# what was shared under it.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: filebrowser-share
+  namespace: plex
+spec:
+  parentRefs:
+    - name: home
+      namespace: envoy-gateway-system
+      sectionName: https-via
+  hostnames:
+    - "${SHARE_HOST}"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /share/
+      backendRefs:
+        - name: filebrowser
+          port: 80
+---
+# A film streams for hours, far past Envoy's 15s default route timeout.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: filebrowser-share
+  namespace: plex
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: filebrowser-share
+  timeout:
+    http:
+      requestTimeout: 0s

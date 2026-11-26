@@ -6,3 +6,4 @@ resources:
   - backendtrafficpolicy.yaml
   - httproute-plex.yaml
   - backendtrafficpolicy-plex.yaml
+  - httproute-share.yaml
