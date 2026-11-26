@@ -29,6 +29,15 @@ spec:
       ports:
         - protocol: TCP
           port: 3923
+    # Client workloads call the gate on 3926; the label marks the
+    # namespaces that may.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              plex.lan/client: "true"
+      ports:
+        - protocol: TCP
+          port: 3926
   egress:
     - to:
         - namespaceSelector:
@@ -37,6 +46,19 @@ spec:
       ports:
         - protocol: UDP
           port: 53
+    # The API server, so the gate can ask it whether a caller's token is
+    # valid; reached at the control plane node addresses after kube-proxy
+    # rewrites the kubernetes Service address, as the runner's rule does.
+    - to:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+      ports:
+        - protocol: TCP
+          port: 6443
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0

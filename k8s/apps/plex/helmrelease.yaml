@@ -156,6 +156,23 @@ spec:
                 name: copyparty-config
             - secret:
                 name: copyparty-accounts
+      # The gate's code ships as a ConfigMap, so it needs no image build
+      # of its own. Its token volume is the one mount of that token: the
+      # account mounts none, so the other containers keep having none.
+      - name: transcode-gate
+        configMap:
+          name: transcode-gate
+      - name: gate-api-token
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: token
+                expirationSeconds: 3600
+            - configMap:
+                name: kube-root-ca.crt
+                items:
+                  - key: ca.crt
+                    path: ca.crt
 
     extraVolumeMounts:
       - name: media
@@ -207,3 +224,58 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
+      # Checks that a caller workload's token is for the one audience it
+      # serves, then forwards the call to the media server on loopback.
+      # The image is reused for its Python, so the pod gains no image.
+      - name: transcode-gate
+        image: copyparty/ac:1.20.24@sha256:0e276e2ca595d1b45df613573f094b789b9a8b41ff87cc55130db1ec9763c164
+        command:
+          - python3
+          - /gate/transcode-gate.py
+          - serve
+        # Same image as copyparty: it declares no user, so this keeps the
+        # process off root. uid 1000 also owns the preferences file, mode
+        # 600, so another uid could not read the token.
+        securityContext:
+          runAsUser: 1000
+        env:
+          - name: PLEX
+            value: "http://127.0.0.1:32400"
+          - name: PORT
+            value: "3926"
+          - name: AUDIENCE
+            value: plex-transcode
+        ports:
+          - containerPort: 3926
+        # Every call needs a token the gate accepts, so like copyparty a
+        # listening socket is the most that can be probed.
+        readinessProbe:
+          tcpSocket:
+            port: 3926
+          initialDelaySeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 3926
+          initialDelaySeconds: 30
+        volumeMounts:
+          - name: transcode-gate
+            mountPath: /gate
+            readOnly: true
+          # The owner token lives here and is only added to calls the gate
+          # forwards, and the gate reads it as uid 1000, the file's owner.
+          - name: pms-config
+            mountPath: /plex/Preferences.xml
+            subPath: Library/Application Support/Plex Media Server/Preferences.xml
+            readOnly: true
+          # A token for the cluster API, so the gate can ask it whether a
+          # caller's token is valid. Only this container mounts it.
+          - name: gate-api-token
+            mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            readOnly: true
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi

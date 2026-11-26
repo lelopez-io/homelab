@@ -10,6 +10,9 @@ resources:
   - helmrelease.yaml
   - networkpolicy.yaml
   - filebrowser-service.yaml
+  - transcode-gate
+  - transcode-gate-service.yaml
+  - transcode-gate-rbac.yaml
   - secret-vars.sops.yaml
   - secret-share-vars.sops.yaml
   - configmap-copyparty.yaml
