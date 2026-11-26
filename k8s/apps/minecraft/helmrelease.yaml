@@ -59,6 +59,15 @@ spec:
             enabled: true
             type: ClusterIP
             port: 19132
+    extraVolumes:
+      - volumeMounts:
+          - name: patches
+            mountPath: /patches
+            readOnly: true
+        volumes:
+          - name: patches
+            configMap:
+              name: minecraft-patches
     persistence:
       dataDir:
         enabled: true
@@ -83,4 +92,6 @@ spec:
         https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
         https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
         https://cdn.modrinth.com/data/H8WCXRtb/versions/u876aZ5C/directionhud-paper-1.8.4.0%2B26.2.jar
+        https://cdn.modrinth.com/data/4IIKQyBu/versions/sOt4db5s/dreamdisplays-paper-1.10.10.jar
       REMOVE_OLD_MODS: 'TRUE'
+      PATCH_DEFINITIONS: /patches
