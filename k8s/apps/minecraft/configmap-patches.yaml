@@ -1,0 +1,21 @@
+---
+# Settings the image applies to plugin configs at every start: bStats
+# reporting of plugin usage stays off. A config a plugin hasn't written yet
+# is skipped with a warning and patched from its next start.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minecraft-patches
+  namespace: minecraft
+data:
+  patches.json: |
+    {
+      "patches": [
+        {
+          "file": "/data/plugins/bStats/config.yml",
+          "ops": [
+            {"$set": {"path": "$.enabled", "value": false}}
+          ]
+        }
+      ]
+    }

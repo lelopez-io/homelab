@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - pvc.yaml
+  - configmap-patches.yaml
   - helmrelease.yaml
   - networkpolicy.yaml
   - tcproute.yaml
