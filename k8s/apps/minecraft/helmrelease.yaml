@@ -94,4 +94,4 @@ spec:
         https://cdn.modrinth.com/data/H8WCXRtb/versions/u876aZ5C/directionhud-paper-1.8.4.0%2B26.2.jar
         https://cdn.modrinth.com/data/4IIKQyBu/versions/sOt4db5s/dreamdisplays-paper-1.10.10.jar
       REMOVE_OLD_MODS: 'TRUE'
-      PATCH_DEFINITIONS: /patches
+      PATCH_DEFINITIONS: /patches/patches.json
