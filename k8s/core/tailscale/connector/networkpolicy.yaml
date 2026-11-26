@@ -1,0 +1,22 @@
+---
+# Beside the namespace's policy, which the top-level sync applies without
+# substitution: the routers may reach the NAS's file sharing and nothing
+# else on the storage VLAN.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: connector-nas-smb
+  namespace: tailscale
+spec:
+  podSelector:
+    matchLabels:
+      tailscale.com/parent-resource-type: connector
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: ${NAS_ADDRESS}/32
+      ports:
+        - protocol: TCP
+          port: 445

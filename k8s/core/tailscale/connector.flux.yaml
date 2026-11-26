@@ -19,3 +19,9 @@ spec:
       kind: HelmRelease
       name: tailscale-operator
       namespace: tailscale
+  postBuild:
+    # The NAS address comes from sops, so it never appears in plain
+    # manifests.
+    substituteFrom:
+      - kind: Secret
+        name: tailscale-connector-vars
