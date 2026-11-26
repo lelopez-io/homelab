@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - secret.sops.yaml
+  - secret-connector-vars.sops.yaml
   - helmrepository.yaml
   - helmrelease.yaml
   - connector.flux.yaml

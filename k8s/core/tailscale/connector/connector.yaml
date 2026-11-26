@@ -10,3 +10,6 @@ spec:
   subnetRouter:
     advertiseRoutes:
       - "192.168.10.0/24"
+      # The NAS alone, so a grant can admit a device to its file sharing
+      # without the rest of the storage VLAN.
+      - "${NAS_ADDRESS}/32"
