@@ -76,8 +76,10 @@ spec:
       MODPACK: "https://download.bentobox.world/api/generate?downloads=%5B%22BSkyBlock%22%2C%22Challenges%22%2C%22Level%22%2C%22Warps%22%2C%22ControlPanel%22%2C%22DimensionalTrees%22%2C%22Biomes%22%2C%22Bank%22%5D"
       MODRINTH_PROJECTS: |
         paper:viaversion
-      # DirectionHUD has no Paper build for 26.3 yet; this is its newest.
+      # DirectionHUD has no Paper build for 26.3 yet; this is its newest. It
+      # needs OtterLib, which it no longer bundles.
       PLUGINS: |
+        https://cdn.modrinth.com/data/zVVpzurY/versions/oxZLx3yz/otterlib-0.4.0.1%2B26.2-paper.jar
         https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
         https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
         https://cdn.modrinth.com/data/H8WCXRtb/versions/u876aZ5C/directionhud-paper-1.8.4.0%2B26.2.jar
