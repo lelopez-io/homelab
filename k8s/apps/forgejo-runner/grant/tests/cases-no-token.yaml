@@ -41,3 +41,64 @@
   as: system:serviceaccount:kube-system:replicaset-controller
   labels: {}
   object: {"spec":{"containers":[],"volumes":[{"name":"kube-api-access-x","projected":{"sources":[{"serviceAccountToken":{"path":"token","expirationSeconds":3607}}]}}]}}
+- name: "projected token for a listed platform audience"
+  want: admit
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"plex-transcode","expirationSeconds":600,"path":"token"}}]}}]}}
+- name: "projected token for the second listed audience"
+  want: admit
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"minecraft-console","expirationSeconds":600,"path":"token"}}]}}]}}
+- name: "projected token for an unlisted audience"
+  want: deny
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"someone-else","expirationSeconds":600,"path":"token"}}]}}]}}
+- name: "listed audience with the lifetime unset on a raw object"
+  want: deny
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"plex-transcode","path":"token"}}]}}]}}
+- name: "listed audience at the lifetime ceiling"
+  want: admit
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"plex-transcode","expirationSeconds":3600,"path":"token"}}]}}]}}
+- name: "listed audience above the lifetime ceiling"
+  want: deny
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"plex-transcode","expirationSeconds":3601,"path":"token"}}]}}]}}
+- name: "listed audience with a short lifetime"
+  want: admit
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"plex-transcode","expirationSeconds":600,"path":"token"}}]}}]}}
+- name: "projected token with no audience names the cluster API"
+  want: deny
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"expirationSeconds":600,"path":"token"}}]}}]}}
+- name: "projected token with an empty audience"
+  want: deny
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"","expirationSeconds":600,"path":"token"}}]}}]}}
+- name: "automount true beside a listed-audience token"
+  want: deny
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":true,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"plex-transcode","expirationSeconds":600,"path":"token"}}]}}]}}
+- name: "one listed source beside one with no audience"
+  want: deny
+  resource: pods
+  labels: {"forge/repository": "site"}
+  object: {"spec":{"automountServiceAccountToken":false,"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"audience":"plex-transcode","expirationSeconds":600,"path":"token"}},{"serviceAccountToken":{"path":"other"}}]}}]}}
+- name: "a namespace no run owns stays untouched"
+  want: admit
+  resource: pods
+  labels: {}
+  object: {"spec":{"containers":[],"volumes":[{"name":"svc","projected":{"sources":[{"serviceAccountToken":{"path":"token"}}]}}]}}
+

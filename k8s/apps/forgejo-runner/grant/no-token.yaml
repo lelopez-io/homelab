@@ -1,7 +1,7 @@
 ---
-# A forge app calls no cluster API, so its pods mount no service account
-# token. The platform's mutation sets the field false; this judges the pod
-# after it, so an outage of the mutation cannot lift the rule.
+# A forge app calls no cluster API; its pods may carry a token only for
+# a platform service's audience on the list below. This judges the pod
+# after the mutation, so an outage of the mutation cannot lift the rule.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
@@ -18,6 +18,15 @@ spec:
     # Match conditions cannot see the namespace, so the rules test it.
     - name: forgeNamespace
       expression: "namespaceObject.metadata.?labels[?'forge/repository'].hasValue()"
+    # Platform services a forge app's pod may call with a projected
+    # token, by token audience. One more service is one more list entry.
+    # An unset or empty audience names the cluster API and stays refused.
+    - name: allowedAudiences
+      expression: >-
+        [
+          'plex-transcode',
+          'minecraft-console',
+        ]
   validations:
     # Unset counts as not false: the ServiceAccount's default mounts the
     # token when the mutation is down.
@@ -25,10 +34,18 @@ spec:
         !variables.forgeNamespace ||
         object.spec.?automountServiceAccountToken.orValue(true) == false
       message: "a forge app's pods must set automountServiceAccountToken: false"
+    # A listed token lives at most an hour, so a copied one stops working
+    # soon at the service. The API server defaults an unset lifetime to
+    # 3600 before judging, so the check bites only on raw objects, as in tests.
     - expression: >-
         !variables.forgeNamespace || object.spec.?volumes.orValue([]).all(v,
-          v.?projected.?sources.orValue([]).all(s, !has(s.serviceAccountToken)))
-      message: "a forge app's pods may not project a service account token"
+          v.?projected.?sources.orValue([]).all(s,
+            !has(s.serviceAccountToken) ||
+            (has(s.serviceAccountToken.audience) &&
+              s.serviceAccountToken.audience in variables.allowedAudiences &&
+              has(s.serviceAccountToken.expirationSeconds) &&
+              s.serviceAccountToken.expirationSeconds <= 3600)))
+      message: "a forge app's pods may project a token only for a listed platform service's audience, with a lifetime of at most 3600 seconds"
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
