@@ -500,3 +500,28 @@
   resource: networkpolicies
   as: system:serviceaccount:kube-system:generator
   object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"ingress":[{}],"egress":[{}]}}
+- name: "egress to the media namespace on its listed port"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"plex"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"plex-media-server"}}}],"ports":[{"protocol":"TCP","port":3926}]}]}}
+- name: "egress to the media namespace on another port"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"plex"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"plex-media-server"}}}],"ports":[{"protocol":"TCP","port":32400}]}]}}
+- name: "egress to the media namespace without the pod pin"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"plex"}}}],"ports":[{"protocol":"TCP","port":3926}]}]}}
+- name: "egress to the game namespace on its listed port"
+  want: admit
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"minecraft"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"minecraft"}}}],"ports":[{"protocol":"TCP","port":25580}]}]}}
+- name: "egress to the game namespace on another port"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"minecraft"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"minecraft"}}}],"ports":[{"protocol":"TCP","port":25565}]}]}}
+- name: "egress to the game namespace without the pod pin"
+  want: deny
+  resource: networkpolicies
+  object: {"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"],"egress":[{"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"minecraft"}}}],"ports":[{"protocol":"TCP","port":25580}]}]}}
+

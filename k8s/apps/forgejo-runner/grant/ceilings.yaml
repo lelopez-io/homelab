@@ -44,12 +44,25 @@ spec:
     - name: isNamespace
       expression: "request.resource.resource == 'namespaces'"
     # Platform services a run's egress may reach beyond its own namespace,
-    # by namespace: the one port a rule may name, and the app label of the
+    # by namespace: the ports a rule may name, and the app label of the
     # destination pods where the namespace holds more than that service.
+    # One more service is one more entry in each map.
     - name: egressPorts
-      expression: "{'kube-system': 53, 'versitygw': 7070}"
+      expression: >-
+        {
+          'kube-system': [53],
+          'versitygw': [7070],
+          'plex': [3926],
+          'minecraft': [25580]
+        }
     - name: egressApps
-      expression: "{'kube-system': '', 'versitygw': 'versitygw'}"
+      expression: >-
+        {
+          'kube-system': '',
+          'versitygw': 'versitygw',
+          'plex': 'plex-media-server',
+          'minecraft': 'minecraft'
+        }
     # The RFC1918 blocks, the tailnet's 100.64.0.0/10 and the metadata block
     # 169.254.0.0/16. An ipBlock covering a range must except all of it, as the
     # internet allow the namespace defaults generate does.
@@ -102,9 +115,10 @@ spec:
           !quantity(c.resources.limits['cpu']).isGreaterThan(quantity('1')) &&
           !quantity(c.resources.limits['memory']).isGreaterThan(quantity('1Gi')))
       message: "a forge app's containers may limit at most 1 cpu and 1Gi of memory"
-    # An egress peer is the run's own pods, a platform service on its one port,
-    # or an IPv4 ipBlock that excepts every private range it contains. A rule
-    # with no peers allows everything, so it is refused.
+    # An egress peer is the run's own pods, a platform service on one of
+    # its listed ports, or an IPv4 ipBlock that excepts every private
+    # range it contains. A rule with no peers allows everything, so it is
+    # refused.
     - expression: >-
         !variables.isPolicy || object.spec.?egress.orValue([]).all(r,
           r.?to.orValue([]).size() > 0 &&
@@ -126,8 +140,9 @@ spec:
                   t.?podSelector.?matchLabels[?'app.kubernetes.io/name'].orValue('') ==
                     variables.egressApps[t.namespaceSelector.matchLabels['kubernetes.io/metadata.name']]) &&
                 r.?ports.orValue([]).size() > 0 &&
-                r.ports.all(p, p.?port.orValue(0) ==
-                  variables.egressPorts[t.namespaceSelector.matchLabels['kubernetes.io/metadata.name']] &&
+                r.ports.all(p,
+                  p.?port.orValue(0) in
+                    variables.egressPorts[t.namespaceSelector.matchLabels['kubernetes.io/metadata.name']] &&
                   !has(p.endPort))) :
             true))
       message: "a forge app's network policy may not admit egress to private ranges, other than DNS and the platform services it is allowed"
