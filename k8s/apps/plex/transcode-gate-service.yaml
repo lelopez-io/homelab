@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transcode-gate
+  namespace: plex
+spec:
+  # Client workloads reach the gate here; it is the only port that
+  # answers a checked token.
+  selector:
+    app.kubernetes.io/name: plex-media-server
+    app.kubernetes.io/instance: plex
+  ports:
+    - port: 3926

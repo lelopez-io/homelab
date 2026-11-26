@@ -1,0 +1,25 @@
+---
+# The gate checks a caller workload's token with the API server. The role
+# allows asking for a token review and nothing else; system:auth-delegator
+# would also grant subject access reviews, which the gate never makes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: transcode-gate-token-review
+rules:
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: transcode-gate-token-review
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: transcode-gate-token-review
+subjects:
+  - kind: ServiceAccount
+    name: plex-plex-media-server
+    namespace: plex
