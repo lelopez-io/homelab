@@ -5,6 +5,7 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - configmap-patches.yaml
+  - secret-rcon.sops.yaml
   - helmrelease.yaml
   - networkpolicy.yaml
   - tcproute.yaml
