@@ -75,6 +75,78 @@ spec:
           - name: patches
             configMap:
               name: minecraft-patches
+      # Gateway-only volumes: no volumeMounts here, so the server
+      # container never sees them; the sidecar entry mounts its own.
+      - volumes:
+          - name: gateway-code
+            configMap:
+              name: console-gateway-code
+      - volumes:
+          - name: gateway-rcon
+            secret:
+              secretName: minecraft-rcon-password
+              items:
+                - key: rcon-password
+                  path: rcon-password
+      - volumes:
+          - name: gateway-auth
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    expirationSeconds: 3600
+                - configMap:
+                    name: kube-root-ca.crt
+                    items:
+                      - key: ca.crt
+                        path: ca.crt
+    sidecarContainers:
+      - name: console-gateway
+        image: itzg/minecraft-server:java25@sha256:5090768ce0331ecaefaf3cf7c1d5ea5a637ba599b14efc4fd1bf28791b5bf6fd
+        command: ["python3", "/gateway/gateway.py"]
+        env:
+          - name: LOG
+            value: /logs/latest.log
+          - name: RCON
+            value: 127.0.0.1:25575
+          - name: PORT
+            value: "25580"
+          - name: PREFIX
+            value: "!"
+          - name: AUDIENCE
+            value: minecraft-console
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+          - name: gateway-code
+            mountPath: /gateway
+            readOnly: true
+          - name: datadir
+            mountPath: /logs
+            subPath: logs
+            readOnly: true
+          - name: gateway-rcon
+            mountPath: /secrets/rcon
+            readOnly: true
+          - name: gateway-auth
+            mountPath: /var/run/secrets/gateway
+            readOnly: true
+    # The pod's own account, and no automounted token: the gateway's
+    # token and CA arrive through the projected volume alone.
+    extraPodSpec:
+      serviceAccountName: minecraft
+      automountServiceAccountToken: "false"
     persistence:
       dataDir:
         enabled: true

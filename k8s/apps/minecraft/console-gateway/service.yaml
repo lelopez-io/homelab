@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: console-gateway
+  namespace: minecraft
+spec:
+  type: ClusterIP
+  selector:
+    app: minecraft
+  ports:
+    - name: console
+      protocol: TCP
+      port: 25580
+      targetPort: 25580
