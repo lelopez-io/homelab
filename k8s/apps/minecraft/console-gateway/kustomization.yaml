@@ -3,6 +3,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - service.yaml
+  - networkpolicy.yaml
+  - console-gateway-rbac.yaml
 # A restart is the only deploy: the sidecar reads its code from the
 # ConfigMap at start, so the generated name must not change with it.
 configMapGenerator:
