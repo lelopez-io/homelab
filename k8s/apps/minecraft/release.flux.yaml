@@ -1,0 +1,19 @@
+---
+# The release has a Flux Kustomization of its own so that values kept
+# out of this repository can be substituted into it; the main one
+# substitutes nothing, since it would rewrite every ${...} in the tree.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: minecraft-release
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./k8s/apps/minecraft/release
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: sync
