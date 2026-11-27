@@ -15,6 +15,9 @@ metadata:
   namespace: minecraft
 spec:
   interval: 30m
+  # A world load can outlast Flux's 5m default, and an upgrade rolled
+  # back mid-restart is worse than a slow one.
+  timeout: 10m
   chart:
     spec:
       chart: minecraft
@@ -51,6 +54,10 @@ spec:
       serviceType: ClusterIP
       rcon:
         enabled: true
+        # The password ships as a sops Secret in this folder, applied
+        # before this value lands; the chart reads it instead of
+        # generating one.
+        existingSecret: minecraft-rcon-password
       extraPorts:
         - name: bedrock
           containerPort: 19132
