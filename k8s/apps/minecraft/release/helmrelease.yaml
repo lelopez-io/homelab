@@ -4,10 +4,6 @@ kind: HelmRepository
 metadata:
   name: minecraft
   namespace: minecraft
-  # Held while this object moves to a Flux Kustomization of its own: a
-  # prune here would uninstall the server. Removed once it has moved.
-  annotations:
-    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   interval: 24h
   url: https://itzg.github.io/minecraft-server-charts
@@ -17,10 +13,6 @@ kind: HelmRelease
 metadata:
   name: minecraft
   namespace: minecraft
-  # Held while this object moves to a Flux Kustomization of its own: a
-  # prune here would uninstall the server. Removed once it has moved.
-  annotations:
-    kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
   interval: 30m
   # A world load can outlast Flux's 5m default, and an upgrade rolled
