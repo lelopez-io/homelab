@@ -75,6 +75,11 @@ spec:
           - name: patches
             configMap:
               name: minecraft-patches
+    # The server never calls the API, so the pod mounts no token of its
+    # own; a container that needs one projects it.
+    extraPodSpec:
+      serviceAccountName: minecraft
+      automountServiceAccountToken: "false"
     persistence:
       dataDir:
         enabled: true
