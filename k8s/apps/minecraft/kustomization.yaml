@@ -8,6 +8,10 @@ resources:
   - pvc.yaml
   - configmap-patches.yaml
   - secret-rcon.sops.yaml
+  # minecraft-vars in flux-system, key CONSOLE_GATEWAY_IMAGE, the gateway
+  # image's repository; private-registry in minecraft, for its pull.
+  - secret-vars.sops.yaml
+  - secret-private-registry.sops.yaml
   - release.flux.yaml
   - networkpolicy.yaml
   - console-gateway-service.yaml
