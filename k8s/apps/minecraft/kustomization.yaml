@@ -10,6 +10,7 @@ resources:
   - secret-rcon.sops.yaml
   - release.flux.yaml
   - networkpolicy.yaml
+  - console-gateway-service.yaml
   - tcproute.yaml
   - udproute.yaml
   - limitrange.yaml

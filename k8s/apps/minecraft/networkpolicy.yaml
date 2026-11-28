@@ -34,6 +34,15 @@ spec:
           port: 25565
         - protocol: UDP
           port: 19132
+    # Console gateway callers, from namespaces labelled as its clients.
+    # The gateway checks each caller's token before it answers.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              minecraft.lan/client: "true"
+      ports:
+        - protocol: TCP
+          port: 25580
   egress:
     # DNS resolution
     - to:
@@ -52,3 +61,16 @@ spec:
               - 10.0.0.0/8
               - 172.16.0.0/12
               - 192.168.0.0/16
+    # The API server, so the console gateway can ask it whether a caller's
+    # token is valid; reached at the control plane node addresses after
+    # kube-proxy rewrites the kubernetes Service address.
+    - to:
+        - ipBlock:
+            cidr: 192.168.10.30/32
+        - ipBlock:
+            cidr: 192.168.10.31/32
+        - ipBlock:
+            cidr: 192.168.10.32/32
+      ports:
+        - protocol: TCP
+          port: 6443
