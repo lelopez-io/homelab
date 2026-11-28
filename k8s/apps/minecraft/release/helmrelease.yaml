@@ -34,6 +34,14 @@ spec:
   values:
     image:
       tag: "java25@sha256:5090768ce0331ecaefaf3cf7c1d5ea5a637ba599b14efc4fd1bf28791b5bf6fd"
+      # The console gateway's image is private; the server's is public and
+      # pulls the same with or without it.
+      pullSecret: private-registry
+
+    # The pod has two containers now; kubectl exec and rcon-cli without a
+    # container name still land in the server.
+    podAnnotations:
+      kubectl.kubernetes.io/default-container: minecraft
 
     minecraftServer:
       eula: "TRUE"
@@ -75,6 +83,79 @@ spec:
           - name: patches
             configMap:
               name: minecraft-patches
+      # Console gateway volumes: no volumeMounts here, so the server
+      # container never sees them; the sidecar mounts its own.
+      - volumes:
+          - name: gateway-rcon
+            secret:
+              # The chart deletes its own minecraft-rcon once existingSecret
+              # is set, so this names the Secret the server reads.
+              secretName: minecraft-rcon-password
+              items:
+                - key: rcon-password
+                  path: rcon-password
+      - volumes:
+          - name: gateway-auth
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    expirationSeconds: 3600
+                - configMap:
+                    name: kube-root-ca.crt
+                    items:
+                      - key: ca.crt
+                        path: ca.crt
+    # The console gateway: callers with a token the API server proves for
+    # its audience get chat lines from the log and three console commands
+    # over rcon on loopback. It runs as the pod's user, so it reads the
+    # server's log and the projected token.
+    sidecarContainers:
+      - name: console-gateway
+        # The registry's address comes from the minecraft-vars Secret by
+        # Flux substitution; the digest is the gateway's v0.1.0.
+        image: "${CONSOLE_GATEWAY_IMAGE}@sha256:430b9d18b679f2ba6a96d787b3f07ab46506381a040ae13ee9254d5b069e4e31"
+        env:
+          - name: LOG
+            value: /logs/latest.log
+          - name: RCON
+            value: 127.0.0.1:25575
+          - name: PORT
+            value: "25580"
+          - name: PREFIX
+            value: "!"
+          - name: AUDIENCE
+            value: minecraft-console
+        ports:
+          - name: console
+            containerPort: 25580
+            protocol: TCP
+        # No probe: the image is distroless, with no shell to exec into.
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          # A kill for memory marks the pod unready and drops players.
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+          - name: datadir
+            mountPath: /logs
+            subPath: logs
+            readOnly: true
+          - name: gateway-rcon
+            mountPath: /secrets/rcon
+            readOnly: true
+          - name: gateway-auth
+            mountPath: /var/run/secrets/gateway
+            readOnly: true
     # The server never calls the API, so the pod mounts no token of its
     # own; a container that needs one projects it.
     extraPodSpec:
